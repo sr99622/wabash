@@ -1,6 +1,6 @@
 # wabash
 
-Python library for parallel processing.
+This repo demonstrates the integration of c++ into python using pybind11. The c++ program includes the use of threads and binary data access.
 
 Copyright (c) 2025  Stephen Rhodes
 
