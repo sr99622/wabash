@@ -1,0 +1,10 @@
+build/
+dist/
+env/
+*.egg-info
+.vscode/
+__pycache__/
+wabash/*.dll
+wabash/*.dylib
+wabash/*.so.*
+.DS_Store
