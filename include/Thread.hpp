@@ -44,20 +44,23 @@ public:
     std::function<bool(const Payload& payload, const std::string& arg)> callback = nullptr;
     std::function<void(const std::string& arg)> finish = nullptr;
     bool running = false;
+    bool reconnect = false;
     std::string name;
 
     Payload* payload{nullptr};
 
     Thread(const std::string& name) : name(name) { }
 
-    ~Thread() {
-        if (payload) delete payload;
-        std::cout << "thread destructor called" << std::endl;
-    }
+    ~Thread() { }
 
     void setPayload(int w, int h, int d) {
-        if (payload) delete payload;
-        payload = new Payload(w, h, d);
+        try {
+            if (payload) delete payload;
+            payload = new Payload(w, h, d);
+        }
+        catch (const std::exception& e) {
+            std::cout << e.what() << std::endl;
+        }
     }
 
     void run() {
@@ -69,6 +72,7 @@ public:
                 }
                 else {
                     payload->refill();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
                 }
                 if (callback) {
                     if (callback(*payload, name)) {
@@ -76,6 +80,8 @@ public:
                     }
                 }
             }
+            if (payload) delete payload;
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
             if (finish) finish(name);
         }
         catch (const std::exception& e) {

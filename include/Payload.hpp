@@ -28,6 +28,8 @@
 #include <sstream>
 #include <iomanip>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 namespace wabash {
 
@@ -42,6 +44,7 @@ private:
     int m_depth  {0};
     int m_size   {0};
     int m_stride {0};
+    std::mutex mutex;
 
 public:
     explicit Payload(int width, int height, int depth) :   
@@ -62,7 +65,7 @@ public:
     }
 
     ~Payload() {
-        //std::cout << "payload destructor called" << std::endl;
+        std::cout << "payload destructor called" << std::endl;
     }
 
     Payload(const Payload& other) : 
@@ -116,9 +119,18 @@ public:
     }
 
     void refill() {
+        //std::lock_guard<std::mutex> lock(mutex);
         std::generate_n(m_data.get(), m_size, [&]() {
             return static_cast<uint8_t>(dist(gen));
         });
+    }
+
+    void acquire_lock() {
+        mutex.lock();
+    }
+
+    void release_lock() {
+        mutex.unlock();
     }
 
     void show() {
