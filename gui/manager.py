@@ -18,15 +18,15 @@
 #*********************************************************************
 
 from PyQt6.QtCore import QSize, QSizeF, Qt, QRectF, QPointF
-import wabash
+from PyQt6.QtWidgets import QMainWindow
+from wabash import Thread
 from time import sleep
 
 class Manager():
-    def __init__(self, mw):
+    def __init__(self, mw: QMainWindow):
         self.threads = {}
         self.mw = mw
         self.ordinals = {}
-        self.sizes = {}
         self.thread_lock = False
 
     def lock(self):
@@ -37,7 +37,7 @@ class Manager():
     def unlock(self):
         self.thread_lock = False
 
-    def startThread(self, thread):
+    def startThread(self, thread: Thread):
         self.lock()
         if not thread.name in self.ordinals.keys():
             ordinal = self.nextOrdinal()
@@ -47,7 +47,7 @@ class Manager():
         self.mw.list.addItem(thread.name)
         self.unlock()
 
-    def removeThread(self, name):
+    def removeThread(self, name: str):
         reconnect = False
         self.lock()
         if name in self.threads:
@@ -63,8 +63,7 @@ class Manager():
             if name in self.ordinals:
                 del self.ordinals[name]
         else:
-            thread = wabash.Thread(name)
-            thread.setPayload(320, 180, 3)
+            thread = Thread(name, self.mw.fileSelector.text())
             thread.reconnect = True
             thread.finish = self.removeThread
             self.startThread(thread)
@@ -72,19 +71,26 @@ class Manager():
     def closeAllThreads(self):
         self.lock()
         for name in self.threads:
+            self.threads[name].reconnect = False
             self.threads[name].running = False
         self.unlock()
+        while len(self.threads):
+            sleep(0.001)
 
-    def nextOrdinal(self):
+    def nextOrdinal(self) -> int:
         values = set(self.ordinals.values())
-        size = len(values)
-        for i in range(size):
+        length = len(values)
+        for i in range(length):
             if not i in values:
                 return i
-        return size
+        return length
         
-    def computeRowsCols(self, size_canvas, aspect_ratio):
+    def computeRowsCols(self, canvas_size: QSize, aspect_ratio: float) -> tuple[int, int]:
+        # build a list of all possible combinations of rows and columns that can accommodate the number of
+        # cells required to display all streams, then optimize by finding the least amount of blank space
         num_cells = len(set(self.ordinals.values()))
+        if not num_cells:
+            return 0, 0
 
         valid_layouts = []
         for i in range(1, num_cells+1):
@@ -98,7 +104,7 @@ class Manager():
         first_pass = True
         for i, layout in enumerate(valid_layouts):
             composite = (aspect_ratio * layout.height()) / layout.width()
-            ratio = (size_canvas.width() / size_canvas.height()) / composite
+            ratio = (canvas_size.width() / canvas_size.height()) / composite
             optimize = abs(1 - ratio)
             if first_pass:
                 first_pass = False
@@ -109,43 +115,50 @@ class Manager():
                     min_ratio = optimize
                     index = i
 
-        if index == -1:
-            return 0, 0
-        
         return valid_layouts[index].width(), valid_layouts[index].height()
 
-    def displayRect(self, uri, canvas_size):
-        ar = 177 # assuming 16:9 aspect ratios
+    def getBlankSpace(self, canvas_size: QSize, aspect_ratio: float) -> list[QRectF]:
+        # after determining the size of the composite image which is the aggregate containing all streams, 
+        # compute the rectangles required to fill out the blank space not occupied by any current stream
+        blanks = []
+        num_rows, num_cols = self.computeRowsCols(canvas_size, aspect_ratio)
+        if not num_rows:
+            blanks.append(QRectF(QPointF(0, 0), QSizeF(canvas_size)))
+            return blanks
         
-        num_rows, num_cols = self.computeRowsCols(canvas_size, ar / 100)
-        if num_cols == 0:
-            return QRectF(QPointF(0, 0), QSizeF(canvas_size))
+        composite_size = QSizeF(num_cols * aspect_ratio, num_rows)
+        composite_size.scale(QSizeF(canvas_size), Qt.AspectRatioMode.KeepAspectRatio)
+        im_w = composite_size.toSize().width()
+        im_h = composite_size.toSize().height()
+        cv_w = canvas_size.width()
+        cv_h = canvas_size.height()
+        if im_h == cv_h:
+            blank_w = (cv_w - im_w)/2
+            blanks.append(QRectF(0, 0, blank_w, im_h))
+            blanks.append(QRectF(im_w + blank_w, 0, blank_w, im_h))
+        if im_w == cv_w:
+            blank_h = (cv_h - im_h)/2
+            blanks.append(QRectF(0, 0, im_w, blank_h))
+            blanks.append(QRectF(0, im_h + blank_h, im_w, blank_h))
+        for i in range(num_rows * num_cols):
+            if i not in self.ordinals.values():
+                blanks.append(self.rectForOrdinal(i, canvas_size, aspect_ratio, num_rows, num_cols))
+        return blanks
 
-        ordinal = -1
-        if uri in self.ordinals.keys():
-            ordinal = self.ordinals[uri]
-        else:
-            return QRectF(QPointF(0, 0), QSizeF(canvas_size))
+    def rectForOrdinal(self, ordinal: int, canvas_size: QSize, aspect_ratio: float, num_rows: int, num_cols: int) -> QRectF:
+        if not num_rows or ordinal < 0:
+            return QRectF(QPointF(0, 0, QSizeF(canvas_size)))
 
-        if ordinal > num_rows * num_cols - 1:
-            ordinal = self.nextOrdinal()
-            self.ordinals[uri] = ordinal
-        
         col = ordinal % num_cols
         row = int(ordinal / num_cols)
 
-        composite_size = QSizeF()
-        if num_rows:
-            composite_size = QSizeF(num_cols * ar / 100, num_rows)
-            composite_size.scale(QSizeF(canvas_size), Qt.AspectRatioMode.KeepAspectRatio)
+        composite_size = QSizeF(num_cols * aspect_ratio, num_rows)
+        composite_size.scale(QSizeF(canvas_size), Qt.AspectRatioMode.KeepAspectRatio)
 
         cell_width = composite_size.width() / num_cols
         cell_height = composite_size.height() / num_rows
 
-        image_size = QSizeF(ar, 100)
-        if uri in self.sizes.keys():
-            image_size = QSizeF(self.sizes[uri])
-
+        image_size = QSizeF(aspect_ratio, 1)
         image_size.scale(cell_width, cell_height, Qt.AspectRatioMode.KeepAspectRatio)
         w = image_size.width()
         h = image_size.height()
@@ -157,3 +170,18 @@ class Manager():
         y = (row * cell_height) + y_offset
 
         return QRectF(x, y, w, h)
+
+    def displayRect(self, uri: str, canvas_size: QSize, aspect_ratio: float) -> QRectF:
+        num_rows, num_cols = self.computeRowsCols(canvas_size, aspect_ratio)
+        if not num_rows:
+            return QRectF(QPointF(0, 0), QSizeF(canvas_size))
+
+        ordinal = -1
+        if uri in self.ordinals.keys():
+            ordinal = self.ordinals[uri]
+            # if the number of streams has decreased, the ordinal might be over the rows * cols limit
+            if ordinal > num_rows * num_cols - 1:
+                ordinal = self.nextOrdinal()
+                self.ordinals[uri] = ordinal
+
+        return self.rectForOrdinal(ordinal, canvas_size, aspect_ratio, num_rows, num_cols)        

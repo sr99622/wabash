@@ -19,24 +19,27 @@
 
 cmake_minimum_required(VERSION 3.17)
 
-project(wabash VERSION 0.0.0)
+project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__STDC_CONSTANT_MACROS")
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    add_compile_options(/EHsc /MT)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    set(BUILD_SHARED_LIBS TRUE)
-endif()
+list(PREPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-add_definitions(-w)
+find_package(FFmpeg REQUIRED)
+find_package(SDL2 REQUIRED)
 
-add_subdirectory(pybind11)
+set(PYBIND11_FINDPYTHON ON)
+find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(_wabash 
     src/wabash.cpp
+)
+
+target_link_libraries(_wabash PRIVATE 
+    FFmpeg::FFmpeg
+    SDL2::SDL2
 )
 
 target_include_directories(_wabash SYSTEM PUBLIC
@@ -44,4 +47,5 @@ target_include_directories(_wabash SYSTEM PUBLIC
 )
 
 install(TARGETS _wabash DESTINATION wabash)
-install(FILES wabash/__init__.py DESTINATION wabash)
+file(GLOB WABASH_DEPENDENCIES "${CMAKE_CURRENT_SOURCE_DIR}/wabash/*")
+install(FILES ${WABASH_DEPENDENCIES} DESTINATION wabash)

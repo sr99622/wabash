@@ -17,78 +17,176 @@
 #
 #*********************************************************************
 
-import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
-        QListWidget, QLabel
-from PyQt6.QtCore import QSize, Qt, QRect, QRectF, QPointF, QTimer
-from PyQt6.QtGui import QImage, QPainter, QColorConstants, QPixmap, QPen, QFont
-import wabash
+from PyQt6.QtWidgets import QLabel, QMainWindow
+from PyQt6.QtCore import QSize, Qt, QPointF, QTimer, QRectF, QMargins
+from PyQt6.QtGui import QImage, QPainter, QColorConstants, QPixmap, QPen, \
+        QFont, QMouseEvent
 import numpy as np
-from time import sleep
+from collections import deque
+import time
+import os
+import psutil
 
 class Display(QLabel):
-    def __init__(self, mw, size):
+    def __init__(self, mw: QMainWindow):
         super().__init__()
         self.mw = mw
         self.image = None
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timeout)
         self.timer.start(10)
+        self.image = QImage(self.size(), QImage.Format.Format_ARGB32)
+        self.stream_aspect_ratio = 16/9
+        self.global_start_time = time.time()
+        self.cycle_start_time = time.time()
+        self.process = psutil.Process(os.getpid())
+        self.blank_display = True
+        self.line = None
+        self.x = deque()
+        self.rss = deque()
+        self.uss = deque()
+        self.vms = deque()
 
     def timeout(self):
-        self.image = QImage(self.size(), QImage.Format.Format_ARGB32)
-        if self.image.isNull():
-            return
-        painter = QPainter(self.image)
-        if not painter.isActive():
-            return
-        painter.fillRect(self.image.rect(), QColorConstants.Black)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setFont(QFont("Arial", 20))
+        try:
+            current_time = time.time()
+            cycle_elapsed_time = current_time - self.cycle_start_time
+            global_elapsed_time = current_time - self.global_start_time
+            if cycle_elapsed_time > self.mw.spnInterval.value():
+                print(f"time (seconds): {global_elapsed_time:.2f} memory (bytes): {self.process.memory_info().rss}")
+                self.cycle_start_time = current_time
+                if len(self.x) > self.mw.spnSampleSize.value():
+                    print("trimming data", len(self.x))
+                    self.x.popleft()
+                    self.rss.popleft()
+                    self.uss.popleft()
+                    self.vms.popleft()
+                self.x.append(global_elapsed_time)
+                MB = 1024 * 1024
+                self.rss.append(self.process.memory_info().rss / MB)
+                self.uss.append(self.process.memory_full_info().uss / MB)
+                self.vms.append(self.process.memory_info().vms / MB)
 
-        self.mw.manager.lock()
-        for thread in self.mw.manager.threads.values():
-            if not thread.payload or not thread.running:
-                continue
-            ary = np.array(thread.payload, copy = False)
-            ary = np.ascontiguousarray(ary)
-            if len(ary.shape) < 3:
-                continue
-            h = ary.shape[0]
-            w = ary.shape[1]
-            d = ary.shape[2]
-            data = QImage(ary.data, w, h, d * w, QImage.Format.Format_RGB888)
-            if data.isNull():
-                continue
+                if self.mw.cmbMemoryType.currentText() == "Unique":
+                    dataset = self.uss
+                elif self.mw.cmbMemoryType.currentText() == "Resident":
+                    dataset = self.rss
+                elif self.mw.cmbMemoryType.currentText() == "Virtual":
+                    dataset = self.vms
+                if self.line:
+                    self.line.setData(self.x, dataset)
+                else:
+                    self.line = self.mw.plot_widget.plot(self.x, dataset)
 
-            rect = self.mw.manager.displayRect(thread.name, self.size())
-            painter.drawImage(rect, data)
+            if self.image.isNull():
+                return
+
+            resized = False
+            if self.image.size() != self.size():
+                self.image = QImage(self.size(), QImage.Format.Format_ARGB32)
+                resized = True
+
+            painter = QPainter(self.image)
+            if not painter.isActive():
+                return
             
-            painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
-            textRect = self.getTextRect(painter, thread.name)
-            textRect.moveCenter(QPointF(rect.center()))
-            painter.drawText(textRect, Qt.AlignmentFlag.AlignCenter, thread.name)
-            painter.setPen(QPen(Qt.GlobalColor.lightGray, 2, Qt.PenStyle.SolidLine))
-            painter.drawRect(rect)
-            if self.mw.list.currentItem() and thread.name == self.mw.list.currentItem().text():
+            if resized:
+                painter.fillRect(self.image.rect(), QColorConstants.Black)
+
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setFont(QFont("Arial", 20))
+
+            self.mw.manager.lock()
+            
+            for thread in self.mw.manager.threads.values():
+                if not thread.running:
+                    continue
+                if thread.frame.is_null():
+                    continue
+
+                # only write the image to the pixmap if the frame is new
+                if thread.last_pts == thread.frame.pts():
+                    continue
+                
+                ary = np.array(thread.frame, copy = False)
+                ary = np.ascontiguousarray(ary)
+
+                if len(ary.shape) < 3:
+                    continue
+                h = ary.shape[0]
+                w = ary.shape[1]
+                d = ary.shape[2]
+                data = QImage(ary.data, w, h, d * w, QImage.Format.Format_RGB888)
+                if data.isNull():
+                    continue
+
+                # interestingly, the thread cannot be written to until after the ary is assigned
+                thread.last_pts = thread.frame.pts()
+
+                if thread.counter > 3:
+                    if self.mw.model and self.mw.chkInfer.isChecked():
+                        boxes = self.mw.model(ary)
+                        if boxes is not None:
+                            thread.detections = boxes
+                    thread.counter = 0
+
+                # draw stream image
+                rect = self.mw.manager.displayRect(thread.name, self.image.size(), self.stream_aspect_ratio)
+                painter.drawImage(rect, data)
+                
+                # draw stream name
                 painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
-                painter.drawRect(rect.adjusted(2, 2, -2, -2))
-        self.mw.manager.unlock()
+                textRect = self.getTextRect(painter, thread.name)
+                textRect.moveCenter(QPointF(rect.center()))
+                painter.drawText(textRect, Qt.AlignmentFlag.AlignCenter, thread.name)
+                
+                # draw stream detections
+                scalex = rect.width() / w
+                scaley = rect.height() / h
+                for box in thread.detections:
+                    p = (box[0] * scalex + rect.x())
+                    q = (box[1] * scaley + rect.y())
+                    r = (box[2] - box[0]) * scalex
+                    s = (box[3] - box[1]) * scaley
+                    painter.drawRect(QRectF(p, q, r, s))
 
-        self.setPixmap(QPixmap.fromImage(self.image))
+                # draw stream border
+                painter.setPen(QPen(Qt.GlobalColor.lightGray, 2, Qt.PenStyle.SolidLine))
+                painter.drawRect(rect)
+                if self.mw.list.currentItem() and thread.name == self.mw.list.currentItem().text():
+                    painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
+                    painter.drawRect(rect.adjusted(2, 2, -2, -2))
 
-    def sizeHint(self):
+            if len(self.mw.manager.threads) or self.blank_display:
+                blanks = self.mw.manager.getBlankSpace(self.image.size(), self.stream_aspect_ratio)
+                for blank in blanks:
+                    painter.fillRect(blank, QColorConstants.Black)
+                self.setPixmap(QPixmap.fromImage(self.image))
+                self.blank_display = False
+            else:
+                self.blank_display = True
+
+            self.mw.manager.unlock()
+        except Exception as ex:
+            print(f'Display Refresh Error: {ex}')
+            self.mw.manager.unlock()
+
+    def sizeHint(self) -> QSize:
         return QSize(480,480)
+    
+    def resizeEvent(self, event):
+        self.image = QImage(event.size().shrunkBy(QMargins(5, 5, 5, 5)), QImage.Format.Format_ARGB32)
+        return super().resizeEvent(event)
 
-    def getTextRect(self, painter, text):
+    def getTextRect(self, painter: QPainter, text: str) -> QRectF:
         # to get exact bounding box, first estimate
         estimate = painter.fontMetrics().boundingRect(text)
         return painter.fontMetrics().boundingRect(estimate, 0, text).toRectF()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
         self.mw.manager.lock()
         for name in self.mw.manager.threads:
-            rect = self.mw.manager.displayRect(name, self.size())
+            rect = self.mw.manager.displayRect(name, self.size(), self.stream_aspect_ratio)
             if rect.contains(event.position()):
                 self.mw.list.setCurrentText(name)
                 break

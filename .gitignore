@@ -8,3 +8,9 @@ wabash/*.dll
 wabash/*.dylib
 wabash/*.so.*
 .DS_Store
+yolox_s.pth
+model.bin
+model.xml
+*.onnx
+*.rknn
+*.jpg

@@ -28,65 +28,57 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <array>
+#include <memory>
 
-#include "Payload.hpp"
+#include "wabash.hpp"
 
 namespace wabash {
 
-std::vector<std::vector<int>> resolutions = { { 640,  360, 3},
-                                              {1280,  720, 3},
-                                              {1920, 1080, 3},
-                                              {2560, 1440, 3},
-                                              {3840, 2160, 3} };
-
 class Thread {
 public:
-    std::function<bool(const Payload& payload, const std::string& arg)> callback = nullptr;
     std::function<void(const std::string& arg)> finish = nullptr;
     bool running = false;
     bool reconnect = false;
     std::string name;
+    std::string filename;
+    uint64_t counter = 0;
+    uint64_t last_pts = AV_NOPTS_VALUE;
+    Frame frame;
+    std::vector<std::array<double, 4>> detections;
 
-    Payload* payload{nullptr};
-
-    Thread(const std::string& name) : name(name) { }
+    Thread(const std::string& name, const std::string& filename) : name(name), filename(filename) {
+        av_log_set_level(AV_LOG_QUIET);
+     }
 
     ~Thread() { }
 
-    void setPayload(int w, int h, int d) {
-        try {
-            if (payload) delete payload;
-            payload = new Payload(w, h, d);
-        }
-        catch (const std::exception& e) {
-            std::cout << e.what() << std::endl;
-        }
-    }
-
     void run() {
         try {
+            Reader reader(filename);
+            int duration = (int)(1000 / reader.fps()); 
+            Decoder decoder(&reader, AVMEDIA_TYPE_VIDEO);
+            Filter filter(&decoder, "format=rgb24");
             while (running) {
-                if (!payload) { 
-                    std::vector<int> dims = resolutions[static_cast<int>(dist(gen) * 5 / 256)];
-                    payload = new Payload(dims[0], dims[1], dims[2]);
+                Packet pkt = reader.get_packet();
+                if (pkt.is_null()) {
+                    running = false;
+                    break;
                 }
-                else {
-                    payload->refill();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                }
-                if (callback) {
-                    if (callback(*payload, name)) {
-                        break;
-                    }
+                if (pkt.stream_index() == reader.video_stream_index) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                    filter.GetFrame(pkt, frame);
+                    counter++;
                 }
             }
-            if (payload) delete payload;
-            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-            if (finish) finish(name);
+            //std::cout << "done" << std::endl;
         }
         catch (const std::exception& e) {
-            std::cout << e.what() << std::endl;
+            if (e.what() != "EOF")
+                std::cout << e.what() << std::endl;
         }
+        
+        if (finish) finish(name);
     }
 
     void start() {
