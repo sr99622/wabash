@@ -28,9 +28,10 @@ import numpy as np
 from torchvision.transforms import functional
 import torch
 import torch.nn as nn
-from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
-import yolox.utils
+from wabash.gui.yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
+from wabash.gui.yolox.utils import postprocess
 from loguru import logger
+from pathlib import Path
 
 if (sys.platform != "darwin") and (platform.machine() != "aarch64"):
     import openvino as ov
@@ -41,7 +42,7 @@ INF_DIMENSION = 640
 
 class Model():
     def __init__(self, mw: QMainWindow):
-        print("MODEL INIT")
+        print("MODEL INIT", os.getcwd())
         self.mw = mw
 
         print(self.mw.cmbAPI.currentText())
@@ -53,7 +54,8 @@ class Model():
         self.ov_device = "AUTO"
         ov_model = None
         if self.api == "OpenVINO":
-            ov_model_name = "gui/model.xml"
+            ov_model_name = Path(__file__).parent / "model.xml"
+            print("ov_model_name", ov_model_name)
             if os.path.exists(ov_model_name):
                 ov_model = ov.Core().read_model(ov_model_name)
 
@@ -75,8 +77,9 @@ class Model():
 
             # model weights are assigned, download the file from github if needed
             self.model_name = "yolox_s"
-            self.ckpt_file = f"gui/{self.model_name}.pth"
+            self.ckpt_file = ckpt_path = Path(__file__).parent / f"{self.model_name}.pth"
             if not os.path.exists(self.ckpt_file):
+                print("DID NOT FIND FILE", self.ckpt_file, ckpt_path)
                 self.download_ckpt()
             self.model.load_state_dict(torch.load(self.ckpt_file, map_location="cpu")["model"])
 
@@ -145,7 +148,7 @@ class Model():
         nmsthre = 0.65
         if isinstance(outputs, np.ndarray):
             outputs = torch.from_numpy(outputs)
-        outputs = yolox.utils.postprocess(outputs, NUM_CLASSES, confthre, nmsthre)
+        outputs = postprocess(outputs, NUM_CLASSES, confthre, nmsthre)
         
         boxes = []
         inf_size = (INF_DIMENSION, INF_DIMENSION)
@@ -192,6 +195,7 @@ class Model():
             return None
 
     def download_ckpt(self):
+        print("DOWNLOAD CHKPT")
         link = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/" + f'{self.model_name}.pth'
         logger.debug(f"Dowloading model weights {link}")
         response = requests.get(link, allow_redirects=True, timeout=(10, 120))

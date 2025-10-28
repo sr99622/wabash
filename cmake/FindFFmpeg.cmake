@@ -21,7 +21,7 @@ macro(find_component_library var library_name)
     find_library(${var} NAME ${library_name}
         HINTS
             $ENV{FFMPEG_INSTALL_DIR}/lib
-            $ENV{CONDA_PREFIX}
+            ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/lib
     )
 endmacro()
 
@@ -29,11 +29,11 @@ macro(find_component_include_dir var header_name)
     find_path(${var} ${header_name}
         HINTS
             $ENV{FFMPEG_INSTALL_DIR}/include
-            $ENV{CONDA_PREFIX}
+            ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
     )
 endmacro()
 
-if (DEFINED ENV{FFMPEG_INSTALL_DIR})
+if (DEFINED ENV{FFMPEG_INSTALL_DIR} OR (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg))
     find_component_library(LIBAVCODEC_LIBRARY avcodec)
     find_component_include_dir(LIBAVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
 

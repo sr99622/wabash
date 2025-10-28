@@ -28,7 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__STDC_CONSTANT_MACROS")
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 find_package(FFmpeg REQUIRED)
-find_package(SDL2 REQUIRED)
+#find_package(SDL2 REQUIRED)
 
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
@@ -39,13 +39,17 @@ pybind11_add_module(_wabash
 
 target_link_libraries(_wabash PRIVATE 
     FFmpeg::FFmpeg
-    SDL2::SDL2
+#    SDL2::SDL2
 )
 
 target_include_directories(_wabash SYSTEM PUBLIC
     include
 )
 
-install(TARGETS _wabash DESTINATION wabash)
-file(GLOB WABASH_DEPENDENCIES "${CMAKE_CURRENT_SOURCE_DIR}/wabash/*")
-install(FILES ${WABASH_DEPENDENCIES} DESTINATION wabash)
+install(TARGETS _wabash DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/wabash")
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/wabash/
+    DESTINATION wabash
+    FILES_MATCHING
+    PATTERN "*"
+)

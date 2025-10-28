@@ -22,17 +22,16 @@ import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
         QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox
 from PyQt6.QtCore import QSize, Qt, QSettings, QDir
-from PyQt6.QtGui import QGuiApplication, QCloseEvent
+from PyQt6.QtGui import QGuiApplication, QCloseEvent, QShowEvent
 import wabash
 from enum import Enum
 from pathlib import Path
-from display import Display
-from manager import Manager
-#from model import Model
-from components.fileselector import FileSelector
+from wabash.gui.display import Display
+from wabash.gui.manager import Manager
+from wabash.gui.components.fileselector import FileSelector
 from loguru import logger
 import pyqtgraph as pg
-#from rockchip import Model
+import importlib.metadata
 
 class Style(Enum):
     DARK = 0
@@ -54,7 +53,7 @@ class MainWindow(QMainWindow):
             self.manager = Manager(self)
             self.model = None
 
-            QDir.addSearchPath("image", self.getLocation() + "/gui/resources/")
+            QDir.addSearchPath("image", str(Path(__file__).parent.parent / "gui" / "resources"))
             self.settings = QSettings("wabash", "gui")
             #self.settings.clear()
             logger.debug(f'Settings loaded from file {self.settings.fileName()} using format {self.settings.format()}')
@@ -67,7 +66,7 @@ class MainWindow(QMainWindow):
             self.memoryTypeKey = "MainWindow/memoryType"
             self.intervalKey = "MainWindow/interval"
 
-            self.setWindowTitle("Threads Example")
+            self.setWindowTitle(f"wabash version {self.getVersion()}")
             self.setMinimumSize(QSize(320, 240))
 
             self.fileSelector = FileSelector(self, "File")
@@ -169,23 +168,39 @@ class MainWindow(QMainWindow):
                 if screen := QGuiApplication.screenAt(rect.topLeft()):
                     self.setGeometry(rect)
 
-            if self.chkInfer.isChecked():
-                self.startModel()
+            #if self.chkInfer.isChecked():
+            #    self.startModel()
 
         except Exception as ex:
             logger.error(f"Initialization Error: {ex}")
 
     def startModel(self):
         try:
-            api = self.cmbAPI.currentText()
-            logger.debug(f'startng model using api: {api}')
-            if api == "rknn":
-                from rockchip import Model
-            else:
-                from model import Model
-            self.model = Model(self)
+            if not self.model:
+                logger.debug(f'starting model using api: {self.cmbAPI.currentText()}')
+                #if api == "rknn":
+                #    from rockchip import Model
+                #else:
+                #    from wabash.gui.model import Model
+                from wabash.gui.model import Model
+                self.model = Model(self)
         except Exception as ex:
             logger.error(f'Error starting model: {ex}')
+
+    def getVersion(self) -> str:
+        try:
+            path = Path(__file__).parent.parent.parent / "pyproject.toml"
+            if path.exists() and sys.version_info >= (3, 11):
+                import tomllib
+                with open(path, "rb") as f:
+                    data = tomllib.load(f)
+                return data.get("project", {}).get("version", "Unknown")
+            
+            return importlib.metadata.version('wabash')
+
+        except Exception as ex:
+            logger.error(f'getVersion error: {ex}')
+        return "Unknown"
 
     def startThread(self, name: str=None, filename: str=None):
         if not name:
@@ -256,13 +271,8 @@ class MainWindow(QMainWindow):
         self.settings.setValue(self.geometryKey, self.geometry())
         super().closeEvent(event)
 
-    def getLocation(self) -> str:
-        path = Path(os.path.dirname(__file__))
-        return str(path.parent.absolute())
-    
     def style(self, appearance: Style) -> str:
-        path = Path(os.path.dirname(__file__))
-        filename = str(path.parent.absolute()) + "/gui/resources/darkstyle.qss"
+        filename = Path(__file__).parent.parent / "gui" / "resources" / "darkstyle.qss"
         with open(filename, 'r') as file:
             strStyle = file.read()
 
@@ -311,10 +321,13 @@ class MainWindow(QMainWindow):
                 strStyle = strStyle.replace("selection_item",    isDefault)
 
         return strStyle
-
-if __name__ == "__main__":
+    
+def run():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
+
+if __name__ == "__main__":
+    run()

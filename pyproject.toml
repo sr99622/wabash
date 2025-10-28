@@ -18,12 +18,13 @@
 #*********************************************************************/
 
 [build-system]
-requires = ["scikit-build-core>=0.9.0", "pybind11>=2.13.6"]
+#requires = ["scikit-build-core @ git+http://10.1.1.14:3000/stephen/scikit-build-core@main", "pybind11"]
+requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "wabash"
-version = "0.0.0"
+version = "0.0.2"
 description = "Example pybind11 extension for multi-threading and data transfer"
 authors = [{ name = "Stephen Rhodes" }]
 readme = "README.md"
@@ -35,3 +36,6 @@ dependencies = [
 
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true
+
+[project.gui-scripts]
+wabash = "wabash.gui.main:run"

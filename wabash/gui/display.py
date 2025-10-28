@@ -26,6 +26,7 @@ from collections import deque
 import time
 import os
 import psutil
+from loguru import logger
 
 class Display(QLabel):
     def __init__(self, mw: QMainWindow):
@@ -124,7 +125,9 @@ class Display(QLabel):
                 thread.last_pts = thread.frame.pts()
 
                 if thread.counter > 3:
-                    if self.mw.model and self.mw.chkInfer.isChecked():
+                    if self.mw.chkInfer.isChecked():
+                        if not self.mw.model:
+                            self.mw.startModel()
                         boxes = self.mw.model(ary)
                         if boxes is not None:
                             thread.detections = boxes
@@ -168,7 +171,7 @@ class Display(QLabel):
 
             self.mw.manager.unlock()
         except Exception as ex:
-            print(f'Display Refresh Error: {ex}')
+            logger.debug(f'Display Refresh Error: {ex}')
             self.mw.manager.unlock()
 
     def sizeHint(self) -> QSize:
