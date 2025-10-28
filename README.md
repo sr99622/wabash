@@ -7,7 +7,7 @@ This repo demonstrates the integration of c++ into python using pybind11. The c+
 To build the project, you need to install Visual Studio, git, CMake and Python.
 
 
-The project requires FFMPEG shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). The FFMPEG shared binaries all other necessary components are set up by the script below. To configure the project, open a ***Windows PowerShell*** prompt and run the following commands.
+The project requires FFMPEG shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). The FFMPEG shared binaries and all other necessary components are set up by the script below. To configure the project, open a ***Windows PowerShell*** prompt and run the following commands.
 
 ```
 git clone https://github.com/sr99622/wabash
@@ -59,3 +59,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
