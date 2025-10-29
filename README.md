@@ -4,6 +4,8 @@ This repo demonstrates the integration of c++ into python using pybind11. The c+
 
 ### Currently only windows is supported
 
+* System Requirements
+
 To build the project, you need to install Visual Studio, git, CMake and Python.
 
 
@@ -21,7 +23,9 @@ python -m venv env
 env\Scripts\activate
 ```
 
-The project can now be compiled using the .bat script.
+* Compilation and Runtime
+
+Compile the project using the build.bat script.
 
 ```
 scripts\windows\build
@@ -33,14 +37,18 @@ The program can now be run independent of the virtual environment. The executabl
 env\Scripts\wabash
 ```
 
-To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This necessary because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that you have activated the python environment as shown above. To observe changes made to python code, use the following
+* Development
+
+To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that you have activated the python environment as shown above. To observe changes made to python code, use the following
 
 ```
 pip uninstall wabash
 python run.py
 ```
 
-Re-building the project will send python source code changes to the program as installed in the virtual environment. Any changes made in the C++ domain require re-building the project to be observed. It is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
+Any changes made in the C++ domain require re-building the project to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the ffmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by ```__init__.py```. As an aside, it is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
+
+* Distribution
 
 To build the distribution files, install the build module into the environment. For CMake to successfully find ffmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
 
@@ -50,6 +58,7 @@ set FFMPEG_INSTALL_DIR=%CD%\ffmpeg
 python -m build --sdist --wheel
 ```
 
+The distribution whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
 
 ### License
 
@@ -66,5 +75,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 
 
