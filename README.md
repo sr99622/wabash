@@ -42,7 +42,14 @@ python run.py
 
 Re-building the project will send python source code changes to the program as installed in the virtual environment. Any changes made in the C++ domain require re-building the project to be observed. It is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
 
-The build script creates the built distribution file in the dist/ directory. This file can install the program as a python module by invoking the pip command directly on the filename. Because the built distribution contains everything necessary for runtime execution, no further configuration is required.
+To build the distribution files, install the build module into the environment. For CMake to successfully find ffmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
+
+```
+pip install build
+set FFMPEG_INSTALL_DIR=%CD%\ffmpeg
+python -m build --sdist --wheel
+```
+
 
 ### License
 

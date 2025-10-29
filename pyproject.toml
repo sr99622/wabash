@@ -18,8 +18,7 @@
 #*********************************************************************/
 
 [build-system]
-requires = ["scikit-build-core @ git+https://github.com/sr99622/scikit-build-core/", "pybind11"]
-#requires = ["scikit-build-core", "pybind11"]
+requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
