@@ -6,19 +6,25 @@ This repo demonstrates the integration of C++ into python using pybind11. The C+
 
 #### System Requirements
 
-To build the project, Windows development tools are required. The following components are needed.
+To build the project, Windows development tools are required. The following components are needed. The primary link points to the Homepage for each tool. To download a recent version of the tool known to work with this project, use the <--.EXE link to get the executable installer.
+
    * [C++ Desktop Development Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/)
+      * [<--.EXE](https://aka.ms/vs/17/release/vs_BuildTools.exe)
    * [git](https://git-scm.com/install/windows)
+      * [<--.EXE](https://github.com/git-for-windows/git/releases/download/v2.51.2.windows.1/Git-2.51.2-64-bit.exe)
    * [CMake](https://cmake.org/download/)
+      * [<--.EXE](https://github.com/Kitware/CMake/releases/download/v4.2.0-rc2/cmake-4.2.0-rc2-windows-x86_64.msi)
    * [Python](https://www.python.org/downloads/windows/)
+      * [<--.EXE](https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe)
 
 #### Project Configuration
 
-The project additionally requires FFMPEG shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). Because the FFMPEG components are installed relative to the project source files, the project is first set up with git. The script below will download the project source code along with the FFMPEG shared runtime binaries and necessary development components. After completion of the code installation, the script will create and activate a python virtual environment within the source directory.
+The project additionally requires FFmpeg shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). Because the FFmpeg components are installed relative to the project source files, the project is first set up with git. The script below will download the project source code along with the FFMPEG shared runtime binaries and necessary development components. After completion of the code installation, the script will create and activate a python virtual environment within the source directory.
 
-To configure the project, open a ***Windows PowerShell*** prompt and run the following commands.
+To configure the project, open a ***Windows PowerShell*** prompt and run the following commands. Please note that the script will locate the repository in the user's home directory, then cd to the wabash directory to execute the balance of commands from there.
 
 ```
+cd $env:HOMEPATH
 git clone https://github.com/sr99622/wabash
 cd wabash
 Invoke-WebRequest -Uri 'https://github.com/GyanD/codexffmpeg/releases/download/8.0/ffmpeg-8.0-full_build-shared.zip' -OutFile 'ffmpeg-8.0-full_build-shared.zip'
@@ -53,11 +59,11 @@ pip uninstall wabash
 python run.py
 ```
 
-Any changes made in the C++ domain require re-building the project in order to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the ffmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by ```__init__.py```. As an aside, it is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
+Any changes made in the C++ domain require re-building the project in order to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by ```__init__.py```. As an aside, it is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
 
 #### Distribution
 
-To build the distribution files, install the build module into the environment. For CMake to successfully find ffmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
+To build the distribution files, install the build module into the environment. For CMake to successfully find FFmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
 
 ```
 pip install build
@@ -66,6 +72,18 @@ python -m build --sdist --wheel
 ```
 
 The distribution whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
+
+#### Installing Arbitrary Python Versions
+
+It may be required to install multiple Python versions on the development machine for distribution and testing purposes. A 
+
+```
+if not exist "%LOCALAPPDATA%\Programs\Python\Python313\" (
+    curl --output python-3.13.2-amd64.exe https://www.python.org/ftp/python/3.13.2/python-3.13.2-amd64.exe
+    python-3.13.2-amd64.exe /passive /quiet
+)
+```
+
 
 ### License
 
