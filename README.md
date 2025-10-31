@@ -75,13 +75,24 @@ The distribution whl file can be used to install the program on an arbitrary mac
 
 #### Installing Arbitrary Python Versions
 
-It may be required to install multiple Python versions on the development machine for distribution and testing purposes. A 
+It is necessary to install multiple Python versions on the development machine for distribution and testing purposes. A selection of Python installation executables is available by script. To install a particular version of Python, use the following command.
 
 ```
-if not exist "%LOCALAPPDATA%\Programs\Python\Python313\" (
-    curl --output python-3.13.2-amd64.exe https://www.python.org/ftp/python/3.13.2/python-3.13.2-amd64.exe
-    python-3.13.2-amd64.exe /passive /quiet
-)
+scripts\windows\install_python <XXX>
+```
+
+where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313]`.
+
+Note that the installer will not include the Python executable in the system PATH. The Python installation can be started using the command
+
+```
+scripts\windows\start_python <XXX>
+```
+
+To create a virtual environment using one of these Python installations
+
+```
+scripts\windows\create_venv <XXX> <name>
 ```
 
 
