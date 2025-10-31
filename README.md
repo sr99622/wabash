@@ -10,10 +10,10 @@ To build the project, Windows development tools are required. The following comp
 
    | Tool Name | Download |
    |-----------|:--------:|
-   |[C++ Desktop Development Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/) | [<--.EXE](https://aka.ms/vs/17/release/vs_BuildTools.exe) |
-   |[git](https://git-scm.com/install/windows) | [<--.EXE](https://github.com/git-for-windows/git/releases/download/v2.51.2.windows.1/Git-2.51.2-64-bit.exe) |
-   |[CMake](https://cmake.org/download/) | [<--.EXE](https://github.com/Kitware/CMake/releases/download/v4.2.0-rc2/cmake-4.2.0-rc2-windows-x86_64.msi) |
-   |[Python](https://www.python.org/downloads/windows/) | [<--.EXE](https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe) |
+   |[C++ Desktop Development Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/) | [.EXE](https://aka.ms/vs/17/release/vs_BuildTools.exe) |
+   |[git](https://git-scm.com/install/windows) | [.EXE](https://github.com/git-for-windows/git/releases/download/v2.51.2.windows.1/Git-2.51.2-64-bit.exe) |
+   |[CMake](https://cmake.org/download/) | [.EXE](https://github.com/Kitware/CMake/releases/download/v4.2.0-rc2/cmake-4.2.0-rc2-windows-x86_64.msi) |
+   |[Python](https://www.python.org/downloads/windows/) | [.EXE](https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe) |
 
 #### Project Configuration
 
@@ -109,6 +109,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 
 
 
