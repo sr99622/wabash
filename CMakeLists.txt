@@ -27,6 +27,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__STDC_CONSTANT_MACROS")
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    add_compile_options(/EHsc /MT)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set(BUILD_SHARED_LIBS TRUE)
+endif()
+
 find_package(FFmpeg REQUIRED)
 #find_package(SDL2 REQUIRED)
 
