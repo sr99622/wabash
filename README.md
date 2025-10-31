@@ -2,9 +2,11 @@
 
 This repo demonstrates the integration of C++ into python using pybind11. The C++ program includes the use of threads and zero-copy binary data access. It is designed to measure the memory consumption of running YOLO inference on a video file. Running OpenVINO on a recent Intel CPU with an integrated graphics chip will work best. The iGPU driver should be pre-installed with windows. Pytorch on NVIDIA will run as well, you might need to modify the installation to get the proper pytorch version to match your CUDA version.
 
-### Currently only windows is supported
+<b><i>Currently only windows is supported</i></b>
 
-#### System Requirements
+&nbsp;
+### System Requirements
+---
 
 To build the project, Windows development tools are required. The following components are needed. The primary link points to the Homepage for each tool. To download a recent version of the tool known to work with this project, use the .EXE link to get the executable installer.
 
@@ -15,7 +17,9 @@ To build the project, Windows development tools are required. The following comp
    |[CMake](https://cmake.org/download/) | [.EXE](https://github.com/Kitware/CMake/releases/download/v4.2.0-rc2/cmake-4.2.0-rc2-windows-x86_64.msi) |
    |[Python](https://www.python.org/downloads/windows/) | [.EXE](https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe) |
 
-#### Project Configuration
+&nbsp;
+### Project Configuration
+---
 
 The project additionally requires FFmpeg shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). Because the FFmpeg components are installed relative to the project source files, the project is first set up with git. The script below will download the project source code along with the FFMPEG shared runtime binaries and necessary development components. After completion of the code installation, the script will create and activate a python virtual environment within the source directory.
 
@@ -34,7 +38,9 @@ python -m venv env
 env\Scripts\activate
 ```
 
-#### Compilation and Runtime
+&nbsp;
+### Compilation and Runtime
+---
 
 Compile the project using the build.bat script.
 
@@ -48,7 +54,9 @@ The program can now be run independent of the virtual environment. The executabl
 env\Scripts\wabash
 ```
 
-#### Development
+&nbsp;
+### Development
+---
 
 To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that you have activated the python environment as shown above. To observe changes made to python code, use the following.
 
@@ -59,7 +67,9 @@ python run.py
 
 Any changes made in the C++ domain require re-building the project in order to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by ```__init__.py```. As an aside, it is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
 
-#### Distribution
+&nbsp;
+### Distribution
+---
 
 To build the distribution files, install the build module into the environment. For CMake to successfully find FFmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
 
@@ -71,7 +81,9 @@ python -m build --sdist --wheel
 
 The distribution whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
 
-#### Installing Arbitrary Python Versions
+&nbsp;
+### Installing Arbitrary Python Versions
+---
 
 It is necessary to install multiple Python versions on the development machine for distribution and testing purposes. A selection of Python installation executables is available by script. To install a particular version of Python, use the following command.
 
@@ -93,7 +105,7 @@ To create a virtual environment using one of these Python installations
 scripts\windows\create_venv <XXX> <name>
 ```
 
-
+&nbsp;
 ### License
 
 Copyright (c) 2025  Stephen Rhodes
@@ -109,6 +121,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 
 
 
