@@ -6,9 +6,9 @@ This repo demonstrates the integration of C++ into python using pybind11. The C+
 
 #### System Requirements
 
-To build the project, Windows development tools are required. The following components are needed. The primary link points to the Homepage for each tool. To download a recent version of the tool known to work with this project, use the <--.EXE link to get the executable installer.
+To build the project, Windows development tools are required. The following components are needed. The primary link points to the Homepage for each tool. To download a recent version of the tool known to work with this project, use the .EXE link to get the executable installer.
 
-   | Tool Name | Download |
+   | Tool Homepage | Download |
    |-----------|:--------:|
    |[C++ Desktop Development Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/) | [.EXE](https://aka.ms/vs/17/release/vs_BuildTools.exe) |
    |[git](https://git-scm.com/install/windows) | [.EXE](https://github.com/git-for-windows/git/releases/download/v2.51.2.windows.1/Git-2.51.2-64-bit.exe) |
@@ -109,6 +109,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 
 
 
