@@ -8,14 +8,12 @@ This repo demonstrates the integration of C++ into python using pybind11. The C+
 
 To build the project, Windows development tools are required. The following components are needed. The primary link points to the Homepage for each tool. To download a recent version of the tool known to work with this project, use the <--.EXE link to get the executable installer.
 
-   * [C++ Desktop Development Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/)
-      * [<--.EXE](https://aka.ms/vs/17/release/vs_BuildTools.exe)
-   * [git](https://git-scm.com/install/windows)
-      * [<--.EXE](https://github.com/git-for-windows/git/releases/download/v2.51.2.windows.1/Git-2.51.2-64-bit.exe)
-   * [CMake](https://cmake.org/download/)
-      * [<--.EXE](https://github.com/Kitware/CMake/releases/download/v4.2.0-rc2/cmake-4.2.0-rc2-windows-x86_64.msi)
-   * [Python](https://www.python.org/downloads/windows/)
-      * [<--.EXE](https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe)
+   | Tool Name | Download |
+   |-----------|:--------:|
+   |[C++ Desktop Development Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/) | [<--.EXE](https://aka.ms/vs/17/release/vs_BuildTools.exe) |
+   |[git](https://git-scm.com/install/windows) | [<--.EXE](https://github.com/git-for-windows/git/releases/download/v2.51.2.windows.1/Git-2.51.2-64-bit.exe) |
+   |[CMake](https://cmake.org/download/) | [<--.EXE](https://github.com/Kitware/CMake/releases/download/v4.2.0-rc2/cmake-4.2.0-rc2-windows-x86_64.msi) |
+   |[Python](https://www.python.org/downloads/windows/) | [<--.EXE](https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe) |
 
 #### Project Configuration
 
