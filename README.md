@@ -110,6 +110,30 @@ scripts\windows\create_venv <XXX> <name>
 ```
 
 &nbsp;
+### Creating a Windows Icon in Gimp
+---
+
+Create new png file with transparent background using 256 x 256 size. After the icon has been drawn in the application and saved as .png, use the Layers menu to select Duplicate Layers. This will create another layer with the same image. Click the Layers menu again and select Scale Layer and resize the new layer to 128 x 128. Repeat for other sizes e.g. 64, 32 and 16. Export the file using the File menu and Export As. When the dialog prompt appears, rename the file to use the .ico extension. Gimp will automatically format the exported file for ico. The earlier saved png file can be used in other scenarios or saved for reference.
+
+&nbsp;
+### Building the Installer Program
+---
+
+The project includes scripts for building an executable installer using [NSIS](https://sourceforge.net/projects/nsis/). The installed version of the program requires a re-distributable Python version which is supplied by [Astral](https://github.com/astral-sh). The basic philosophy of the installer is to create the python virtual environment in the user's system file directory ```C:\Program Files (x86)``` and run the installed wabash.exe executable file from there. 
+
+The installer will copy the contents of the local wabash\wabash directory into the installation location on the target machine. This is a double edged sword in that any files to be installed onto the target machine can easily be placed in the local wabash\wabash directory, but also any stray artifacts that are generated during development, such as versioned .pyd or .dll files will be installed as well, so it is worthwhile to review the wabash\wabash directory prior to building the installer. The script will automatically remove the local ```__pycache__``` directories, so those can safely be ignored.
+
+ In the current program configuration, yolo models are kept in the wabash\wabash\gui folder. They are not included in the repository, so the program must be run so they can be downloaded. A feature of the installation strategy is that the virtual environment folder is not writeable without Administrator privilege. The implication here is that if the desired behavior of the installer is to include the model files, the program must be run on the development machine first to download and configure the model files, which will subsequently be installed on the target machine. An alternative strategy is to change the location of the model files to a user writeable location and have the program download and configure the files at runtime.
+
+The installer is built from the project directory using the command
+
+```
+scripts\windows\build_installer
+```
+
+The installer itself can be found in the installer subdirectory.
+
+&nbsp;
 ### License
 
 Copyright (c) 2025  Stephen Rhodes

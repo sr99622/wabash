@@ -1,6 +1,7 @@
 build/
 dist/
 env/
+installer/
 ffmpeg/
 *.egg-info
 .vscode/
