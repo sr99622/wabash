@@ -1,6 +1,6 @@
 # wabash
 
-This repo demonstrates the integration of C++ into python using pybind11. The C++ program includes the use of threads and zero-copy binary data access. It is designed to measure the memory consumption of running YOLO inference on a video file. Running OpenVINO on a recent Intel CPU with an integrated graphics chip will work best. The iGPU driver should be pre-installed with windows. Pytorch on NVIDIA will run as well, you might need to modify the installation to get the proper pytorch version to match your CUDA version.
+This repo demonstrates the integration of C++ into python using pybind11. The C++ program includes the use of threads and zero-copy binary data access. It is designed to measure the memory consumption of running YOLO inference on a video file. Running OpenVINO on a recent Intel CPU with an integrated graphics chip (iGPU) will work best. The iGPU driver should be pre-installed with windows. Pytorch on NVIDIA will run as well, although the installation may require modification to get the proper pytorch version to match the CUDA version installed on the machine.
 
 <b><i>Currently only windows is supported</i></b>
 
@@ -58,7 +58,7 @@ env\Scripts\wabash
 ### Development
 ---
 
-To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that you have activated the python environment as shown above. To observe changes made to python code, use the following.
+To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated as shown above. To observe changes made to python code, use the following.
 
 ```
 pip uninstall wabash
@@ -79,7 +79,7 @@ set FFMPEG_INSTALL_DIR=%CD%\ffmpeg
 python -m build --sdist --wheel
 ```
 
-The distribution whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
+The distribution .whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
 
 &nbsp;
 ### Installing Arbitrary Python Versions
@@ -91,7 +91,7 @@ It is necessary to install multiple Python versions on the development machine f
 scripts\windows\install_python <XXX>
 ```
 
-where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313]`.
+where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313]`, each of which represents a Python version without the dot between major and minor versions.
 
 Note that the installer will not include the Python executable in the system PATH. The Python installation can be started using the command
 
@@ -121,6 +121,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 
 
 
