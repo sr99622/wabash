@@ -119,11 +119,11 @@ Create new png file with transparent background using 256 x 256 size. After the 
 ### Building the Installer Program
 ---
 
-The project includes scripts for building an executable installer using [NSIS](https://sourceforge.net/projects/nsis/). The installed version of the program requires a re-distributable Python version which is supplied by [Astral](https://github.com/astral-sh). The basic philosophy of the installer is to create the python virtual environment in the user's system file directory ```C:\Program Files (x86)``` and run the installed wabash.exe executable file from there. 
+The project includes scripts for building an executable installer using [NSIS](https://sourceforge.net/projects/nsis/). The installed version of the program requires a re-distributable Python version which is supplied by [Astral](https://github.com/astral-sh). The basic philosophy of the installer is to create a copy of a portable python virtual environment on the target system and run the installed env\scripts\wabash.exe executable file from there. 
 
 The installer will copy the contents of the local wabash\wabash directory into the installation location on the target machine. This is a double edged sword in that any files to be installed onto the target machine can easily be placed in the local wabash\wabash directory, but also any stray artifacts that are generated during development, such as versioned .pyd or .dll files will be installed as well, so it is worthwhile to review the wabash\wabash directory prior to building the installer. The script will automatically remove the local ```__pycache__``` directories, so those can safely be ignored.
 
- In the current program configuration, yolo models are kept in the wabash\wabash\gui folder. They are not included in the repository, so the program must be run so they can be downloaded. A feature of the installation strategy is that the virtual environment folder is not writeable without Administrator privilege. The implication here is that if the desired behavior of the installer is to include the model files, the program must be run on the development machine first to download and configure the model files, which will subsequently be installed on the target machine. An alternative strategy is to change the location of the model files to a user writeable location and have the program download and configure the files at runtime.
+ In the current program configuration, yolo models are kept in the wabash\wabash\gui folder. They are not included in the github repository, so the program will download these files when it is run with the Infer box checked. A feature of the installation strategy as it currently exists is that the virtual environment folder in the Program Files (x86) location is not writeable without Administrator privilege. The implication here is that if the desired behavior of the installer is to include the model files, the program must be run on the development machine first to download and configure the model files, which will subsequently be installed on the target machine. An alternative strategy is to change the location of the model files to a user writeable location and have the program download and configure the files at runtime. Still another approach would be to install the target in a user writable location like AppData\Local. Something along these lines is likely to be implemented.
 
 The installer is built from the project directory using the following command.
 
@@ -131,7 +131,7 @@ The installer is built from the project directory using the following command.
 scripts\windows\build_installer
 ```
 
-The installer itself can be found in the installer subdirectory.
+The executable installer itself can be found in the installer subdirectory.
 
 &nbsp;
 ### License
