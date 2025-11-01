@@ -125,7 +125,7 @@ The installer will copy the contents of the local wabash\wabash directory into t
 
  In the current program configuration, yolo models are kept in the wabash\wabash\gui folder. They are not included in the repository, so the program must be run so they can be downloaded. A feature of the installation strategy is that the virtual environment folder is not writeable without Administrator privilege. The implication here is that if the desired behavior of the installer is to include the model files, the program must be run on the development machine first to download and configure the model files, which will subsequently be installed on the target machine. An alternative strategy is to change the location of the model files to a user writeable location and have the program download and configure the files at runtime.
 
-The installer is built from the project directory using an Administrator privileged command prompt.
+The installer is built from the project directory using the following command.
 
 ```
 scripts\windows\build_installer

@@ -36,7 +36,7 @@ functionEnd
  
 section "install"
 	setOutPath $INSTDIR
-	File /nonfatal /r "C:\Program Files (x86)\wabash\"
+	File /nonfatal /r ".\staging\"
 	writeUninstaller "$INSTDIR\uninstall.exe"
  	createDirectory "$SMPROGRAMS\${APPNAME}"
 	CreateShortcut "$SMPROGRAMS\${APPNAME}\wabash.lnk" "$INSTDIR\env\Scripts\wabash" "" "$INSTDIR\env\Lib\site-packages\wabash\gui\resources\wabash.ico"
