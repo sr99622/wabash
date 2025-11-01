@@ -8,7 +8,6 @@ if "%~1"=="" (
     echo [311] Python 3.11
     echo [312] Python 3.12
     echo [313] Python 3.13
-    echo [314] Python 3.14
     set /p PYVER="Enter version (e.g. 310): "
 ) else (
     set PYVER=%~1
@@ -23,11 +22,9 @@ if /i "%PYVER%"=="310" (
     set PYNAME=Python312
 ) else if /i "%PYVER%"=="313" (
     set PYNAME=Python313
-) else if /i "%PYVER%"=="314" (
-    set PYNAME=Python314
 ) else (
     echo Invalid selection "%PYVER%".
-    echo Valid options: 310, 311, 312, 313, 314
+    echo Valid options: 310, 311, 312, 313
     exit /b 1
 )
 

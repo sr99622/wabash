@@ -21,7 +21,7 @@ To build the project, Windows development tools are required. The following comp
 ### Project Configuration
 ---
 
-To configure the project, open a command prompt and run the following commands. Please note that these commands will locate the repository in the user's home directory, then cd to the wabash directory to execute the balance of commands from there.
+To configure the project, open a command prompt and run the following commands. Please note that these commands will locate the repository in the user's home directory, then cd to the wabash project directory to execute the balance of commands from there.
 
 ```
 cd %HOMEPATH%
@@ -32,7 +32,7 @@ cd wabash
 The project additionally requires FFmpeg shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). The script below will download the FFmpeg shared runtime binaries and necessary development components and install them in the project directory.
 
 ```
-scripts/windows/install_ffmpeg
+scripts\windows\install_ffmpeg
 ```
 
 Create a virtual environment for the project and activate
@@ -52,7 +52,7 @@ Compile the project using the build.bat script.
 scripts\windows\build
 ```
 
-The program can now be run independent of the virtual environment. The executable is located in the env\Scripts directory as wabash.exe.
+The program can now be run independent of the virtual environment. The executable is located in the env\Scripts directory as wabash.exe. Note that it may take a moment for the application to start on the initial run.
 
 ```
 env\Scripts\wabash
@@ -89,13 +89,13 @@ The distribution .whl file can be used to install the program on an arbitrary ma
 ### Installing Arbitrary Python Versions
 ---
 
-It is necessary to install multiple Python versions on the development machine for distribution and testing purposes. A selection of Python installation executables is available by script. To install a particular version of Python, use the following command.
+It may be necessary to install multiple Python versions on the development machine for distribution and testing purposes. A selection of Python installation executables is available by script. To install a particular version of Python, use the following command.
 
 ```
 scripts\windows\install_python <XXX>
 ```
 
-where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313, 314]`, each of which represents a Python version without the dot between major and minor versions.
+where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313]`, each of which represents a Python version without the dot between major and minor versions.
 
 Note that the installer will not include the Python executable in the system PATH. The Python installation can be started using the command
 
