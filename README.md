@@ -91,7 +91,7 @@ It is necessary to install multiple Python versions on the development machine f
 scripts\windows\install_python <XXX>
 ```
 
-where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313]`, each of which represents a Python version without the dot between major and minor versions.
+where `<XXX>` represents the Python version as one of the following choices `[310, 311, 312, 313, 314]`, each of which represents a Python version without the dot between major and minor versions.
 
 Note that the installer will not include the Python executable in the system PATH. The Python installation can be started using the command
 
