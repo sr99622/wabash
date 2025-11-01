@@ -21,19 +21,23 @@ To build the project, Windows development tools are required. The following comp
 ### Project Configuration
 ---
 
-The project additionally requires FFmpeg shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). Because the FFmpeg components are installed relative to the project source files, the project is first set up with git. The script below will download the project source code along with the FFMPEG shared runtime binaries and necessary development components. After completion of the code installation, the script will create and activate a python virtual environment within the source directory.
-
-To configure the project, open a ***Windows PowerShell*** prompt and run the following commands. Please note that the script will locate the repository in the user's home directory, then cd to the wabash directory to execute the balance of commands from there.
+To configure the project, open a command prompt and run the following commands. Please note that these commands will locate the repository in the user's home directory, then cd to the wabash directory to execute the balance of commands from there.
 
 ```
-cd $env:HOMEPATH
+cd %HOMEPATH%
 git clone https://github.com/sr99622/wabash
 cd wabash
-Invoke-WebRequest -Uri 'https://github.com/GyanD/codexffmpeg/releases/download/8.0/ffmpeg-8.0-full_build-shared.zip' -OutFile 'ffmpeg-8.0-full_build-shared.zip'
-Expand-Archive -Path ffmpeg-8.0-full_build-shared.zip -DestinationPath .
-move ffmpeg-8.0-full_build-shared ffmpeg
-copy ffmpeg\bin\*.dll wabash
-del ffmpeg-8.0-full_build-shared.zip
+```
+
+The project additionally requires FFmpeg shared libraries, which are available courtesy of [GyanD](https://github.com/GyanD/codexffmpeg). The script below will download the FFmpeg shared runtime binaries and necessary development components and install them in the project directory.
+
+```
+scripts/windows/install_ffmpeg
+```
+
+Create a virtual environment for the project and activate
+
+```
 python -m venv env
 env\Scripts\activate
 ```
@@ -65,7 +69,7 @@ pip uninstall wabash
 python run.py
 ```
 
-Any changes made in the C++ domain require re-building the project in order to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by ```__init__.py```. As an aside, it is not necessary to use powershell after the initial configuration, a standard command prompt works fine.
+Any changes made in the C++ domain require re-building the project in order to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by ```__init__.py```.
 
 &nbsp;
 ### Distribution
