@@ -42,6 +42,8 @@ if not exist "%LOCALAPPDATA%\Programs\Python\%PYNAME%\" (
     curl -L -o "%PYFILE%" "%PYURL%"
     echo Installing %PYNAME% silently...
     "%PYFILE%" /passive /quiet
+    echo Deleting downloaded file %PYFILE%...
+    del "%PYFILE%"
 ) else (
     echo %PYNAME% is already installed.
 )
