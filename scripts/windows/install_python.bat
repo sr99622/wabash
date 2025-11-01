@@ -32,7 +32,7 @@ if /i "%PYVER%"=="310" (
     set PYFILE=python-3.13.9-amd64.exe
     set PYURL=https://www.python.org/ftp/python/3.13.9/python-3.13.9-amd64.exe
 ) else if /i "%PYVER%"=="314" (
-    set PYNAME=Python313
+    set PYNAME=Python314
     set PYFILE=python-3.14.0-amd64.exe
     set PYURL=https://www.python.org/ftp/python/3.14.0/python-3.14.0-amd64.exe
 ) else (
