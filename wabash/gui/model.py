@@ -43,6 +43,7 @@ INF_DIMENSION = 640
 class Model():
     def __init__(self, mw: QMainWindow):
         print("MODEL INIT", os.getcwd())
+        print(mw.getCachePath())
         self.mw = mw
 
         print(self.mw.cmbAPI.currentText())
@@ -54,7 +55,7 @@ class Model():
         self.ov_device = "AUTO"
         ov_model = None
         if self.api == "OpenVINO":
-            ov_model_name = Path(__file__).parent / "model.xml"
+            ov_model_name = self.mw.getCachePath() / "model.xml"
             print("ov_model_name", ov_model_name)
             if os.path.exists(ov_model_name):
                 ov_model = ov.Core().read_model(ov_model_name)
@@ -77,7 +78,7 @@ class Model():
 
             # model weights are assigned, download the file from github if needed
             self.model_name = "yolox_s"
-            self.ckpt_file = ckpt_path = Path(__file__).parent / f"{self.model_name}.pth"
+            self.ckpt_file = ckpt_path = self.mw.getCachePath() / f"{self.model_name}.pth"
             if not os.path.exists(self.ckpt_file):
                 print("DID NOT FIND FILE", self.ckpt_file, ckpt_path)
                 self.download_ckpt()
@@ -103,9 +104,6 @@ class Model():
 
     def __call__(self, ary):
         # collect the thread frame image data
-        #ary = np.array(thread.frame, copy = False)
-        #ary = np.ascontiguousarray(ary)
-
         if len(ary.shape) < 3:
             return
         h = ary.shape[0]
@@ -132,7 +130,6 @@ class Model():
                 outputs = self.model(timg)
             boxes = self.postprocess(outputs, w, h)
             return boxes
-            #thread.detections = boxes
         if self.api == "OpenVINO":
             infer_request = self.compiled_model.create_infer_request()
             infer_request.set_input_tensor(ov.Tensor(np.asarray(timg)))
@@ -140,8 +137,6 @@ class Model():
             outputs = infer_request.get_output_tensor(0).data
             boxes = self.postprocess(outputs, w, h)
             return boxes
-            #print(boxes)
-            #thread.detections = boxes
 
     def postprocess(self, outputs, w, h):
         confthre = 50 / 100
@@ -195,7 +190,6 @@ class Model():
             return None
 
     def download_ckpt(self):
-        print("DOWNLOAD CHKPT")
         link = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/" + f'{self.model_name}.pth'
         logger.debug(f"Dowloading model weights {link}")
         response = requests.get(link, allow_redirects=True, timeout=(10, 120))

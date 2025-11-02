@@ -21,7 +21,7 @@ import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
         QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox
-from PyQt6.QtCore import QSize, Qt, QSettings, QDir
+from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths
 from PyQt6.QtGui import QGuiApplication, QCloseEvent, QShowEvent
 import wabash
 from enum import Enum
@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         try:
+            self.logger_id = logger.add(self.getCachePath() / "logs" / "log.txt", rotation="1 MB")
             self.counter = 0
             self.manager = Manager(self)
             self.model = None
@@ -270,6 +271,9 @@ class MainWindow(QMainWindow):
         self.manager.closeAllThreads()
         self.settings.setValue(self.geometryKey, self.geometry())
         super().closeEvent(event)
+
+    def getCachePath(self) -> Path:
+        return Path(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.HomeLocation)[0]) / ".cache" / "wabash"
 
     def style(self, appearance: Style) -> str:
         filename = Path(__file__).parent.parent / "gui" / "resources" / "darkstyle.qss"
