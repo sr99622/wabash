@@ -80,7 +80,7 @@ PYBIND11_MODULE(_wabash, m)
         .def_readwrite("num", &AVRational::num)
         .def_readwrite("den", &AVRational::den);
 
-    m.attr("__version__") = "0.0.0";
+    m.attr("__version__") = "0.0.2";
 
 }
 
