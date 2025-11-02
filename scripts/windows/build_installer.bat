@@ -37,7 +37,7 @@ echo -- Creating a new installer directory at %BASE_PATH%\installer
 mkdir "%BASE_PATH%\installer"
 cd "%BASE_PATH%\installer"
 
-echo Downloading portable Python
+echo -- Downloading portable Python from Astral
 curl -OL https://github.com/astral-sh/python-build-standalone/releases/download/20250517/cpython-3.13.3+20250517-x86_64-pc-windows-msvc-install_only.tar.gz
 
 echo -- Creating a staging directory for installer components
