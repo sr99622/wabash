@@ -32,6 +32,8 @@ from wabash.gui.yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
 from wabash.gui.yolox.utils import postprocess
 from loguru import logger
 from pathlib import Path
+import threading
+from time import sleep
 
 if (sys.platform != "darwin") and (platform.machine() != "aarch64"):
     import openvino as ov

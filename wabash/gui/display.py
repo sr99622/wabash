@@ -54,7 +54,7 @@ class Display(QLabel):
             cycle_elapsed_time = current_time - self.cycle_start_time
             global_elapsed_time = current_time - self.global_start_time
             if cycle_elapsed_time > self.mw.spnInterval.value():
-                print(f"time (seconds): {global_elapsed_time:.2f} memory (bytes): {self.process.memory_info().rss}")
+                #print(f"time (seconds): {global_elapsed_time:.2f} memory (bytes): {self.process.memory_info().rss}")
                 self.cycle_start_time = current_time
                 if len(self.x) > self.mw.spnSampleSize.value():
                     print("trimming data", len(self.x))

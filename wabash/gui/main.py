@@ -29,6 +29,7 @@ from pathlib import Path
 from wabash.gui.display import Display
 from wabash.gui.manager import Manager
 from wabash.gui.components.fileselector import FileSelector
+from wabash.gui.components.waitdialog import WaitDialog
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
@@ -71,6 +72,7 @@ class MainWindow(QMainWindow):
             self.setMinimumSize(QSize(320, 240))
 
             self.fileSelector = FileSelector(self, "File")
+            self.waitDialog = WaitDialog(self)
 
             btnAdd = QPushButton("Add Thread")
             btnAdd.clicked.connect(self.btnAddClicked)
@@ -233,11 +235,8 @@ class MainWindow(QMainWindow):
             self.startThread(filename=self.fileSelector.text())
 
     def btnTestClicked(self):
-        for name in self.manager.threads:
-            rect = self.manager.displayRect(name, self.display.size()).toRect()
-            ordinal = self.manager.ordinals[name]
-            width, height = self.manager.computeRowsCols(self.display.size(), 1.77)
-            print(name, width, height, ordinal, rect)
+        print("btnTestClicked")
+        self.waitDialog.signals.show.emit("THIS IS A TEST")
 
     def chkReconnectChecked(self, state: int):
         self.settings.setValue(self.reconnectKey, state)
