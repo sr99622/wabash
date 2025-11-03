@@ -14,6 +14,11 @@ for /d /r %%d in (__pycache__) do (
         rmdir /s /q "%%d"
     )
 )
+echo Searching for existing pyd binaries
+for /r %%F in ("*_wabash.cp*-win_amd64.pyd") do (
+    echo Deleting %%F
+    del /f "%%F"
+)
 endlocal
 cd "%BASE_PATH%"
 

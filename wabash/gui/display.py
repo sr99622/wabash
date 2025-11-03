@@ -26,6 +26,7 @@ from collections import deque
 import time
 import os
 import psutil
+import traceback
 from loguru import logger
 
 class Display(QLabel):
@@ -128,9 +129,10 @@ class Display(QLabel):
                     if self.mw.chkInfer.isChecked():
                         if not self.mw.model:
                             self.mw.startModel()
-                        boxes = self.mw.model(ary)
-                        if boxes is not None:
-                            thread.detections = boxes
+                        if self.mw.model.loaded:
+                            boxes = self.mw.model(ary)
+                            if boxes is not None:
+                                thread.detections = boxes
                     thread.counter = 0
 
                 # draw stream image
@@ -151,7 +153,7 @@ class Display(QLabel):
                     q = (box[1] * scaley + rect.y())
                     r = (box[2] - box[0]) * scalex
                     s = (box[3] - box[1]) * scaley
-                    painter.drawRect(QRectF(p, q, r, s))
+                    painter.drawRect(QRectF(p, q, r, s).intersected(rect))
 
                 # draw stream border
                 painter.setPen(QPen(Qt.GlobalColor.lightGray, 2, Qt.PenStyle.SolidLine))
@@ -172,6 +174,7 @@ class Display(QLabel):
             self.mw.manager.unlock()
         except Exception as ex:
             logger.debug(f'Display Refresh Error: {ex}')
+            logger.debug(traceback.format_exc())
             self.mw.manager.unlock()
 
     def sizeHint(self) -> QSize:

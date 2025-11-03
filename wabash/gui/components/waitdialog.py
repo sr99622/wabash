@@ -10,12 +10,12 @@ class WaitDialogSignals(QObject):
 class WaitDialog(QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.lblMessage = QLabel("Please wait for proxy server to download")
+        self.lblMessage = QLabel("Please wait")
         self.lblProgress = QLabel()
         self.movie = QMovie("image:spinner.gif")
         self.movie.setScaledSize(QSize(50, 50))
         self.lblProgress.setMovie(self.movie)
-        self.setWindowTitle("Onvif GUI")
+        self.setWindowTitle("wabash")
         if sys.platform == "linux":
             self.setMinimumWidth(350)
 

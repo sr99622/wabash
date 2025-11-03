@@ -113,7 +113,7 @@ scripts\windows\create_venv <XXX> <name>
 ### Creating a Windows Icon in Gimp
 ---
 
-Create new png file with transparent background using 256 x 256 size. After the icon has been drawn in the application and saved as .png, use the Layers menu to select Duplicate Layers. This will create another layer with the same image. Click the Layers menu again and select Scale Layer and resize the new layer to 128 x 128. Repeat for other sizes e.g. 64, 32 and 16. Export the file using the File menu and Export As. When the dialog prompt appears, rename the file to use the .ico extension. Gimp will automatically format the exported file for ico. The earlier saved png file can be used in other scenarios or saved for reference.
+Create a new png file with transparent background using 256 x 256 size. After the icon has been drawn in the application and saved as ```wabash.png```, use the Layers menu to select Duplicate Layers. This will create another layer with the same image. Click the Layers menu again and select Scale Layer and resize the new layer to 128 x 128. Repeat for other sizes e.g. 64, 32 and 16. Export the file using the File menu and Export As ```wabash.ico```. When the dialog prompt appears, rename the file to use the .ico extension. Gimp will automatically format the exported file for ico. The earlier saved png file is used for the application window icon. These files should be placed in the wabash\gui\resources folder.
 
 &nbsp;
 ### Building the Installer Program
@@ -121,9 +121,7 @@ Create new png file with transparent background using 256 x 256 size. After the 
 
 The project includes scripts for building an executable installer using [NSIS](https://sourceforge.net/projects/nsis/). The installed version of the program requires a re-distributable Python version which is supplied by [Astral](https://github.com/astral-sh). The basic philosophy of the installer is to create a copy of a portable python virtual environment on the target system and run the installed env\scripts\wabash.exe executable file from there. 
 
-The installer will copy the contents of the local wabash\wabash directory into the installation location on the target machine. This is a double edged sword in that any files to be installed onto the target machine can easily be placed in the local wabash\wabash directory, but also any stray artifacts that are generated during development, such as versioned .pyd or .dll files will be installed as well, so it is worthwhile to review the wabash\wabash directory prior to building the installer. The script will automatically remove the local ```__pycache__``` directories, so those can safely be ignored.
-
- In the current program configuration, yolo models are kept in the wabash\wabash\gui folder. They are not included in the github repository, so the program will download these files when it is run with the Infer box checked. A feature of the installation strategy as it currently exists is that the virtual environment folder in the Program Files (x86) location is not writeable without Administrator privilege. The implication here is that if the desired behavior of the installer is to include the model files, the program must be run on the development machine first to download and configure the model files, which will subsequently be installed on the target machine. An alternative strategy is to change the location of the model files to a user writeable location and have the program download and configure the files at runtime. Still another approach would be to install the target in a user writable location like AppData\Local. Something along these lines is likely to be implemented.
+The installer will copy the post-compilation contents of the local ```wabash\wabash``` directory into the installation location on the target machine. This is a double edged sword in that any files to be installed onto the target machine can easily be placed in the local wabash\wabash directory, but also any stray artifacts that are generated during development will be installed as well, so it is worthwhile to review the contents of the directory prior to building the installer. The script will automatically remove the local ```__pycache__``` directories and any ```_wabash.cp*-win_amd64.pyd``` files, so those can safely be ignored. The ffmpeg dlls should be included in the installation.
 
 The installer is built from the project directory using the following command.
 
@@ -131,7 +129,7 @@ The installer is built from the project directory using the following command.
 scripts\windows\build_installer
 ```
 
-The executable installer itself can be found in the installer subdirectory.
+The executable installer itself can be found in the ```installer``` subdirectory.
 
 &nbsp;
 ### License

@@ -22,7 +22,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
         QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox
 from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths
-from PyQt6.QtGui import QGuiApplication, QCloseEvent, QShowEvent
+from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
 import wabash
 from enum import Enum
 from pathlib import Path
@@ -33,6 +33,7 @@ from wabash.gui.components.waitdialog import WaitDialog
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
+import traceback
 
 class Style(Enum):
     DARK = 0
@@ -57,6 +58,7 @@ class MainWindow(QMainWindow):
 
             QDir.addSearchPath("image", str(Path(__file__).parent.parent / "gui" / "resources"))
             self.settings = QSettings("wabash", "gui")
+            self.setWindowIcon(QIcon('image:wabash.png'))
             #self.settings.clear()
             logger.debug(f'Settings loaded from file {self.settings.fileName()} using format {self.settings.format()}')
             self.geometryKey = "MainWindow/geometry"
@@ -189,6 +191,7 @@ class MainWindow(QMainWindow):
                 self.model = Model(self)
         except Exception as ex:
             logger.error(f'Error starting model: {ex}')
+            logger.debug(traceback.format_exc())
 
     def getVersion(self) -> str:
         try:

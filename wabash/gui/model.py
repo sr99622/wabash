@@ -34,6 +34,7 @@ from loguru import logger
 from pathlib import Path
 import threading
 from time import sleep
+import traceback
 
 if (sys.platform != "darwin") and (platform.machine() != "aarch64"):
     import openvino as ov
@@ -46,63 +47,14 @@ class Model():
     def __init__(self, mw: QMainWindow):
         print("MODEL INIT", os.getcwd())
         print(mw.getCachePath())
+
         self.mw = mw
+        self.loaded = False
 
-        print(self.mw.cmbAPI.currentText())
-
-        self.api = self.mw.cmbAPI.currentText()
-        #self.api = "PyTorch"
-        self.torch_device = None
-        #self.api = "OpenVINO"
-        self.ov_device = "AUTO"
-        ov_model = None
-        if self.api == "OpenVINO":
-            ov_model_name = self.mw.getCachePath() / "model.xml"
-            print("ov_model_name", ov_model_name)
-            if os.path.exists(ov_model_name):
-                ov_model = ov.Core().read_model(ov_model_name)
-
-        # if using openvino, the model needs to be converted on the first pass
-        if self.api == "PyTorch" or (self.api == "OpenVINO" and not ov_model):
-            # find the hardware for the model
-            self.torch_device_name = "cpu"
-            if torch.cuda.is_available():
-                self.torch_device_name = "cuda"
-            if torch.backends.mps.is_available():
-                self.torch_device_name = "mps"
-            self.torch_device = torch.device(self.torch_device_name)
-
-            # get_model is an internal yolox command for creating the model framework, create on device
-            model_size = [0.33, 0.50]
-            self.model = self.get_model(NUM_CLASSES, model_size[0], model_size[1], None).to(self.torch_device)
-            # model is set to inference mode, rather than training
-            self.model.eval()
-
-            # model weights are assigned, download the file from github if needed
-            self.model_name = "yolox_s"
-            self.ckpt_file = ckpt_path = self.mw.getCachePath() / f"{self.model_name}.pth"
-            if not os.path.exists(self.ckpt_file):
-                print("DID NOT FIND FILE", self.ckpt_file, ckpt_path)
-                self.download_ckpt()
-            self.model.load_state_dict(torch.load(self.ckpt_file, map_location="cpu")["model"])
-
-            # intialize the model with random data
-            initializer_data = torch.rand(1, 3, INF_DIMENSION, INF_DIMENSION)
-            self.model(initializer_data.to(self.torch_device))
-
-        if self.api == "OpenVINO":
-            if not self.torch_device:
-                self.torch_device = torch.device("cpu")
-            initializer_data = torch.rand(1, 3, INF_DIMENSION, INF_DIMENSION)
-            if not ov_model:
-                ov_model = ov.convert_model(self.model, example_input=initializer_data)
-                ov.save_model(ov_model, ov_model_name)
-            ov_model.reshape({0: [1, 3, INF_DIMENSION, INF_DIMENSION]})
-            ov_config = {}
-            #if "GPU" in self.ov_device or ("AUTO" in self.ov_device and "GPU" in ov.Core().available_devices):
-            #    ov_config = {"GPU_DISABLE_WINOGRAD_CONVOLUTION": "YES"}
-            self.compiled_model = ov.compile_model(ov_model, self.ov_device, ov_config)
-            self.compiled_model(initializer_data)
+        thread = threading.Thread(target=self.load_model)
+        thread.start()
+        mw.waitDialog.signals.show.emit("Please wait while the model is initialized")
+        #self.load_model()
 
     def __call__(self, ary):
         # collect the thread frame image data
@@ -126,7 +78,7 @@ class Model():
         timg = functional.pad(timg, pad, 114)
         timg = timg.unsqueeze(0)
 
-        # model is run on the image, outputs is raw data and needs post processing
+        # model is run on the image, outputs are raw data and need post processing
         if self.api == "PyTorch":
             with torch.no_grad():
                 outputs = self.model(timg)
@@ -163,6 +115,66 @@ class Model():
                 boxes.append(output[i, 0:4])
 
         return np.array(boxes)
+
+    def load_model(self):
+        try:
+            self.api = self.mw.cmbAPI.currentText()
+            self.torch_device = None
+            self.ov_device = "AUTO"
+            ov_model = None
+            if self.api == "OpenVINO":
+                ov_model_name = self.mw.getCachePath() / "model.xml"
+                print("ov_model_name", ov_model_name)
+                if os.path.exists(ov_model_name):
+                    ov_model = ov.Core().read_model(ov_model_name)
+
+            # if using openvino, the model needs to be converted on the first pass
+            if self.api == "PyTorch" or (self.api == "OpenVINO" and not ov_model):
+                # find the hardware for the model
+                self.torch_device_name = "cpu"
+                if torch.cuda.is_available():
+                    self.torch_device_name = "cuda"
+                if torch.backends.mps.is_available():
+                    self.torch_device_name = "mps"
+                self.torch_device = torch.device(self.torch_device_name)
+
+                # get_model is an internal yolox command for creating the model framework, create on device
+                model_size = [0.33, 0.50]
+                self.model = self.get_model(NUM_CLASSES, model_size[0], model_size[1], None).to(self.torch_device)
+                # model is set to inference mode, rather than training
+                self.model.eval()
+
+                # model weights are assigned, download the file from github if needed
+                self.model_name = "yolox_s"
+                self.ckpt_file = ckpt_path = self.mw.getCachePath() / f"{self.model_name}.pth"
+                if not os.path.exists(self.ckpt_file):
+                    print("DID NOT FIND FILE", self.ckpt_file, ckpt_path)
+                    self.download_ckpt()
+                self.model.load_state_dict(torch.load(self.ckpt_file, map_location="cpu")["model"])
+
+                # intialize the model with random data
+                initializer_data = torch.rand(1, 3, INF_DIMENSION, INF_DIMENSION)
+                self.model(initializer_data.to(self.torch_device))
+
+            if self.api == "OpenVINO":
+                if not self.torch_device:
+                    self.torch_device = torch.device("cpu")
+                initializer_data = torch.rand(1, 3, INF_DIMENSION, INF_DIMENSION)
+                if not ov_model:
+                    ov_model = ov.convert_model(self.model, example_input=initializer_data)
+                    ov.save_model(ov_model, ov_model_name)
+                ov_model.reshape({0: [1, 3, INF_DIMENSION, INF_DIMENSION]})
+                ov_config = {}
+                #if "GPU" in self.ov_device or ("AUTO" in self.ov_device and "GPU" in ov.Core().available_devices):
+                #    ov_config = {"GPU_DISABLE_WINOGRAD_CONVOLUTION": "YES"}
+                self.compiled_model = ov.compile_model(ov_model, self.ov_device, ov_config)
+                self.compiled_model(initializer_data)
+            
+            self.loaded = True
+        except Exception as ex:
+            logger.error("Model load failure: {ex}")
+            logger.debug(traceback.format_exc())
+        self.mw.waitDialog.signals.hide.emit()
 
     def get_model(self, num_classes, depth, width, act):
         def init_yolo(M):
