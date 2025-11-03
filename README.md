@@ -45,7 +45,7 @@ env\Scripts\activate
 ### Compilation and Runtime
 ---
 
-Compile the project using the build.bat script.
+Compile the project using the compile.bat script.
 
 ```
 scripts\windows\compile
