@@ -67,5 +67,7 @@ section "uninstall"
 	rmDir /r "$SMPROGRAMS\${APPNAME}"
 	rmDir /r $INSTDIR
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
-	rmDir /r $PROFILE\.cache\wabash
+    ReadEnvStr $0 "HOMEDRIVE"
+    ReadEnvStr $1 "HOMEPATH"
+    rmDir /r "$0$1\.cache\wabash"
 sectionEnd
