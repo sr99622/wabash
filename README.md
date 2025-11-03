@@ -68,7 +68,7 @@ pip uninstall wabash
 python run.py
 ```
 
-Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the build will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
+Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile script will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
 
 &nbsp;
 ### Distribution
@@ -119,6 +119,8 @@ Create a new png file with transparent background using 256 x 256 size. After th
 ---
 
 The project includes scripts for building an executable installer using [NSIS](https://sourceforge.net/projects/nsis/). The installed version of the program requires a re-distributable Python version which is supplied by [Astral](https://github.com/astral-sh). The basic philosophy of the installer is to create a copy of a portable python virtual environment on the target system and run the installed env\scripts\wabash.exe executable file from there. 
+
+The build_installer script will download NSIS if the program is not already present on the development machine. If this is the case, some user interaction will be required as the script executes. When the NSIS installer shows it's installation dialog, it is recommended to accept all defaults during installation, then decline the automatic startups at the conclusion by de-selecting the presented checkboxes. This will allow the script to continue without interruption.
 
 The installer will copy the post-compilation contents of the local `wabash\wabash` directory into the installation location on the target machine. This is a double edged sword in that any files to be installed onto the target machine can easily be placed in the local wabash\wabash directory, but also any stray artifacts that are generated during development will be installed as well, so it is worthwhile to review the contents of the directory prior to building the installer. The script will automatically remove the local `__pycache__` directories and any pre-exsiting `_wabash.cp*-win_amd64.pyd` files, so those can safely be ignored. The ffmpeg dlls should be included in the installation.
 
