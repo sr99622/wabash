@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
 
         except Exception as ex:
             logger.error(f"Initialization Error: {ex}")
+            logger.debug(traceback.format_exc())
 
     def startModel(self):
         try:
@@ -206,6 +207,7 @@ class MainWindow(QMainWindow):
 
         except Exception as ex:
             logger.error(f'getVersion error: {ex}')
+            logger.debug(traceback.format_exc())
         return "Unknown"
 
     def startThread(self, name: str=None, filename: str=None):
@@ -218,6 +220,7 @@ class MainWindow(QMainWindow):
             self.manager.startThread(thread)
         except Exception as ex:
             logger.error(f'Error starting thread: {ex}')
+            logger.debug(traceback.format_exc())
 
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
