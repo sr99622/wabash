@@ -32,12 +32,17 @@ extern "C" {
 #include "Filter.hpp"
 #include "Exception.hpp"
 
+struct CallbackParams {
+    time_t timeout_start = time(nullptr);
+    bool triggered = false;
+};
+
 #define MAX_TIMEOUT 5
 static int interrupt_callback(void *ctx) {
-    time_t* timeout_start = (time_t*)ctx;
-    time_t diff = time(nullptr) - *timeout_start;
+    CallbackParams* callback_params = (CallbackParams*)ctx;
+    time_t diff = time(nullptr) - callback_params->timeout_start;
     if (diff > MAX_TIMEOUT) {
-        std::cout << "TIME OUT OCCURRED" << std::endl;
+        callback_params->triggered = true;
         return 1;
     }
     return 0;
@@ -68,9 +73,10 @@ public:
     bool recording = false;
     bool live_stream = true;
     bool paused = false;
+    CallbackParams callback_params;
 
     std::function<void(const std::string& uri)> packetDrop = nullptr;
-
+    std::function<void(const std::string& msg, const std::string& uri)> infoCallback = nullptr;
     std::function<void(void*)> clear_callback = nullptr;
     void* player = nullptr;
     int64_t seek_pts = AV_NOPTS_VALUE;
@@ -115,7 +121,7 @@ public:
 
     int read() {
         try {
-            timeout_start = time(nullptr);
+            callback_params.timeout_start = time(nullptr);
 
             if (seek_pts != AV_NOPTS_VALUE) {
                 clear_callback(player);
@@ -161,7 +167,9 @@ public:
         }
         catch (const std::exception& e) {
             if (!strcmp(e.what(), "EOF")) {
-                std::cout << "END OF FILE" << std::endl;
+                if (callback_params.triggered) {
+                    infoCallback("reader terminated by timeout", uri);
+                }
                 closed = true;
                 seek_pts = AV_NOPTS_VALUE;
                 if (video_pkts) video_pkts->push(Packet(nullptr));

@@ -131,6 +131,7 @@ public:
             reader->player = this;
             reader->live_stream = live_stream;
             reader->packetDrop = packetDrop;
+            reader->infoCallback = infoCallback;
             reader->cache_size_in_seconds = buffer_size_in_seconds;
 
             if (!disable_video && !hidden)

@@ -2,7 +2,9 @@
 
 This repo demonstrates the integration of C++ into python using pybind11. The C++ program includes the use of threads and zero-copy binary data access. It is designed to measure the memory consumption of running YOLO inference on a video file. Running OpenVINO on a recent Intel CPU with an integrated graphics chip (iGPU) will work best. The iGPU driver should be pre-installed with windows. Pytorch on NVIDIA will run as well, although the installation may require modification to get the proper pytorch version to match the CUDA version installed on the machine.
 
-<b><i>Currently only windows is supported</i></b>
+### Installation and Operating Instructions
+
+<details><summary><b>Windows</b></summary>
 
 &nbsp;
 ### System Requirements
@@ -131,6 +133,34 @@ scripts\windows\build_installer
 ```
 
 The executable installer itself can be found in the `installer` subdirectory.
+&nbsp;
+
+---
+&nbsp;
+</details>
+
+
+<details><summary><b>Linux</b></summary>
+&nbsp;
+
+### Creating a Virtual Machine
+
+```
+sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt-manager
+sudo systemctl start libvirtd
+sudo systemctl enable libvirtd
+sudo systemctl status libvirtd
+```
+
+Step 5: Start the default virtual network (optional) 
+
+    For easier management, it's recommended to auto-start the default virtual network: 
+
+Code
+
+    virsh net-autostart default
+
+</details>
 
 &nbsp;
 ### License
