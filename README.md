@@ -143,6 +143,15 @@ The executable installer itself can be found in the `installer` subdirectory.
 <details><summary><b>Linux</b></summary>
 &nbsp;
 
+Building wabash on Linux requires FFmpeg libraries. Installing the libraries can be done using the distribution package manager. This approach, while simple, has some drawbacks. The FFmpeg version installed by the package manager will have many features which are unnecessary for the wabash program, and will introduce a complex web of dependencies which in practical terms is nearly impossible to untangle. If program portability is not a concern, this approach will work just fine. If installation on an arbitrary target is required, another approach will be needed.
+
+A portable version of FFmpeg containing only the necessary library components for the wabash program to work can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
+
+There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel in a maintained environment which can help avoid security and stability issues, along with providing a well known environment with a smooth interface. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
+
+
+
+
 ### Creating a Virtual Machine
 
 ```
@@ -152,13 +161,84 @@ sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
 ```
 
-Step 5: Start the default virtual network (optional) 
+---
 
-    For easier management, it's recommended to auto-start the default virtual network: 
+### Mount SMB Drive from Linux
 
-Code
+&nbsp;
 
-    virsh net-autostart default
+---
+
+It may be necessary to install cifs-utils on the machine. For example on Manjaro Linux, 
+
+```
+sudo pacman -S cifs-utils
+```
+
+Create a Mount Point. Please note that if you installed the application by snap or flatpak, you will not have access to the /mnt directory. The installers create a container environment that limits your access to directories on the host. In this case, you should create another mount point that is accessible from within the application container. 
+
+The application containers only allow connection to Videos and Pictures directories on the host. In this case, the easiest option is to create subdirectories in your Videos and Pictures folders. The mounting process will obscure files on the host system in favor of files on the mounted remote. If you have existing files in the Videos or Pictures folders, or if you need to preserve the location for use by other programs, using subdirectories as the mounting points will let you keep using the Videos and Pictures folders without disrupting other programs.
+
+The examples that follow are based on general mounting instructions, and use the generic tag `<mount_point>` to indicate the mount directory. Note that the best practice is to use the full path name of the mount point directory in the following commands.
+
+```
+sudo mkdir -p <mount_point>
+```
+
+Mount the share, you can get the uid and gid using the command `id $USER`, they are usually both 1000
+```
+sudo mount -t cifs //<server_ip>/<share_path> <mount_point> -o username=<username>,password=<password>,uid=<user_id>,gid=<group_id>
+```
+
+Once you are done testing the mount, you can unmount the remote server before setting it up permanently
+```
+sudo umount <mount_point>
+```
+
+For better security, you should use a credentials file
+
+```
+sudo nano /root/.smbcredentials
+```
+
+Then add this information to the file
+```
+username=<username>
+password=<password>
+domain=<domain> (if applicable)
+```
+
+Set the access permisions of the file
+```
+sudo chmod 600 /root/.smbcredentials
+```
+
+If you would like to test the credentials file, you can mount 
+```
+sudo mount -t cifs //<server_ip>/<share_path> <mount_point> -o credentials=/root/.smbcredentials,uid=<user_id>,gid=<group_id>
+```
+
+To make the mount persistent, edit the fstab file
+```
+sudo nano /etc/fstab
+```
+
+Add this content to the file
+```
+//<server_ip>/<share_path> <mount_point> cifs x-systemd.automount,_netdev,credentials=/root/.smbcredentials,uid=<user_id>,gid=<group_id> 0 0
+```
+
+You can test the fstab file
+```
+sudo systemctl daemon-reload
+sudo mount -a
+```
+
+Please note that the mount requires the system to wait for the network to be up before running fstab. The part of the fstab entry - `x-systemd.automount,_netdev,` is what does this. It assumes you have systemd in you Linux distribution. If you don't know what systemd is, you probably have it, as most mainstream linux distros use it by default. If you are using a distro that doesn't have it, then you probably already know what to do.
+
+Once the mount is established, you can use the directory browser from the Files panel to set the Video directory used by the application. Note that the Files panel setting is used for viewing existing videos. The setting on the Storage panel Archive Dir is used by the application for writing videos files as they are produced by the cameras.
+
+---
 
 </details>
 
