@@ -143,14 +143,17 @@ The executable installer itself can be found in the `installer` subdirectory.
 <details><summary><b>Linux</b></summary>
 &nbsp;
 
+### Introduction
+
 Building wabash on Linux requires FFmpeg libraries. Installing the libraries can be done using the distribution package manager. This approach, while simple, has some drawbacks. The FFmpeg version installed by the package manager will have many features which are unnecessary for the wabash program, and will introduce a complex web of dependencies which in practical terms is nearly impossible to untangle. If program portability is not a concern, this approach will work just fine. If installation on an arbitrary target is required, another approach will be needed.
 
-A portable version of FFmpeg containing only the necessary library components for the wabash program to work can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
+A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
 
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel in a maintained environment which can help avoid security and stability issues, along with providing a well known environment with a smooth interface. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
 
+Once the dependency libraries have been built, they can be transferred to the development to be used during development of the program. This is desirable as there may be some subtle differences between the libraries installed using the distribution package manager and the portable versions compiled on the virtual machine. This can lead to tricky problems that may not be observed until program deployment, causing issues that did not exist during development. If possible, it is desireable to develop on a machine that does not have the FFmpeg development libraries installed so that only the portable version is available.
 
-
+If the goal is to use the portable libraries on the development machine, it is necesary to copy them into the `wabash/wabash` directory so that they are available to the pip build process. This can be trickier than it would appear initially. The FFmpeg libraries copied will have build and link artifacts from the build process. There is a script in the `scripts/linux` directory named `copy_libs` that can help with this process. The trick to using this script is that it requires the binary python module to be build first before it can run. The implication here is that running `pip install .` the first time will create the python binary and install it, but it will not run. After the first pass of `pip install .`, run `scripts/linux/copy_libs` and the dependency libraries will be copied into the `wabash/wabash` folder. Now a second run of `pip install .` will install the dependency libraries into the python virtual environment and the program will run as expected.
 
 ### Creating a Virtual Machine
 
@@ -160,6 +163,35 @@ sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
 ```
+
+There should now be an icon the Applications for starting the virtual machine. Click on that then use the Linux Mint ico from the link above to install Linux Mint.
+
+---
+
+### Building the Program on the Virtual Machine
+
+After installing Linux Mint 21 on the virutal machine, it may be desirable to update the software as recommended by the operating system. This will update the system components without changing the kernel and glibc versions. Use the terminal to follow with the rest of the commands.
+
+```
+sudo apt install git
+git clone https://github.com/sr99622/wabash
+cd wabash/scripts/linux
+source env_variables
+./make_build_dirs
+./prerequisites
+./build_libs
+cd ../..
+pip install -v .
+export executable=$PWD/wabash/_wabash*
+scripts/linux/copy_libs
+pip install -v .
+```
+
+This should get the wabash program running on the virtual machine.
+
+---
+
+### Building the Program on the Development Machine
 
 ---
 
