@@ -1,7 +1,7 @@
 #*******************************************************************************
 # wabash/CMakeLists.txt
 #
-# Copyright (c) 2025 Stephen Rhodes 
+# Copyright (c) 2025 Stephen Rhodes
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,16 @@ target_link_libraries(_wabash PRIVATE
 target_include_directories(_wabash SYSTEM PUBLIC
     include
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message("-- Setting run_path for Linux binaries")
+    set_target_properties(_wabash PROPERTIES
+        BUILD_RPATH "$ORIGIN"
+        BUILD_RPATH_USE_ORIGIN TRUE
+        INSTALL_RPATH "$ORIGIN"
+        INSTALL_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 install(TARGETS _wabash DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/wabash")
 install(
