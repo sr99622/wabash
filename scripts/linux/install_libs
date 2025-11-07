@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd scripts/linux
+source env_variables
+./make_build_dirs
+./prerequisites
+./build_libs
+cd ../..
+cp -R $HOME/ffmpeg_build ffmpeg
+pip install -v .
+export executable=$PWD/wabash/_wabash*
+scripts/linux/copy_libs
+pip install -v .
