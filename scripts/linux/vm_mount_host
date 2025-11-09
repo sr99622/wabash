@@ -1,0 +1,2 @@
+mkdir shared
+sudo mount -t virtiofsd host shared

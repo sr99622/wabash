@@ -1,6 +1,7 @@
 build/
 dist/
 env/
+vm/
 installer/
 ffmpeg/
 *.egg-info

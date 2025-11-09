@@ -151,7 +151,7 @@ A portable version of FFmpeg containing only the necessary library components fo
 
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel in a maintained environment which can help avoid security and stability issues, along with providing a well known environment with a smooth interface. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
 
-### Creating a Virtual Machine
+### Installing libvirt
 
 ```
 sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt-manager
@@ -160,13 +160,23 @@ sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
 ```
 
-There should now be an icon the Applications for starting the virtual machine. Click on that then use the Linux Mint ico from the link above to install Linux Mint.
-
-
-Once the virtual machine has been created, it can be started from the command line
+### Create the Virutal Machine
 
 ```
-sudo /usr/libexec/virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=/mnt/qemu --cache=always --sandbox=none --daemonize
+mkdir -p vm/iso vm/hda vm/share
+curl https://pub.linuxmint.io/stable/21/linuxmint-21-cinnamon-64bit.iso --output vm/iso/linuxmint-21-cinnamon-64bit.iso
+virt-install --name=wabash-vm \
+--vcpus=4 \
+--memory=8192 \
+--cdrom=vm/iso/linuxmint-21-cinnamon-64bit.iso \
+--disk path=vm/hda/wabash.qcow2,size=32,format=qcow2 \
+--os-variant=linux2020
+```
+
+### Start the Virtual Machine
+
+```
+sudo /usr/libexec/virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=vm/shared --cache=always --sandbox=none & \
 sudo qemu-system-x86_64 \
   -enable-kvm \
   -machine type=pc,accel=kvm \
@@ -177,13 +187,13 @@ sudo qemu-system-x86_64 \
   -numa node,memdev=mem \
   -chardev socket,id=char0,path=/tmp/vhostqemu \
   -device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host \
-  -hda /var/lib/libvirt/images/linux2022-4.qcow2 \
+  -hda vm/hda/wabash.qcow2 \
   -boot order=d \
   -name "Linux Mint 21" \
   -vga virtio \
   -display sdl,gl=on \
   -device virtio-net-pci,netdev=net0 \
-  -netdev user,id=net0
+  -netdev user,id=net0 &
 ```
 
 Inside the virtual machine, mount the shared directory
@@ -192,6 +202,11 @@ Inside the virtual machine, mount the shared directory
 sudo mount -t virtiofs host /mnt/host
 ```
 
+To delete the virtual machine, 
+
+```
+virsh undefine wabash-vm --remove-all-storage
+```
 
 ---
 
