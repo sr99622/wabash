@@ -149,7 +149,7 @@ Building wabash on Linux requires FFmpeg libraries. Installing the libraries can
 
 A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
 
-There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel in a maintained environment which can help avoid security and stability issues, along with providing a well known environment with a smooth interface. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
+There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
 
 ### Installing libvirt
 
@@ -162,47 +162,40 @@ sudo systemctl status libvirtd
 
 ### Create the Virutal Machine
 
+The virtual machine is set up with a Linux Mint ISO. The ISO is a fwe GB in size, so it will take some time to download. There is a script included with the project to do that.
+
 ```
-mkdir -p vm/iso vm/hda vm/share
-curl https://pub.linuxmint.io/stable/21/linuxmint-21-cinnamon-64bit.iso --output vm/iso/linuxmint-21-cinnamon-64bit.iso
-virt-install --name=wabash-vm \
---vcpus=4 \
---memory=8192 \
---cdrom=vm/iso/linuxmint-21-cinnamon-64bit.iso \
---disk path=vm/hda/wabash.qcow2,size=32,format=qcow2 \
---os-variant=linux2020
+scripts/linux/vm_download
 ```
 
 ### Start the Virtual Machine
 
-```
-sudo /usr/libexec/virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=vm/shared --cache=always --sandbox=none & \
-sudo qemu-system-x86_64 \
-  -enable-kvm \
-  -machine type=pc,accel=kvm \
-  -m 4G \
-  -smp 2 \
-  -cpu host \
-  -object memory-backend-memfd,id=mem,size=4G,share=on \
-  -numa node,memdev=mem \
-  -chardev socket,id=char0,path=/tmp/vhostqemu \
-  -device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host \
-  -hda vm/hda/wabash.qcow2 \
-  -boot order=d \
-  -name "Linux Mint 21" \
-  -vga virtio \
-  -display sdl,gl=on \
-  -device virtio-net-pci,netdev=net0 \
-  -netdev user,id=net0 &
-```
+Once the download completes, the virtual machine can be created with following script. Performance of the virtual machine can be improved by editing the script to increase the settings for `--vcpus=4` and `--memory=8192` to values appropriate for the host.
 
-Inside the virtual machine, mount the shared directory
 
 ```
-sudo mount -t virtiofs host /mnt/host
+scripts/linux/vm_create
 ```
 
-To delete the virtual machine, 
+This will bring up the virtual machine in a window, from where the operating system can be installed. At the conclusion of the operating system installation, the machine should be rebooted. Upon completion of the reboot, the virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine guest. The following script run from inside the virtual machine will do this
+
+### Mount the Shared Directory
+
+```
+sudo scripts/linux/vm_mount_host
+```
+
+The shared directory resides at `vm/shared`
+
+### Other Optional Commands For Controlling the Virtual Machine
+
+If the virtual machine is shut down, use the following command to start it
+
+```
+sudo scripts/linux/vm_start
+```
+
+If you would like to delete the virtual machine, 
 
 ```
 virsh undefine wabash-vm --remove-all-storage
@@ -212,136 +205,41 @@ virsh undefine wabash-vm --remove-all-storage
 
 ### Building the Program on the Virtual Machine
 
-After installing Linux Mint 21 on the virutal machine, it may be desirable to update the software as recommended by the operating system. This will update the system components without changing the kernel and glibc versions. Use the terminal to follow with the rest of the commands.
+After installing Linux Mint 21 on the virutal machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
 sudo apt install git
 git clone https://github.com/sr99622/wabash
-cd wabash/scripts/linux
-source env_variables
-./make_build_dirs
-./prerequisites
-./build_libs
-cd ../..
-pip install -v .
-export executable=$PWD/wabash/_wabash*
-scripts/linux/copy_libs
-pip install -v .
+cd wabash
 ```
 
-This should get the wabash program running on the virtual machine.
+Run the following script to build and install the program
 
-Once the dependency libraries have been built, they can be transferred to the development machine to be used during development of the program. This is desirable as there may be some subtle differences between the libraries installed using the distribution package manager and the portable versions compiled on the virtual machine. This can lead to tricky problems that may not be observed until program deployment, causing issues that did not exist during development. If possible, it is desireable to develop on a machine that does not have the FFmpeg development libraries installed so that only the portable version is available.
+```
+scripts/linux/build_libs
+```
 
-If the goal is to use the portable libraries on the development machine, it is necesary to copy them into the `wabash/wabash` directory so that they are available to the pip build process. This can be trickier than it would appear initially. The FFmpeg libraries copied will have build and link artifacts from the build process. There is a script in the `scripts/linux` directory named `copy_libs` that can help with this process. The trick to using this script is that it requires the binary python module to be build first before it can run. The implication here is that running `pip install .` the first time will create the python binary and install it, but it will not run. After the first pass of `pip install .`, run `scripts/linux/copy_libs` and the dependency libraries will be copied into the `wabash/wabash` folder. Now a second run of `pip install .` will install the dependency libraries into the python virtual environment and the program will run as expected.
+To test that the build was successful, run the command
+
+```
+env/bin/wabash
+```
+
+Once the dependency libraries have been built, they can be transferred to the development machine to be used during development of the program. Run the following from the virtual machine
+
+```
+sudo scripts/linux/vm_tar_libs
+```
+
+The tar package should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations
+
+```
+scripts/linux/vm_unpack_libs
+```
 
 ---
 
 ### Building the Program on the Development Machine
 
 ---
-
-### Mount SMB Drive from Linux
-
-&nbsp;
-
----
-
-It may be necessary to install cifs-utils on the machine. For example on Manjaro Linux, 
-
-```
-sudo pacman -S cifs-utils
-```
-
-Create a Mount Point. Please note that if you installed the application by snap or flatpak, you will not have access to the /mnt directory. The installers create a container environment that limits your access to directories on the host. In this case, you should create another mount point that is accessible from within the application container. 
-
-The application containers only allow connection to Videos and Pictures directories on the host. In this case, the easiest option is to create subdirectories in your Videos and Pictures folders. The mounting process will obscure files on the host system in favor of files on the mounted remote. If you have existing files in the Videos or Pictures folders, or if you need to preserve the location for use by other programs, using subdirectories as the mounting points will let you keep using the Videos and Pictures folders without disrupting other programs.
-
-The examples that follow are based on general mounting instructions, and use the generic tag `<mount_point>` to indicate the mount directory. Note that the best practice is to use the full path name of the mount point directory in the following commands.
-
-```
-sudo mkdir -p <mount_point>
-```
-
-Mount the share, you can get the uid and gid using the command `id $USER`, they are usually both 1000
-```
-sudo mount -t cifs //<server_ip>/<share_path> <mount_point> -o username=<username>,password=<password>,uid=<user_id>,gid=<group_id>
-```
-
-Once you are done testing the mount, you can unmount the remote server before setting it up permanently
-```
-sudo umount <mount_point>
-```
-
-For better security, you should use a credentials file
-
-```
-sudo nano /root/.smbcredentials
-```
-
-Then add this information to the file
-```
-username=<username>
-password=<password>
-domain=<domain> (if applicable)
-```
-
-Set the access permisions of the file
-```
-sudo chmod 600 /root/.smbcredentials
-```
-
-If you would like to test the credentials file, you can mount 
-```
-sudo mount -t cifs //<server_ip>/<share_path> <mount_point> -o credentials=/root/.smbcredentials,uid=<user_id>,gid=<group_id>
-```
-
-To make the mount persistent, edit the fstab file
-```
-sudo nano /etc/fstab
-```
-
-Add this content to the file
-```
-//<server_ip>/<share_path> <mount_point> cifs x-systemd.automount,_netdev,credentials=/root/.smbcredentials,uid=<user_id>,gid=<group_id> 0 0
-```
-
-You can test the fstab file
-```
-sudo systemctl daemon-reload
-sudo mount -a
-```
-
-Please note that the mount requires the system to wait for the network to be up before running fstab. The part of the fstab entry - `x-systemd.automount,_netdev,` is what does this. It assumes you have systemd in you Linux distribution. If you don't know what systemd is, you probably have it, as most mainstream linux distros use it by default. If you are using a distro that doesn't have it, then you probably already know what to do.
-
-Once the mount is established, you can use the directory browser from the Files panel to set the Video directory used by the application. Note that the Files panel setting is used for viewing existing videos. The setting on the Storage panel Archive Dir is used by the application for writing videos files as they are produced by the cameras.
-
----
-
-</details>
-
-&nbsp;
-### License
-
-Copyright (c) 2025  Stephen Rhodes
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-
-
-
-
-
-
-
 

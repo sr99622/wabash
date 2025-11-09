@@ -1,0 +1,2 @@
+tar xvf vm/shared/ffmpeg.tar.gz ffmpeg
+cp ffmpeg/lib/* wabash

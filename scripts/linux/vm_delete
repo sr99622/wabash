@@ -1,0 +1,3 @@
+#!/bin/bash
+
+virsh undefine wabash-vm --remove-all-storage
