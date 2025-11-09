@@ -18,7 +18,6 @@ mkdir -p $HOME/libxml2_sources
 
 ./prerequisites
 
-./build_cmake && \
 ./build_automake && \
 ./build_libxml2 && \
 ./build_nasm && \
