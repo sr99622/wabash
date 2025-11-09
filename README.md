@@ -151,10 +151,6 @@ A portable version of FFmpeg containing only the necessary library components fo
 
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel in a maintained environment which can help avoid security and stability issues, along with providing a well known environment with a smooth interface. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
 
-Once the dependency libraries have been built, they can be transferred to the development machine to be used during development of the program. This is desirable as there may be some subtle differences between the libraries installed using the distribution package manager and the portable versions compiled on the virtual machine. This can lead to tricky problems that may not be observed until program deployment, causing issues that did not exist during development. If possible, it is desireable to develop on a machine that does not have the FFmpeg development libraries installed so that only the portable version is available.
-
-If the goal is to use the portable libraries on the development machine, it is necesary to copy them into the `wabash/wabash` directory so that they are available to the pip build process. This can be trickier than it would appear initially. The FFmpeg libraries copied will have build and link artifacts from the build process. There is a script in the `scripts/linux` directory named `copy_libs` that can help with this process. The trick to using this script is that it requires the binary python module to be build first before it can run. The implication here is that running `pip install .` the first time will create the python binary and install it, but it will not run. After the first pass of `pip install .`, run `scripts/linux/copy_libs` and the dependency libraries will be copied into the `wabash/wabash` folder. Now a second run of `pip install .` will install the dependency libraries into the python virtual environment and the program will run as expected.
-
 ### Creating a Virtual Machine
 
 ```
@@ -165,6 +161,37 @@ sudo systemctl status libvirtd
 ```
 
 There should now be an icon the Applications for starting the virtual machine. Click on that then use the Linux Mint ico from the link above to install Linux Mint.
+
+
+Once the virtual machine has been created, it can be started from the command line
+
+```
+sudo /usr/libexec/virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=/mnt/qemu --cache=always --sandbox=none --daemonize
+sudo qemu-system-x86_64 \
+  -enable-kvm \
+  -machine type=pc,accel=kvm \
+  -m 4G \
+  -smp 2 \
+  -cpu host \
+  -object memory-backend-memfd,id=mem,size=4G,share=on \
+  -numa node,memdev=mem \
+  -chardev socket,id=char0,path=/tmp/vhostqemu \
+  -device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host \
+  -hda /var/lib/libvirt/images/linux2022-4.qcow2 \
+  -boot order=d \
+  -name "Linux Mint 21" \
+  -vga virtio \
+  -display sdl,gl=on \
+  -device virtio-net-pci,netdev=net0 \
+  -netdev user,id=net0
+```
+
+Inside the virtual machine, mount the shared directory
+
+```
+sudo mount -t virtiofs host /mnt/host
+```
+
 
 ---
 
@@ -188,6 +215,10 @@ pip install -v .
 ```
 
 This should get the wabash program running on the virtual machine.
+
+Once the dependency libraries have been built, they can be transferred to the development machine to be used during development of the program. This is desirable as there may be some subtle differences between the libraries installed using the distribution package manager and the portable versions compiled on the virtual machine. This can lead to tricky problems that may not be observed until program deployment, causing issues that did not exist during development. If possible, it is desireable to develop on a machine that does not have the FFmpeg development libraries installed so that only the portable version is available.
+
+If the goal is to use the portable libraries on the development machine, it is necesary to copy them into the `wabash/wabash` directory so that they are available to the pip build process. This can be trickier than it would appear initially. The FFmpeg libraries copied will have build and link artifacts from the build process. There is a script in the `scripts/linux` directory named `copy_libs` that can help with this process. The trick to using this script is that it requires the binary python module to be build first before it can run. The implication here is that running `pip install .` the first time will create the python binary and install it, but it will not run. After the first pass of `pip install .`, run `scripts/linux/copy_libs` and the dependency libraries will be copied into the `wabash/wabash` folder. Now a second run of `pip install .` will install the dependency libraries into the python virtual environment and the program will run as expected.
 
 ---
 
