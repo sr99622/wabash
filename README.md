@@ -256,11 +256,10 @@ With the dependency libraries in place, the program can be built on the host usi
 pip install -v .
 ```
 
-
-The program can now be run independent of the virtual environment. The executable is located in the env\Scripts directory as wabash.exe.
+The program can now be run independent of the virtual environment. The executable is located in the env/bin directory as wabash.exe.
 
 ```
-env\Scripts\wabash
+env/bin/wabash
 ```
 
 &nbsp;
@@ -275,6 +274,20 @@ python run.py
 ```
 
 Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile script will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
+
+&nbsp;
+### Distribution
+---
+
+To build the distribution files, install the build module into the environment. For CMake to successfully find FFmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
+
+```
+pip install build
+set FFMPEG_INSTALL_DIR=%CD%/ffmpeg
+python -m build --sdist --wheel
+```
+
+The distribution .whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
 
 &nbsp;
 
