@@ -153,7 +153,7 @@ Install build tools.
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
 &nbsp;
 
-Install the Python devlopment libraries based on the Python version 
+Install the Python devlopment libraries based on the Python version, substituting the Host Python version for `X.XX`
 
 ```
 sudo apt install pythonX.XX-dev pythonX.XX-venv
@@ -296,7 +296,7 @@ scripts/linux/vm_download
 ```
 
 &nbsp;
-### Create and Start the Virtual Machine
+### Create the Virtual Machine
 ---
 Once the download completes, the virtual machine can be created with following script. Performance of the virtual machine can be improved by editing the script to increase the settings for `--vcpus=4` and `--memory=8192` to values appropriate for the host.
 
@@ -319,7 +319,13 @@ sudo scripts/linux/vm_start
 If you would like to delete the virtual machine, 
 
 ```
-virsh undefine wabash-vm --remove-all-storage
+scripts/linux/vm_delete
+```
+
+To list installed virtual machines
+
+```
+virsh list --all
 ```
 
 &nbsp;
@@ -328,7 +334,7 @@ virsh undefine wabash-vm --remove-all-storage
 After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
-sudo apt install git
+sudo apt install -y git
 git clone https://github.com/sr99622/wabash
 cd wabash
 ```
@@ -346,6 +352,22 @@ env/bin/wabash
 ```
 
 &nbsp;
+### Restart the Virtual Machine
+---
+
+In order to mount the shared directory, it is necessary to restart the virtual machine. To stop from within the virtual machine, use the command.
+
+```
+shutdown now
+```
+
+Then from the Host, use the command.
+
+```
+sudo scripts/linux/vm_start
+```
+
+&nbsp;
 ### Mount the Shared Directory from the Virtual Machine
 ---
 
@@ -355,7 +377,7 @@ The virtual machine can mount a shared directory so that files may be passed bet
 sudo scripts/linux/vm_mount_host
 ```
 
-The shared directory resides at `vm/shared`
+The shared directory resides at `vm/shared`. You should be able to observe files on the Host from the virtual machine at the same location relative to the project directory. If files are added to the Host shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
 
 &nbsp;
 ### Transfer the Dependency Libraries to the Host
@@ -366,10 +388,16 @@ Once the dependency libraries have been built, they can be transferred from the 
 sudo scripts/linux/vm_tar_libs
 ```
 
+At this point, the virtual machine is no longer needed
+
+```
+shutdown now
+```
+
 &nbsp;
 ### Install the Dependency Libraries on the Host
 ---
-The tar package should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations,
+The tar package should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations, use the following command from the Host.
 
 ```
 scripts/linux/vm_unpack_libs
