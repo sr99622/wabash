@@ -305,7 +305,7 @@ Once the download completes, the virtual machine can be created with following s
 scripts/linux/vm_create
 ```
 
-This will bring up the virtual machine in a window, from where the operating system can be installed. At the conclusion of the operating system installation, the virtual machine should be rebooted. Upon completion of the reboot, the virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine. The following script run from inside the virtual machine will do this.
+This will bring up the virtual machine in a window, from where the operating system can be installed. At the conclusion of the operating system installation, the virtual machine should be rebooted.
 
 &nbsp;
 ### Other Optional Commands For Controlling the Virtual Machine
@@ -325,7 +325,7 @@ virsh undefine wabash-vm --remove-all-storage
 &nbsp;
 ### Build the Program on the Virtual Machine
 ---
-After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
+After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
 sudo apt install git
@@ -348,6 +348,9 @@ env/bin/wabash
 &nbsp;
 ### Mount the Shared Directory from the Virtual Machine
 ---
+
+The virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine. The following script run from inside the virtual machine will do this.
+
 ```
 sudo scripts/linux/vm_mount_host
 ```
