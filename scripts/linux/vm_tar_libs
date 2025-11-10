@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm -R ffmpeg/share
 rm -R ffmpeg/bin
 rm -R ffmpeg/lib/*

@@ -144,15 +144,16 @@ The executable installer itself can be found in the `installer` subdirectory.
 &nbsp;
 
 ### Introduction
-
+---
 Building wabash on Linux requires FFmpeg libraries. Installing the libraries can be done using the distribution package manager. This approach, while simple, has some drawbacks. The FFmpeg version installed by the package manager will have many features which are unnecessary for the wabash program, and will introduce a complex web of dependencies which in practical terms is nearly impossible to untangle. If program portability is not a concern, this approach will work just fine. If installation on an arbitrary target is required, another approach will be needed.
 
 A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
 
-There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtul machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
+There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
 
-### Installing libvirt
-
+&nbsp;
+### Install libvirt on the Host
+---
 ```
 sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt-manager
 sudo systemctl start libvirtd
@@ -160,16 +161,18 @@ sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
 ```
 
-### Create the Virutal Machine
-
-The virtual machine is set up with a Linux Mint ISO. The ISO is a fwe GB in size, so it will take some time to download. There is a script included with the project to do that.
+&nbsp;
+### Create the Virtual Machine
+---
+The virtual machine is set up with a Linux Mint ISO. The ISO is a few GB in size, so it will take some time to download. There is a script included with the project for this purpose.
 
 ```
 scripts/linux/vm_download
 ```
 
+&nbsp;
 ### Start the Virtual Machine
-
+---
 Once the download completes, the virtual machine can be created with following script. Performance of the virtual machine can be improved by editing the script to increase the settings for `--vcpus=4` and `--memory=8192` to values appropriate for the host.
 
 
@@ -177,19 +180,21 @@ Once the download completes, the virtual machine can be created with following s
 scripts/linux/vm_create
 ```
 
-This will bring up the virtual machine in a window, from where the operating system can be installed. At the conclusion of the operating system installation, the machine should be rebooted. Upon completion of the reboot, the virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine guest. The following script run from inside the virtual machine will do this
+This will bring up the virtual machine in a window, from where the operating system can be installed. At the conclusion of the operating system installation, the virtual machine should be rebooted. Upon completion of the reboot, the virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine. The following script run from inside the virtual machine will do this.
 
-### Mount the Shared Directory
-
+&nbsp;
+### Mount the Shared Directory from the Virtual Machine
+---
 ```
 sudo scripts/linux/vm_mount_host
 ```
 
 The shared directory resides at `vm/shared`
 
+&nbsp;
 ### Other Optional Commands For Controlling the Virtual Machine
-
-If the virtual machine is shut down, use the following command to start it
+---
+If the virtual machine is shut down, use the following command to start it.
 
 ```
 sudo scripts/linux/vm_start
@@ -201,11 +206,10 @@ If you would like to delete the virtual machine,
 virsh undefine wabash-vm --remove-all-storage
 ```
 
+&nbsp;
+### Build the Program on the Virtual Machine
 ---
-
-### Building the Program on the Virtual Machine
-
-After installing Linux Mint 21 on the virutal machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
+After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
 sudo apt install git
@@ -225,21 +229,73 @@ To test that the build was successful, run the command
 env/bin/wabash
 ```
 
-Once the dependency libraries have been built, they can be transferred to the development machine to be used during development of the program. Run the following from the virtual machine
+&nbsp;
+### Transfer the Dependency Libraries to the Host
+---
+Once the dependency libraries have been built, they can be transferred from the virtual machine to the host for development of the program. Run the following from the virtual machine.
 
 ```
 sudo scripts/linux/vm_tar_libs
 ```
 
-The tar package should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations
+&nbsp;
+### Install the Dependency Libraries on the Host
+---
+The tar package should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations,
 
 ```
 scripts/linux/vm_unpack_libs
 ```
 
+&nbsp;
+### Build the Program on the Host
+---
+With the dependency libraries in place, the program can be built on the host using the following command.
+
+```
+pip install -v .
+```
+
+
+The program can now be run independent of the virtual environment. The executable is located in the env\Scripts directory as wabash.exe.
+
+```
+env\Scripts\wabash
+```
+
+&nbsp;
+### Development on the Host
 ---
 
-### Building the Program on the Development Machine
+To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated as shown above. To observe changes made to python code, use the following.
+
+```
+pip uninstall wabash
+python run.py
+```
+
+Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile script will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
+
+&nbsp;
 
 ---
+
+</details>
+
+&nbsp;
+### License
+
+Copyright (c) 2025  Stephen Rhodes
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
