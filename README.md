@@ -141,12 +141,110 @@ The executable installer itself can be found in the `installer` subdirectory.
 
 
 <details><summary><b>Linux</b></summary>
+
+&nbsp;
+### Project Configuration
+---
+
+A Python version greater than or equal to 3.10 with the ability to create virtual environments is required. Linux distributions ship with a default Python pre-installed and the version can be verified using the command `python3 --version`. In the instructions that follow, some commands may be Python version dependent, and are described using the notation `X.XX` to represent the version. Additionally, some basic tools are required to build the program. Select from the instructions below for your distribution.
+
+Install build tools.
+
+<details><summary>apt package manager for Ubuntu and Debian style systems</summary>
 &nbsp;
 
-### Introduction
----
-Building wabash on Linux requires FFmpeg libraries. Installing the libraries can be done using the distribution package manager. This approach, while simple, has some drawbacks. The FFmpeg version installed by the package manager will have many features which are unnecessary for the wabash program, and will introduce a complex web of dependencies which in practical terms is nearly impossible to untangle. If program portability is not a concern, this approach will work just fine. If installation on an arbitrary target is required, another approach will be needed.
+Install the Python devlopment libraries based on the Python version 
 
+```
+sudo apt install pythonX.XX-dev pythonX.XX-venv
+```
+
+Install the build tools
+
+```
+sudo apt install git cmake g++
+```
+
+Install the X11 development libraries if necessary (not needed for Wayland only configuration)
+
+```
+'^libxcb.*-dev'
+```
+---
+&nbsp;
+</details>
+
+<details><summary>dnf package manager for Fedora and Red Hat style systems</summary>
+&nbsp;
+
+Install the Python developement libraries based on the Python version. If you are on Fedora 43, please note that some dependencies will not work with the installed Python version 3.14, so it is necessary to install Python version 3.13.
+
+---
+#### Fedora 43 Only
+
+```
+sudo dnf install python3.13-devel
+```
+
+#### Fedora 42 and Earlier
+
+```
+sudo dnf install python3-devel
+```
+---
+Install the build tools
+
+```
+sudo dnf install git cmake g++
+```
+
+---
+&nbsp;
+</details>
+
+<details><summary>pacman package manager for Arch style systems</summary>
+&nbsp;
+
+Install build tools
+
+```
+sudo pacman -S cmake base-devel
+```
+
+---
+&nbsp;
+</details>
+
+&nbsp;
+
+Clone the repository and set the current working directory to the project directory.
+
+```
+git clone https://github.com/sr99622/wabash
+cd wabash
+```
+
+At this point you will need some libraries installed on the Host development machine in order to compile and run the program. There are two options for doing this. One is to use the operating system package manager to install the dependencies. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that the operation of the program is subject to the whims and quirks of the package library which will likely require tweaking each time the project is installed on a particular machine. The other approach is to build portable libraries that can be integrated into a single Python module and will work on a wide variety of linux distributions. The portable library version is recommended and has been developed with script tools to ease the process of creation. The package manager installation process is included for reference.
+
+&nbsp;
+### Package Manager Libraries (Quick and Easy)
+---
+
+<details><summary>apt package manager for Ubuntu and Debian style systems</summary>
+</details>
+
+<details><summary>dnf package manager for Fedora and Red Hat style systems</summary>
+</details>
+
+<details><summary>pacman package manager for Arch style systems</summary>
+</details>
+
+&nbsp;
+### Portable Dependency Libraries (Recommended)
+---
+
+<details><summary>Library Build and Installation Process</summary>
+&nbsp;
 A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
 
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
@@ -247,6 +345,8 @@ The tar package should now be visible on the host at the location vm/shared/ffmp
 scripts/linux/vm_unpack_libs
 ```
 
+</details>
+
 &nbsp;
 ### Build the Program on the Host
 ---
@@ -276,7 +376,7 @@ python run.py
 Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile script will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
 
 &nbsp;
-### Distribution
+### Distribution (Portable Libraries Only)
 ---
 
 To build the distribution files, install the build module into the environment. For CMake to successfully find FFmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
@@ -288,6 +388,23 @@ python -m build --sdist --wheel
 ```
 
 The distribution .whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
+
+&nbsp;
+### Fixing the Python Linter in VSCode on Fedora
+---
+
+Unfortunately, this can be an issue if you are working on Fedora using VSCode. Add these snippets to your settings.json file if the linter is not picking up the virtual environment.
+
+```
+{
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "/bin/bash"
+        }
+    }
+}
+```
 
 &nbsp;
 
