@@ -287,7 +287,7 @@ sudo systemctl status libvirtd
 ```
 
 &nbsp;
-### Create the Virtual Machine
+### Download ISO
 ---
 The virtual machine is set up with a Linux Mint ISO. The ISO is a few GB in size, so it will take some time to download. There is a script included with the project for this purpose.
 
@@ -296,7 +296,7 @@ scripts/linux/vm_download
 ```
 
 &nbsp;
-### Start the Virtual Machine
+### Create and Start the Virtual Machine
 ---
 Once the download completes, the virtual machine can be created with following script. Performance of the virtual machine can be improved by editing the script to increase the settings for `--vcpus=4` and `--memory=8192` to values appropriate for the host.
 
