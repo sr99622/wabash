@@ -146,7 +146,7 @@ The executable installer itself can be found in the `installer` subdirectory.
 ### Project Configuration
 ---
 
-A Python version greater than or equal to 3.10 with the ability to create virtual environments is required. Linux distributions ship with a default Python pre-installed and the version can be verified using the command `python3 --version`. In the instructions that follow, some commands may be Python version dependent, and are described using the notation `X.XX` to represent the version. Additionally, some basic tools are required to build the program. Select from the instructions below for your distribution.
+A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. Linux distributions ship with a default Python pre-installed and the version can be verified using the command `python3 --version`. In the instructions that follow, some commands may be Python version dependent, and are described using the notation `X.XX` to represent the version. Additionally, some basic tools are required to build the program. Select from the instructions below for your distribution.
 
 Install build tools.
 
@@ -231,12 +231,38 @@ At this point you will need some libraries installed on the Host development mac
 ---
 
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
+&nbsp;
+
+```
+sudo apt install libavdevice-dev
+```
+
+---
+&nbsp;
 </details>
 
 <details><summary>dnf package manager for Fedora and Red Hat style systems</summary>
+&nbsp;
+
+```
+sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf -y install ffmpeg-devel --allowerasing
+```
+
+---
+&nbsp;
 </details>
 
 <details><summary>pacman package manager for Arch style systems</summary>
+&nbsp;
+
+```
+sudo pacman -S ffmpeg
+```
+
+---
+&nbsp;
 </details>
 
 &nbsp;
@@ -245,6 +271,7 @@ At this point you will need some libraries installed on the Host development mac
 
 <details><summary>Library Build and Installation Process</summary>
 &nbsp;
+
 A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
 
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
@@ -350,13 +377,22 @@ scripts/linux/vm_unpack_libs
 &nbsp;
 ### Build the Program on the Host
 ---
-With the dependency libraries in place, the program can be built on the host using the following command.
+With the dependency libraries in place, the program can be built on the host using the following commands.
+
+First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The python version must be >=3.10 and <=3.13.
+
+```
+pythonX.XX -m venv env
+source env/bin/activate
+```
+
+Now compile and install the program.
 
 ```
 pip install -v .
 ```
 
-The program can now be run independent of the virtual environment. The executable is located in the env/bin directory as wabash.exe.
+The program can now be run. The executable is located in the env/bin directory as wabash.exe.
 
 ```
 env/bin/wabash
