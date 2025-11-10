@@ -308,15 +308,6 @@ scripts/linux/vm_create
 This will bring up the virtual machine in a window, from where the operating system can be installed. At the conclusion of the operating system installation, the virtual machine should be rebooted. Upon completion of the reboot, the virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine. The following script run from inside the virtual machine will do this.
 
 &nbsp;
-### Mount the Shared Directory from the Virtual Machine
----
-```
-sudo scripts/linux/vm_mount_host
-```
-
-The shared directory resides at `vm/shared`
-
-&nbsp;
 ### Other Optional Commands For Controlling the Virtual Machine
 ---
 If the virtual machine is shut down, use the following command to start it.
@@ -353,6 +344,15 @@ To test that the build was successful, run the command
 ```
 env/bin/wabash
 ```
+
+&nbsp;
+### Mount the Shared Directory from the Virtual Machine
+---
+```
+sudo scripts/linux/vm_mount_host
+```
+
+The shared directory resides at `vm/shared`
 
 &nbsp;
 ### Transfer the Dependency Libraries to the Host
