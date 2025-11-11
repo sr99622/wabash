@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 sudo /usr/libexec/virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=vm/shared --cache=always --sandbox=none & \
 sudo qemu-system-x86_64 \

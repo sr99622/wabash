@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 mkdir -p $HOME/libxml2_sources && \
 cd $HOME/libxml2_sources && \

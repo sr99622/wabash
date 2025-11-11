@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 tar xvf vm/shared/ffmpeg.tar.gz ffmpeg
-cp ffmpeg/lib/* wabash
+pip install -v .
+$excutable=$PWD/wabash/_wabash*
+scripts/linux/copy_libs
+pip install -v .

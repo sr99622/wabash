@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 virt-install --name=wabash-vm \
 --vcpus=4 \

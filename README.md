@@ -147,9 +147,10 @@ The executable installer itself can be found in the `installer` subdirectory.
 ---
 
 A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. Linux distributions ship with a default Python pre-installed and the version can be verified using the command `python3 --version`. In the instructions that follow, some commands may be Python version dependent, and are described using the notation `X.XX` to represent the version. Additionally, some basic tools are required to build the program. Select from the instructions below for your distribution.
+&nbsp;
 
-Install build tools.
-
+### Install build tools
+---
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
 &nbsp;
 
@@ -177,7 +178,7 @@ Install the X11 development libraries if necessary (not needed for Wayland only 
 <details><summary>dnf package manager for Fedora and Red Hat style systems</summary>
 &nbsp;
 
-Install the Python developement libraries based on the Python version. If you are on Fedora 43, please note that some dependencies will not work with the installed Python version 3.14, so it is necessary to install Python version 3.13.
+Install the Python developement libraries based on the Python version. If you are on Fedora 43, please note that some dependencies (OpenVINO) will not work with the installed Python version 3.14, so it is necessary to install Python version 3.13.
 
 ---
 #### Fedora 43 Only
@@ -217,18 +218,20 @@ sudo pacman -S cmake base-devel
 
 &nbsp;
 
-Clone the repository and set the current working directory to the project directory.
+After installing the build tools, clone the repository and set the current working directory to the project directory.
 
 ```
 git clone https://github.com/sr99622/wabash
 cd wabash
 ```
-
-At this point you will need some libraries installed on the Host development machine in order to compile and run the program. There are two options for doing this. One is to use the operating system package manager to install the dependencies. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that the operation of the program is subject to the whims and quirks of the package library which will likely require tweaking each time the project is installed on a particular machine. The other approach is to build portable libraries that can be integrated into a single Python module and will work on a wide variety of linux distributions. The portable library version is recommended and has been developed with script tools to ease the process of creation. The package manager installation process is included for reference.
-
 &nbsp;
-### Package Manager Libraries (Quick and Easy)
+
+### Install Dependency Libraries
 ---
+Dependency libraries are needed on the Host development machine in order to compile and run the program. There are two options for installing these libraries. One option is to use the operating system package manager. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that the operation of the program is subject to the whims and quirks of the package library which may introduce issues when installed on a particular machine. The other approach is to build portable libraries that can be integrated into a single Python module and will work on a wide variety of linux distributions. The portable library version is recommended and has been developed with script tools to ease the process of creation.
+
+* #### Package Manager Libraries (Quick and Easy)
+
 
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
 &nbsp;
@@ -266,8 +269,8 @@ sudo pacman -S ffmpeg
 </details>
 
 &nbsp;
-### Portable Dependency Libraries (Recommended)
----
+* #### Portable Libraries (Recommended)
+
 
 <details><summary>Library Build and Installation Process</summary>
 &nbsp;

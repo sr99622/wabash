@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 rm -R ffmpeg/share
 rm -R ffmpeg/bin
-rm -R ffmpeg/lib/*
-cp wabash/lib* ffmpeg/lib
+rm -R ffmpeg/lib/pkgconfig
+rm -R ffmpeg/lib/cmake
 tar czf vm/shared/ffmpeg.tar.gz ffmpeg

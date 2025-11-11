@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 #
 # input is a python version SemVer, e.g. 3.10.11
 
