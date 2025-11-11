@@ -226,12 +226,14 @@ cd wabash
 ```
 &nbsp;
 
-### Install Dependency Libraries
+### Install Dependency Libraries and Build Program
 ---
 Dependency libraries are needed on the Host development machine in order to compile and run the program. There are two options for installing these libraries. One option is to use the operating system package manager. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that the operation of the program is subject to the whims and quirks of the package library which may introduce issues when installed on a particular machine. The other approach is to build portable libraries that can be integrated into a single Python module and will work on a wide variety of linux distributions. The portable library version is recommended and has been developed with script tools to ease the process of creation.
 
 <details><summary><b>Package Manager Libraries (Quick and Easy)</b></summary>
 &nbsp;
+
+Select the instructions for your distribution.
 
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
 &nbsp;
@@ -264,9 +266,32 @@ sudo dnf -y install ffmpeg-devel --allowerasing
 sudo pacman -S ffmpeg
 ```
 
----
 &nbsp;
 </details>
+&nbsp;
+
+With the dependency libraries in place, the program can be built on the host using the following commands.
+
+First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The python version must be >=3.10 and <=3.13.
+
+```
+pythonX.XX -m venv env
+source env/bin/activate
+```
+
+Now compile and install the program.
+
+```
+pip install -v .
+```
+
+The program can now be run. The executable is located in the env/bin directory as wabash.exe.
+
+```
+env/bin/wabash
+```
+
+---
 &nbsp;
 
 </details>
@@ -377,6 +402,7 @@ sudo scripts/linux/vm_start
 The virtual machine can mount a shared directory so that files may be passed between the host and the virtual machine. The following script run from inside the virtual machine will do this.
 
 ```
+cd wabash
 sudo scripts/linux/vm_mount_host
 ```
 
@@ -398,21 +424,8 @@ shutdown now
 ```
 
 &nbsp;
-### Install the Dependency Libraries on the Host
+### Install the Dependency Libraries and Build the Program on the Host
 ---
-The tar package should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations, use the following command from the Host.
-
-```
-scripts/linux/vm_unpack_libs
-```
-
-</details>
-
-&nbsp;
-### Build the Program on the Host
----
-With the dependency libraries in place, the program can be built on the host using the following commands.
-
 First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The python version must be >=3.10 and <=3.13.
 
 ```
@@ -420,23 +433,27 @@ pythonX.XX -m venv env
 source env/bin/activate
 ```
 
-Now compile and install the program.
+The tar package created in the virtual machine should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations and build the program, use the following command from the Host.
 
 ```
-pip install -v .
+scripts/linux/vm_unpack_libs
 ```
 
-The program can now be run. The executable is located in the env/bin directory as wabash.exe.
+To test that the build was successful, run the command
 
 ```
 env/bin/wabash
 ```
 
+</details>
+
 &nbsp;
 ### Development on the Host
 ---
 
-To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated as shown above. To observe changes made to python code, use the following.
+To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated as shown above. 
+
+To develop the python code and observe changes made, use the following.
 
 ```
 pip uninstall wabash
@@ -444,6 +461,13 @@ python run.py
 ```
 
 Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile script will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
+
+To develop C++ code
+
+```
+pip install -v .
+env/bin/wabash
+```
 
 &nbsp;
 ### Distribution (Portable Libraries Only)
