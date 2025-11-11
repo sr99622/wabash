@@ -453,7 +453,7 @@ To build the distribution files, install the build module into the environment. 
 
 ```
 pip install build
-set FFMPEG_INSTALL_DIR=%CD%/ffmpeg
+set FFMPEG_INSTALL_DIR=$PWD/ffmpeg
 python -m build --sdist --wheel
 ```
 
