@@ -230,7 +230,7 @@ cd wabash
 ---
 Dependency libraries are needed on the Host development machine in order to compile and run the program. There are two options for installing these libraries. One option is to use the operating system package manager. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that the operation of the program is subject to the whims and quirks of the package library which may introduce issues when installed on a particular machine. The other approach is to build portable libraries that can be integrated into a single Python module and will work on a wide variety of linux distributions. The portable library version is recommended and has been developed with script tools to ease the process of creation.
 
-* #### Package Manager Libraries (Quick and Easy)
+* #### <u>Package Manager Libraries (Quick and Easy)</u>
 
 
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
@@ -269,7 +269,7 @@ sudo pacman -S ffmpeg
 </details>
 
 &nbsp;
-* #### Portable Libraries (Recommended)
+* #### <u>Portable Libraries (Recommended)</u>
 
 
 <details><summary>Library Build and Installation Process</summary>
