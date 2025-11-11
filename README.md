@@ -230,8 +230,8 @@ cd wabash
 ---
 Dependency libraries are needed on the Host development machine in order to compile and run the program. There are two options for installing these libraries. One option is to use the operating system package manager. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that the operation of the program is subject to the whims and quirks of the package library which may introduce issues when installed on a particular machine. The other approach is to build portable libraries that can be integrated into a single Python module and will work on a wide variety of linux distributions. The portable library version is recommended and has been developed with script tools to ease the process of creation.
 
-* #### <u>Package Manager Libraries (Quick and Easy)</u>
-
+<details><summary><b>Package Manager Libraries (Quick and Easy)</b></summary>
+&nbsp;
 
 <details><summary>apt package manager for Ubuntu and Debian style systems</summary>
 &nbsp;
@@ -267,12 +267,12 @@ sudo pacman -S ffmpeg
 ---
 &nbsp;
 </details>
-
 &nbsp;
-* #### <u>Portable Libraries (Recommended)</u>
 
+</details>
+&nbsp;
 
-<details><summary>Library Build and Installation Process</summary>
+<details><summary><b>Portable Libraries (Recommended)</b></summary>
 &nbsp;
 
 A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
