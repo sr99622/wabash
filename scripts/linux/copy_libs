@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+executable=$1
+echo "start copy libs on executable: $executable"
+
 process_libs() {
     count=$(ldd $executable 2>/dev/null | awk '/=> not found/ {c++} END {print c+0}')
     echo "count: $count"

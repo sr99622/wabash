@@ -32,7 +32,10 @@ cp -R $HOME/ffmpeg_build ffmpeg
 python3.10 -m venv env
 source env/bin/activate
 pip install -v .
-export executable=$PWD/wabash/_wabash*
-scripts/linux/copy_libs
+executable=$(ls -1 wabash/_wabash* 2>/dev/null | head -n 1)
+echo "executable: $executable"
+scripts/linux/copy_libs $executable
+#export executable=$PWD/wabash/_wabash*
+#scripts/linux/copy_libs
 #process_libs "$executable"
 pip install -v .
