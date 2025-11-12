@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 
+export FFMPEG_INSTALL_DIR=$PWD/ffmpeg
 tar xvf vm/shared/ffmpeg.tar.gz ffmpeg
 pip install -v .
-$excutable=$PWD/wabash/_wabash*
-scripts/linux/copy_libs
+excutable=$PWD/wabash/_wabash*
+echo "EXECUTABLE: $executable"
+scripts/linux/copy_libs "$executable"
 pip install -v .
