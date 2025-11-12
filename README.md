@@ -406,18 +406,24 @@ cd wabash
 sudo scripts/linux/vm_mount_host
 ```
 
-The shared directory resides at `vm/shared`. You should be able to observe files on the Host from the virtual machine at the same location relative to the project directory. If files are added to the Host shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
+The shared directory resides at `vm/shared`. You should be able to observe files on the Host from the virtual machine at the same location relative to the project directory. 
+
+```
+ls vm/shared
+```
+
+Please note that if files are added to the shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view in the virtual machine, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
 
 &nbsp;
 ### Transfer the Dependency Libraries to the Host
 ---
-Once the dependency libraries have been built, they can be transferred from the virtual machine to the host for development of the program. Run the following from the virtual machine.
+Once the dependency libraries have been built, they can be transferred from the virtual machine to the Host for development of the program. Run the following from the virtual machine.
 
 ```
 sudo scripts/linux/vm_tar_libs
 ```
 
-At this point, the virtual machine is no longer needed
+The file `ffmpeg.tar.gz` should be observable in the shared directory. At this point, the virtual machine is no longer needed
 
 ```
 shutdown now
@@ -426,14 +432,14 @@ shutdown now
 &nbsp;
 ### Install the Dependency Libraries and Build the Program on the Host
 ---
-First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The python version must be >=3.10 and <=3.13.
+First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The python version must be >=3.10 and <=3.13. The following snippets are intended to be run from the project directory on the Host.
 
 ```
 pythonX.XX -m venv env
 source env/bin/activate
 ```
 
-The tar package created in the virtual machine should now be visible on the host at the location vm/shared/ffmpeg.tar.gz. To place the libraries in the correct locations and build the program, use the following command from the Host.
+The tar package created in the virtual machine should be visible on the Host at `vm/shared/ffmpeg.tar.gz`. To install the libraries in the correct locations and build the program, use the following command from the Host.
 
 ```
 scripts/linux/vm_unpack_libs
@@ -450,19 +456,27 @@ env/bin/wabash
 &nbsp;
 ### Development on the Host
 ---
+Program development may include efforts in both Python and C++. There are different methods for observing changes made to the program in these two domains. Further, there is a difference in the compilation procedure for the C++ domain depending on whether the dependency libaries have been installed using the package manager or the portable libraries.
 
-To develop the python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated as shown above. 
+To develop the Python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated like `source env/bin/activate`. 
 
-To develop the python code and observe changes made, use the following.
+To develop the Python code and observe changes made, use the following.
 
 ```
 pip uninstall wabash
 python run.py
 ```
 
-Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile script will install a copy of the python module binary into the local wabash directory alongside the FFmpeg binaries required for runtime. This enables local development when the python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`.
+Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile process will install a copy of the Python module binary into the local wabash directory. This enables local development when the Python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`. If the portable libraries are being used, the ffmpeg binaries will also be present in the wabash directory.
 
-To develop C++ code
+To develop C++ code using the portable libraries
+
+```
+scripts/linux/compile
+env/bin/wabash
+```
+
+To develop C++ code using the package manager libraries
 
 ```
 pip install -v .
