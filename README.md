@@ -151,7 +151,7 @@ A Python version greater than or equal to 3.10 and less than or equal to 3.13 wi
 
 ### Install build tools
 ---
-<details><summary>apt package manager for Ubuntu and Debian style systems</summary>
+<details><summary><b>apt</b> (Ubuntu and Debian)</summary>
 &nbsp;
 
 Install the Python devlopment libraries based on the Python version, substituting the Host Python version for `X.XX`
@@ -163,7 +163,7 @@ sudo apt install pythonX.XX-dev pythonX.XX-venv
 Install the build tools
 
 ```
-sudo apt install git cmake g++
+sudo apt install curl git cmake g++
 ```
 
 Install the X11 development libraries if necessary (not needed for Wayland only configuration)
@@ -175,7 +175,7 @@ Install the X11 development libraries if necessary (not needed for Wayland only 
 &nbsp;
 </details>
 
-<details><summary>dnf package manager for Fedora and Red Hat style systems</summary>
+<details><summary><b>dnf</b> (Fedora and Red Hat)</summary>
 &nbsp;
 
 Install the Python developement libraries based on the Python version. If you are on Fedora 43, please note that some dependencies (OpenVINO) will not work with the installed Python version 3.14, so it is necessary to install Python version 3.13.
@@ -203,7 +203,7 @@ sudo dnf install git cmake g++
 &nbsp;
 </details>
 
-<details><summary>pacman package manager for Arch style systems</summary>
+<details><summary><b>pacman</b> (Arch)</summary>
 &nbsp;
 
 Install build tools
@@ -307,11 +307,41 @@ There exist several methods to achieve the goal of maximum compatibilty through 
 &nbsp;
 ### Install libvirt on the Host
 ---
+
+<details><summary><b>apt</b> (Ubuntu and Debian)</summary>
+&nbsp;
+
+```
+sudo apt install qemu-kvm libvirt-daemon-system virtinst libvirt-clients bridge-utils virt-manager virt-viewer virtiofsd
+chmod o+x $HOME
+```
+&nbsp;
+
+</details>
+
+<details><summary><b>dnf</b> (Fedora and Red Hat)</summary>
+&nbsp;
+
 ```
 sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt-manager
+```
+&nbsp;
+
+</details>
+
+&nbsp;
+### Configure libvirt
+---
+
+Configure libvrt to run as a service, then add the user to the groups for non-root access, requires reboot.
+
+```
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
+sudo usermod -aG libvirt $USER
+sudo usermod -aG kvm $USER
+sudo reboot now
 ```
 
 &nbsp;
