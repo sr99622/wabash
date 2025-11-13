@@ -107,6 +107,18 @@ enum CmdTag {
     SS
 };
 
+class Exception : public std::runtime_error {
+public:
+    Exception(const std::string& msg, std::error_code ec) : std::runtime_error(msg), error_code(ec) {}
+    const std::error_code& code() const noexcept {
+        return error_code;
+    }
+
+private:    
+    std::error_code error_code;
+
+};
+
 class ExceptionChecker {
 
 public:
@@ -120,7 +132,8 @@ public:
             av_strerror(ret, av_str, 256);
             std::stringstream str;
             str << tag(cmd_tag) << " has failed with error (" << ret << "): " << av_str;
-            throw std::runtime_error(str.str());
+            //throw std::runtime_error(str.str());
+            throw Exception(str.str(), get_error_code(ret));
         }
     }
 
@@ -135,7 +148,8 @@ public:
                 av_strerror(ret, av_str, 256);
                 str << tag(cmd_tag) << " has failed with error (" << ret << "): " << av_str;
             }
-            throw std::runtime_error(str.str());
+            //throw std::runtime_error(str.str());
+            throw Exception(str.str(), get_error_code(ret));
         }
     }
 
@@ -145,7 +159,8 @@ public:
             av_strerror(ret, av_str, 256);
             std::stringstream str;
             str << msg << " : " << av_str;
-            throw std::runtime_error(str.str());
+            //throw std::runtime_error(str.str());
+            throw Exception(str.str(), get_error_code(ret));
         }
     }
 
@@ -168,6 +183,16 @@ public:
             str << msg1 << " : " << msg2;
             throw std::runtime_error(str.str());
         }
+    }
+
+    const std::error_code& get_error_code(int ffmpeg_code) const noexcept {
+        switch (ffmpeg_code) {
+        case -2:
+            return std::make_error_code(std::errc::no_such_file_or_directory);
+        default:
+            return std::make_error_code(std::errc::no_message);
+        }
+        
     }
 
     const char* tag(CmdTag cmd_tag) {
