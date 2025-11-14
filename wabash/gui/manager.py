@@ -73,11 +73,11 @@ class Manager():
             if name in self.ordinals:
                 del self.ordinals[name]
         else:
-            thread = Thread(name, self.mw.fileSelector.text())
-            thread.reconnect = True
-            thread.finish = self.removeThread
-            thread.showError = self.mw.showError
-            self.startThread(thread)
+            #thread = Thread(name, self.mw.fileSelector.text())
+            #thread.reconnect = True
+            #thread.finish = self.removeThread
+            #thread.showError = self.mw.showError
+            self.startThread(name, self.mw.fileSelector.text())
 
     def closeAllThreads(self):
         self.lock()
