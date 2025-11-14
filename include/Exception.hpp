@@ -112,9 +112,7 @@ public:
     Exception(const std::string& msg, int ret) : std::runtime_error(msg) {
         switch (ret) {
         case -2:
-            std::cout << "no such file" << std::endl;
             error_code = std::make_error_code(std::errc::no_such_file_or_directory);
-            //std::cout << "wtf: " << error_code.value() << std::endl;
             break;
         default:
             error_code = std::make_error_code(std::errc::no_message);

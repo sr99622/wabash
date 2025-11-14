@@ -104,6 +104,9 @@ public:
     }
 
     Packet get_packet() {
+        ex.ck(av_read_frame(fmt_ctx, pkt), ARF);
+        return std::move(Packet(pkt));
+        /*
         try {
             ex.eof(av_read_frame(fmt_ctx, pkt), ARF);
             return std::move(Packet(pkt));
@@ -117,6 +120,7 @@ public:
                 throw std::runtime_error(e.what());
             }
         }
+        */
     }
 
     int read() {

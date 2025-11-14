@@ -76,6 +76,7 @@ public:
             //std::cout << "done" << std::endl;
         }
         catch (const Exception& e) {
+            std::cout << "exception occurred: " << e.what() << std::endl;
             if (e.code() == std::errc::no_such_file_or_directory) {
                 if (showError) {
                     std::stringstream str;
