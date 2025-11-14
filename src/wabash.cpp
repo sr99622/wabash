@@ -42,7 +42,8 @@ PYBIND11_MODULE(_wabash, m)
         .def_readwrite("filename", &Thread::filename)
         .def_readwrite("running", &Thread::running)
         .def_readwrite("reconnect", &Thread::reconnect)
-        .def_readwrite("finish", &Thread::finish);
+        .def_readwrite("finish", &Thread::finish)
+        .def_readwrite("showError", &Thread::showError);
  
     py::class_<Frame>(m, "Frame", py::buffer_protocol())
         .def(py::init<>())

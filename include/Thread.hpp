@@ -39,6 +39,7 @@ namespace wabash {
 class Thread {
 public:
     std::function<void(const std::string& arg)> finish = nullptr;
+    std::function<void(const std::string& msgShow, const std::string& msgLog)> showError = nullptr;
     bool running = false;
     bool reconnect = false;
     std::string name;
@@ -75,10 +76,12 @@ public:
             //std::cout << "done" << std::endl;
         }
         catch (const Exception& e) {
-            std::cout << "caught error: " << e.what() << std::end
-            std::cout << "code is: " << e.code().value() << " : " << ENOENT << std::endl;
             if (e.code() == std::errc::no_such_file_or_directory) {
-                std::cout << "NO SUCH FILE; " << e.code().value() << std::endl;
+                if (showError) {
+                    std::stringstream str;
+                    str << filename << " : No such file or directory";
+                    showError(str.str(), e.what());
+                }
             }
         }
         catch (const std::exception& e) {

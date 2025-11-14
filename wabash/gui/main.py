@@ -21,15 +21,13 @@ import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
         QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox
-from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths
+from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
 import wabash
 from enum import Enum
 from pathlib import Path
-from wabash.gui.display import Display
-from wabash.gui.manager import Manager
-from wabash.gui.components.fileselector import FileSelector
-from wabash.gui.components.waitdialog import WaitDialog
+from wabash.gui import Display, Manager
+from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
@@ -75,6 +73,7 @@ class MainWindow(QMainWindow):
 
             self.fileSelector = FileSelector(self, "File")
             self.waitDialog = WaitDialog(self)
+            self.errorDialog = ErrorDialog(self)
 
             btnAdd = QPushButton("Add Thread")
             btnAdd.clicked.connect(self.btnAddClicked)
@@ -155,14 +154,11 @@ class MainWindow(QMainWindow):
             lytControl.addWidget(btnTest,           3, 0, 1, 1)
             lytControl.addWidget(self.chkReconnect, 3, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
             lytControl.addWidget(pnlModel,          4, 0, 1, 2)
-            #lytControl.addWidget(self.list,         5, 0, 1, 2)
-            #lytControl.addWidget(self.plot_widget,  6, 0, 1, 2)
             lytControl.addWidget(control_split,     5, 0, 1, 2)
 
             self.split = QSplitter()
             self.split.addWidget(pnlControl)
             self.split.addWidget(self.display)
-            #self.split.setStretchFactor(1, 10)
             if splitterState := self.settings.value(self.splitKey):
                 self.split.restoreState(splitterState)
             self.split.splitterMoved.connect(self.splitterMoved)
@@ -172,9 +168,6 @@ class MainWindow(QMainWindow):
             if rect := self.settings.value(self.geometryKey):
                 if screen := QGuiApplication.screenAt(rect.topLeft()):
                     self.setGeometry(rect)
-
-            #if self.chkInfer.isChecked():
-            #    self.startModel()
 
         except Exception as ex:
             logger.error(f"Initialization Error: {ex}")
@@ -217,10 +210,15 @@ class MainWindow(QMainWindow):
             thread = wabash.Thread(name, filename)
             thread.finish = self.manager.removeThread
             thread.reconnect = self.chkReconnect.isChecked()
+            thread.showError = self.showError
             self.manager.startThread(thread)
         except Exception as ex:
             logger.error(f'Error starting thread: {ex}')
             logger.debug(traceback.format_exc())
+
+    def showError(self, msgShow: str, msgLog: str):
+        logger.error(msgLog)
+        self.errorDialog.signals.show.emit(msgShow)
 
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
@@ -242,7 +240,8 @@ class MainWindow(QMainWindow):
 
     def btnTestClicked(self):
         print("btnTestClicked")
-        self.waitDialog.signals.show.emit("THIS IS A TEST")
+        #self.waitDialog.signals.show.emit("THIS IS A TEST")
+        self.errorDialog.signals.show.emit("THIS IS A TEST")
 
     def chkReconnectChecked(self, state: int):
         self.settings.setValue(self.reconnectKey, state)
