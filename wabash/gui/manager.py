@@ -21,6 +21,8 @@ from PyQt6.QtCore import QSize, QSizeF, Qt, QRectF, QPointF
 from PyQt6.QtWidgets import QMainWindow
 from wabash import Thread
 from time import sleep
+from loguru import logger
+import traceback
 
 class Manager():
     def __init__(self, mw: QMainWindow):
@@ -37,14 +39,22 @@ class Manager():
     def unlock(self):
         self.thread_lock = False
 
-    def startThread(self, thread: Thread):
+    def startThread(self, name: str, filename: str):
         self.lock()
-        if not thread.name in self.ordinals.keys():
-            ordinal = self.nextOrdinal()
-            self.ordinals[thread.name] = ordinal
-        self.threads[thread.name] = thread
-        thread.start()
-        self.mw.list.addItem(thread.name)
+        try:
+            thread = Thread(name, filename)
+            thread.finish = self.removeThread
+            thread.reconnect = self.mw.chkReconnect.isChecked()
+            thread.showError = self.mw.showError
+            if not thread.name in self.ordinals.keys():
+                ordinal = self.nextOrdinal()
+                self.ordinals[thread.name] = ordinal
+            self.threads[thread.name] = thread
+            thread.start()
+            self.mw.list.addItem(thread.name)
+        except Exception as ex:
+            logger.error(f'Error starting thread: {ex}')
+            logger.debug(traceback.format_exc())
         self.unlock()
 
     def removeThread(self, name: str):
@@ -66,6 +76,7 @@ class Manager():
             thread = Thread(name, self.mw.fileSelector.text())
             thread.reconnect = True
             thread.finish = self.removeThread
+            thread.showError = self.mw.showError
             self.startThread(thread)
 
     def closeAllThreads(self):

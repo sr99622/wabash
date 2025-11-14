@@ -81,6 +81,13 @@ PYBIND11_MODULE(_wabash, m)
         .def_readwrite("num", &AVRational::num)
         .def_readwrite("den", &AVRational::den);
 
+    py::enum_<ErrorTag>(m, "ErrorTag")
+        .value("UNKOWN_ERROR", ErrorTag::UNKOWN_ERROR)
+        .value("NULL_EXCEPTION", ErrorTag::NULL_EXCEPTION)
+        .value("END_OF_FILE", ErrorTag::END_OF_FILE)
+        .value("NO_SUCH_FILE_OR_DIRECTORY", ErrorTag::NO_SUCH_FILE_OR_DIRECTORY)
+        .export_values();
+
     m.attr("__version__") = "0.0.2";
 
 }

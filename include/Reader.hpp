@@ -106,21 +106,6 @@ public:
     Packet get_packet() {
         ex.ck(av_read_frame(fmt_ctx, pkt), ARF);
         return std::move(Packet(pkt));
-        /*
-        try {
-            ex.eof(av_read_frame(fmt_ctx, pkt), ARF);
-            return std::move(Packet(pkt));
-        }
-        catch (const std::exception& e) {
-            if (!strcmp(e.what(), "EOF")) {
-                std::cout << "reached end of file" << std::endl;
-                return std::move(Packet(nullptr));
-            }
-            else {
-                throw std::runtime_error(e.what());
-            }
-        }
-        */
     }
 
     int read() {
@@ -139,12 +124,12 @@ public:
                 if (seek_pts < last_pts)
                     flags |= AVSEEK_FLAG_BACKWARD;
                 av_seek_frame(fmt_ctx, seek_index, seek_pts, flags);
-                ex.eof(av_read_frame(fmt_ctx, pkt), ARF);
+                ex.ck(av_read_frame(fmt_ctx, pkt), ARF);
                 clear_callback(player);
                 seek_pts = AV_NOPTS_VALUE;
             }
             else {
-                ex.eof(av_read_frame(fmt_ctx, pkt), ARF);
+                ex.ck(av_read_frame(fmt_ctx, pkt), ARF);
             }
 
             if (writer_pkts) {
@@ -169,10 +154,10 @@ public:
                 }
             }
         }
-        catch (const std::exception& e) {
-            if (!strcmp(e.what(), "EOF")) {
+        catch (const Exception& e) {
+            if (e.tag == END_OF_FILE) {
                 if (callback_params.triggered) {
-                    infoCallback("reader terminated by timeout", uri);
+                    if (infoCallback) infoCallback("reader terminated by timeout", uri);
                 }
                 closed = true;
                 seek_pts = AV_NOPTS_VALUE;

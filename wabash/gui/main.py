@@ -203,28 +203,23 @@ class MainWindow(QMainWindow):
             logger.debug(traceback.format_exc())
         return "Unknown"
 
-    def startThread(self, name: str=None, filename: str=None):
-        if not name:
-            name = self.name()
-        try:
-            thread = wabash.Thread(name, filename)
-            thread.finish = self.manager.removeThread
-            thread.reconnect = self.chkReconnect.isChecked()
-            thread.showError = self.showError
-            self.manager.startThread(thread)
-        except Exception as ex:
-            logger.error(f'Error starting thread: {ex}')
-            logger.debug(traceback.format_exc())
+    def showError(self, name: str, msgShow: str, msgLog: str, tag: wabash.ErrorTag):
+        logger.error(f'{name} : {msgLog}')
 
-    def showError(self, msgShow: str, msgLog: str):
-        logger.error(msgLog)
-        self.errorDialog.signals.show.emit(msgShow)
+        if tag == wabash.ErrorTag.NO_SUCH_FILE_OR_DIRECTORY:
+            self.manager.lock()
+            if thread := self.manager.threads.get(name):
+                thread.reconnect = False
+            self.manager.unlock()
+
+        if len(msgShow):
+            self.errorDialog.signals.show.emit(msgShow)
 
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
 
     def btnAddClicked(self):
-        self.startThread(filename=self.fileSelector.text())
+        self.manager.startThread(self.name(), self.fileSelector.text())
 
     def btnEndClicked(self):
         if item := self.list.currentItem():
@@ -236,12 +231,10 @@ class MainWindow(QMainWindow):
 
     def btnStartNineClicked(self):
         for i in range(9):
-            self.startThread(filename=self.fileSelector.text())
+            self.manager.startThread(self.name(), self.fileSelector.text())
 
     def btnTestClicked(self):
         print("btnTestClicked")
-        #self.waitDialog.signals.show.emit("THIS IS A TEST")
-        self.errorDialog.signals.show.emit("THIS IS A TEST")
 
     def chkReconnectChecked(self, state: int):
         self.settings.setValue(self.reconnectKey, state)
@@ -256,7 +249,7 @@ class MainWindow(QMainWindow):
             self.startModel()
     
     def cmbPlotDataChanged(self, arg):
-        print("cmbPLotDataachanged", arg)
+        print("cmbPlotDataChanged", arg)
         self.settings.setValue(self.memoryTypeKey, arg)
 
     def spnSampleSizeChanged(self, arg):

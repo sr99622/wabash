@@ -107,57 +107,39 @@ enum CmdTag {
     SS
 };
 
+enum ErrorTag {
+    UNKOWN_ERROR,
+    NULL_EXCEPTION,
+    END_OF_FILE,
+    NO_SUCH_FILE_OR_DIRECTORY
+};
+
 class Exception : public std::runtime_error {
 public:
+    ErrorTag tag = UNKOWN_ERROR;
     Exception(const std::string& msg, int ret) : std::runtime_error(msg) {
         switch (ret) {
-        case -2:
-            error_code = std::make_error_code(std::errc::no_such_file_or_directory);
+        case 0:
+            tag = NULL_EXCEPTION;
             break;
-        default:
-            error_code = std::make_error_code(std::errc::no_message);
+        case -2:
+            tag = NO_SUCH_FILE_OR_DIRECTORY;
+            break;
+        case -541478725:
+            tag = END_OF_FILE;
+            break;
         }
-
     }
-    const std::error_code& code() const noexcept {
-        return error_code;
-    }
-
-private:    
-    std::error_code error_code;
-
 };
 
 class ExceptionChecker {
-
 public:
-    void ck(int ret) {
-        if (ret < 0) throw std::runtime_error("an AV exception has occurred");
-    }
-
     void ck(int ret, CmdTag cmd_tag) {
         if (ret < 0) {
             char av_str[256];
             av_strerror(ret, av_str, 256);
             std::stringstream str;
             str << tag(cmd_tag) << " has failed with error (" << ret << "): " << av_str;
-            //throw std::runtime_error(str.str());
-            throw Exception(str.str(), ret);
-        }
-    }
-
-    void eof(int ret, CmdTag cmd_tag) {
-        if (ret < 0) {
-            std::stringstream str;
-            if (ret == AVERROR_EOF) {
-                str << "EOF";
-            }
-            else {
-                char av_str[256];
-                av_strerror(ret, av_str, 256);
-                str << tag(cmd_tag) << " has failed with error (" << ret << "): " << av_str;
-            }
-            //throw std::runtime_error(str.str());
             throw Exception(str.str(), ret);
         }
     }
@@ -168,48 +150,22 @@ public:
             av_strerror(ret, av_str, 256);
             std::stringstream str;
             str << msg << " : " << av_str;
-            //throw std::runtime_error(str.str());
             throw Exception(str.str(), ret);
         }
     }
 
     void ck(void* arg, CmdTag cmd_tag = CmdTag::NO_TAG) {
-        if (arg == NULL) {
+        if (arg == nullptr) {
             if (cmd_tag == CmdTag::NO_TAG) {
-                throw std::runtime_error("a NULL exception has occurred");
+                throw Exception("a NULL exception has occurred", 0);
             }
             else {
                 std::stringstream str;
                 str << tag(cmd_tag) << " has failed with NULL value";
-                throw std::runtime_error(str.str());
+                throw Exception(str.str(), 0);
             }
         }
     }
-
-    void ck(void* arg, std::string msg1, std::string msg2) {
-        if (!arg) {
-            std::stringstream str;
-            str << msg1 << " : " << msg2;
-            throw std::runtime_error(str.str());
-        }
-    }
-
-    /*
-    const std::error_code& get_error_code(int ffmpeg_code) const noexcept {
-        std::cout << "get error code " << ffmpeg_code << std::endl;
-        std::error_code error_code;
-        switch (ffmpeg_code) {
-        case -2:
-            std::cout << "no such file" << std::endl;
-            error_code = std::make_error_code(std::errc::no_such_file_or_directory);
-            std::cout << "wtf: " << error_code.value() << std::endl;
-            break;
-        default:
-            error_code = std::make_error_code(std::errc::no_message);
-        }
-        return error_code;
-    }
-    */
 
     const char* tag(CmdTag cmd_tag) {
         switch (cmd_tag) {
