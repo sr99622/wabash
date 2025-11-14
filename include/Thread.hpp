@@ -75,33 +75,15 @@ public:
             //std::cout << "done" << std::endl;
         }
         catch (const Exception& e) {
-            std::cout << "caught error: " << e.what() << std::endl;
-            std::cout << e.code().value() << std::endl;
-            if (e.code().value() == 2) {
-                std::cout << "caught error code 2: " << ENOENT << std::endl;
-            }
-            switch (e.code().value()) {
-            case ENOENT:
-                std::cout << "caught ENOENT" << std::endl;
-                break;
-            default:
-                std::cout << "unhandled numbered exception: " << e.code().value() << std::endl;
+            std::cout << "caught error: " << e.what() << std::end
+            std::cout << "code is: " << e.code().value() << " : " << ENOENT << std::endl;
+            if (e.code() == std::errc::no_such_file_or_directory) {
+                std::cout << "NO SUCH FILE; " << e.code().value() << std::endl;
             }
         }
         catch (const std::exception& e) {
             std::cout << "caught unhandled exception: " << e.what() << std::endl;
         }
-        /*
-        catch (const std::exception& e) {
-            if (typeid(e) == typeid(Exception)) {
-                std::cout << "have Exception class" << std::endl;
-            }
-            if (e.what() != "EOF") {
-                std::cout << "error from run loop" << std::endl;
-                std::cout << e.what() << std::endl;
-            }
-        }
-        */
         
         if (finish) finish(name);
     }

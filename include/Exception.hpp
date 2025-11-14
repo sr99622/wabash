@@ -109,7 +109,18 @@ enum CmdTag {
 
 class Exception : public std::runtime_error {
 public:
-    Exception(const std::string& msg, std::error_code ec) : std::runtime_error(msg), error_code(ec) {}
+    Exception(const std::string& msg, int ret) : std::runtime_error(msg) {
+        switch (ret) {
+        case -2:
+            std::cout << "no such file" << std::endl;
+            error_code = std::make_error_code(std::errc::no_such_file_or_directory);
+            //std::cout << "wtf: " << error_code.value() << std::endl;
+            break;
+        default:
+            error_code = std::make_error_code(std::errc::no_message);
+        }
+
+    }
     const std::error_code& code() const noexcept {
         return error_code;
     }
@@ -133,7 +144,7 @@ public:
             std::stringstream str;
             str << tag(cmd_tag) << " has failed with error (" << ret << "): " << av_str;
             //throw std::runtime_error(str.str());
-            throw Exception(str.str(), get_error_code(ret));
+            throw Exception(str.str(), ret);
         }
     }
 
@@ -149,7 +160,7 @@ public:
                 str << tag(cmd_tag) << " has failed with error (" << ret << "): " << av_str;
             }
             //throw std::runtime_error(str.str());
-            throw Exception(str.str(), get_error_code(ret));
+            throw Exception(str.str(), ret);
         }
     }
 
@@ -160,7 +171,7 @@ public:
             std::stringstream str;
             str << msg << " : " << av_str;
             //throw std::runtime_error(str.str());
-            throw Exception(str.str(), get_error_code(ret));
+            throw Exception(str.str(), ret);
         }
     }
 
@@ -185,15 +196,22 @@ public:
         }
     }
 
+    /*
     const std::error_code& get_error_code(int ffmpeg_code) const noexcept {
+        std::cout << "get error code " << ffmpeg_code << std::endl;
+        std::error_code error_code;
         switch (ffmpeg_code) {
         case -2:
-            return std::make_error_code(std::errc::no_such_file_or_directory);
+            std::cout << "no such file" << std::endl;
+            error_code = std::make_error_code(std::errc::no_such_file_or_directory);
+            std::cout << "wtf: " << error_code.value() << std::endl;
+            break;
         default:
-            return std::make_error_code(std::errc::no_message);
+            error_code = std::make_error_code(std::errc::no_message);
         }
-        
+        return error_code;
     }
+    */
 
     const char* tag(CmdTag cmd_tag) {
         switch (cmd_tag) {
