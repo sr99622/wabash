@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
             pnlPlot = QWidget()
             lytPlot = QGridLayout(pnlPlot)
             lytPlot.addWidget(QLabel("Memory Type"),   0, 0, 1, 1, Qt.AlignmentFlag.AlignRight)
-            lytPlot.addWidget(self.cmbMemoryType,        0, 1, 1, 1)
+            lytPlot.addWidget(self.cmbMemoryType,      0, 1, 1, 1)
             lytPlot.addWidget(QLabel("Sample Size"),   0, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
             lytPlot.addWidget(self.spnSampleSize,      0, 3, 1, 1)
             lytPlot.addWidget(QLabel("Interval"),      0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
@@ -144,6 +144,12 @@ class MainWindow(QMainWindow):
             control_split.addWidget(self.list)
             control_split.addWidget(pnlPlot)
 
+            self.lblFeedback = QLabel("TESTING")
+
+            pnlFeedback = QWidget()
+            lytFeedback = QGridLayout(pnlFeedback)
+            lytFeedback.addWidget(self.lblFeedback,   0, 0, 1, 1)
+
             pnlControl = QWidget()
             lytControl = QGridLayout(pnlControl)
             lytControl.addWidget(self.fileSelector, 0, 0, 1, 2)
@@ -154,7 +160,8 @@ class MainWindow(QMainWindow):
             lytControl.addWidget(btnTest,           3, 0, 1, 1)
             lytControl.addWidget(self.chkReconnect, 3, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
             lytControl.addWidget(pnlModel,          4, 0, 1, 2)
-            lytControl.addWidget(control_split,     5, 0, 1, 2)
+            lytControl.addWidget(pnlFeedback,       0, 2, 1, 1)
+            lytControl.addWidget(control_split,     5, 0, 1, 3)
 
             self.split = QSplitter()
             self.split.addWidget(pnlControl)
@@ -215,6 +222,10 @@ class MainWindow(QMainWindow):
         if len(msgShow):
             self.errorDialog.signals.show.emit(msgShow)
 
+    def foolish(self, name: str, pts: int):
+        print("foolish", name, pts)
+        self.lblFeedback.setText(f'{name} : {pts}')
+
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
 
@@ -235,6 +246,7 @@ class MainWindow(QMainWindow):
 
     def btnTestClicked(self):
         print("btnTestClicked")
+        self.lblFeedback.setText("THINGY BOB")
 
     def chkReconnectChecked(self, state: int):
         self.settings.setValue(self.reconnectKey, state)

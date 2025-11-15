@@ -46,6 +46,7 @@ class Manager():
             thread.finish = self.removeThread
             thread.reconnect = self.mw.chkReconnect.isChecked()
             thread.showError = self.mw.showError
+            thread.foolish = self.mw.foolish
             if not thread.name in self.ordinals.keys():
                 ordinal = self.nextOrdinal()
                 self.ordinals[thread.name] = ordinal

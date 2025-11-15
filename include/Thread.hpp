@@ -39,6 +39,7 @@ class Thread {
 public:
     std::function<void(const std::string& arg)> finish = nullptr;
     std::function<void(const std::string& name, const std::string& msgShow, const std::string& msgLog, ErrorTag tag)> showError = nullptr;
+    std::function<void(const std::string& name, int pts)> foolish = nullptr;
     bool running = false;
     bool reconnect = false;
     std::string name;
@@ -70,6 +71,7 @@ public:
                     std::this_thread::sleep_for(std::chrono::milliseconds(40));
                     filter.GetFrame(pkt, frame);
                     counter++;
+                    foolish(name, pkt.pts());
                 }
             }
             //std::cout << "done" << std::endl;
