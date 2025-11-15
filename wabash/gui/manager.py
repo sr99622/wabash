@@ -59,25 +59,23 @@ class Manager():
 
     def removeThread(self, name: str):
         reconnect = False
+        filename = self.mw.fileSelector.text()
         self.lock()
-        if name in self.threads:
-            reconnect = self.threads[name].reconnect
-            del self.threads[name]
+        if thread := self.threads.get(name):
+            reconnect = thread.reconnect
+            filename = thread.filename
             list = self.mw.list
             items = list.findItems(name, Qt.MatchFlag.MatchExactly)
             if len(items):
                 list.takeItem(list.row(items[0]))
+            del self.threads[name]
         self.unlock()
 
         if not reconnect:
             if name in self.ordinals:
                 del self.ordinals[name]
         else:
-            #thread = Thread(name, self.mw.fileSelector.text())
-            #thread.reconnect = True
-            #thread.finish = self.removeThread
-            #thread.showError = self.mw.showError
-            self.startThread(name, self.mw.fileSelector.text())
+            self.startThread(name, filename)
 
     def closeAllThreads(self):
         self.lock()
