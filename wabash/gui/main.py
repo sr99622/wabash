@@ -45,6 +45,9 @@ class List(QListWidget):
         if items := self.findItems(text, Qt.MatchFlag.MatchExactly):
             self.setCurrentItem(items[0])
 
+class MainWindowSignals(QObject):
+    feedback = pyqtSignal(str)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -53,6 +56,8 @@ class MainWindow(QMainWindow):
             self.counter = 0
             self.manager = Manager(self)
             self.model = None
+            self.signals = MainWindowSignals()
+            self.signals.feedback.connect(self.foolUpdate)
 
             QDir.addSearchPath("image", str(Path(__file__).parent.parent / "gui" / "resources"))
             self.settings = QSettings("wabash", "gui")
@@ -222,9 +227,12 @@ class MainWindow(QMainWindow):
         if len(msgShow):
             self.errorDialog.signals.show.emit(msgShow)
 
+    def foolUpdate(self, msg: str):
+        self.lblFeedback.setText(msg)
+
     def foolish(self, name: str, pts: int):
         print("foolish", name, pts)
-        self.lblFeedback.setText(f'{name} : {pts}')
+        self.signals.feedback.emit(f'{name} - {pts}')
 
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
