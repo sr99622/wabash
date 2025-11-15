@@ -23,7 +23,7 @@ import platform
 import hashlib
 import requests
 from PyQt6.QtWidgets import QMainWindow
-from wabash import Thread
+from wabash import Stream
 import numpy as np
 from torchvision.transforms import functional
 import torch

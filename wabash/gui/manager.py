@@ -19,72 +19,78 @@
 
 from PyQt6.QtCore import QSize, QSizeF, Qt, QRectF, QPointF
 from PyQt6.QtWidgets import QMainWindow
-from wabash import Thread
+from wabash import Stream
 from time import sleep
 from loguru import logger
 import traceback
 
 class Manager():
     def __init__(self, mw: QMainWindow):
-        self.threads = {}
+        self.streams = {}
         self.mw = mw
         self.ordinals = {}
-        self.thread_lock = False
+        self.stream_lock = False
 
     def lock(self):
-        while self.thread_lock:
+        while self.stream_lock:
             sleep(0.001)
-        self.thread_lock = True
+        self.stream_lock = True
 
     def unlock(self):
-        self.thread_lock = False
+        self.stream_lock = False
 
-    def startThread(self, name: str, filename: str):
+    def startStream(self, name: str, filename: str):
         self.lock()
         try:
-            thread = Thread(name, filename)
-            thread.finish = self.removeThread
-            thread.reconnect = self.mw.chkReconnect.isChecked()
-            thread.showError = self.mw.showError
-            thread.foolish = self.mw.foolish
-            if not thread.name in self.ordinals.keys():
+            stream = Stream(name, filename)
+            stream.finish = self.removeStream
+            stream.reconnect = self.mw.chkReconnect.isChecked()
+            stream.showError = self.mw.showError
+            stream.foolish = self.mw.foolish
+            if not stream.name in self.ordinals.keys():
                 ordinal = self.nextOrdinal()
-                self.ordinals[thread.name] = ordinal
-            self.threads[thread.name] = thread
-            thread.start()
-            self.mw.list.addItem(thread.name)
+                self.ordinals[stream.name] = ordinal
+            self.streams[stream.name] = stream
+            stream.start()
+            self.mw.list.addItem(stream.name)
         except Exception as ex:
-            logger.error(f'Error starting thread: {ex}')
+            logger.error(f'Error starting stream: {ex}')
             logger.debug(traceback.format_exc())
         self.unlock()
 
-    def removeThread(self, name: str):
+    def stopStream(self, name: str):
+        self.lock()
+        if stream := self.streams.get(name):
+            stream.running = False
+        self.unlock()
+
+    def removeStream(self, name: str):
         reconnect = False
         filename = self.mw.fileSelector.text()
         self.lock()
-        if thread := self.threads.get(name):
-            reconnect = thread.reconnect
-            filename = thread.filename
+        if stream := self.streams.get(name):
+            reconnect = stream.reconnect
+            filename = stream.filename
             list = self.mw.list
             items = list.findItems(name, Qt.MatchFlag.MatchExactly)
             if len(items):
                 list.takeItem(list.row(items[0]))
-            del self.threads[name]
+            del self.streams[name]
         self.unlock()
 
         if not reconnect:
             if name in self.ordinals:
                 del self.ordinals[name]
         else:
-            self.startThread(name, filename)
+            self.startStream(name, filename)
 
-    def closeAllThreads(self):
+    def closeAllStreams(self):
         self.lock()
-        for name in self.threads:
-            self.threads[name].reconnect = False
-            self.threads[name].running = False
+        for name in self.streams:
+            self.streams[name].reconnect = False
+            self.streams[name].running = False
         self.unlock()
-        while len(self.threads):
+        while len(self.streams):
             sleep(0.001)
 
     def nextOrdinal(self) -> int:

@@ -100,17 +100,17 @@ class Display(QLabel):
 
             self.mw.manager.lock()
             
-            for thread in self.mw.manager.threads.values():
-                if not thread.running:
+            for stream in self.mw.manager.streams.values():
+                if not stream.running:
                     continue
-                if thread.frame.is_null():
+                if stream.frame.is_null():
                     continue
 
                 # only write the image to the pixmap if the frame is new
-                if thread.last_pts == thread.frame.pts():
+                if stream.last_pts == stream.frame.pts():
                     continue
                 
-                ary = np.array(thread.frame, copy = False)
+                ary = np.array(stream.frame, copy = False)
                 ary = np.ascontiguousarray(ary)
 
                 if len(ary.shape) < 3:
@@ -122,33 +122,33 @@ class Display(QLabel):
                 if data.isNull():
                     continue
 
-                # interestingly, the thread cannot be written to until after the ary is assigned
-                thread.last_pts = thread.frame.pts()
+                # interestingly, the stream cannot be written to until after the ary is assigned
+                stream.last_pts = stream.frame.pts()
 
-                if thread.counter > 3:
+                if stream.counter > 3:
                     if self.mw.chkInfer.isChecked():
                         if not self.mw.model:
                             self.mw.startModel()
                         if self.mw.model.loaded:
                             boxes = self.mw.model(ary)
                             if boxes is not None:
-                                thread.detections = boxes
-                    thread.counter = 0
+                                stream.detections = boxes
+                    stream.counter = 0
 
                 # draw stream image
-                rect = self.mw.manager.displayRect(thread.name, self.image.size(), self.stream_aspect_ratio)
+                rect = self.mw.manager.displayRect(stream.name, self.image.size(), self.stream_aspect_ratio)
                 painter.drawImage(rect, data)
                 
                 # draw stream name
                 painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
-                textRect = self.getTextRect(painter, thread.name)
+                textRect = self.getTextRect(painter, stream.name)
                 textRect.moveCenter(QPointF(rect.center()))
-                painter.drawText(textRect, Qt.AlignmentFlag.AlignCenter, thread.name)
+                painter.drawText(textRect, Qt.AlignmentFlag.AlignCenter, stream.name)
                 
                 # draw stream detections
                 scalex = rect.width() / w
                 scaley = rect.height() / h
-                for box in thread.detections:
+                for box in stream.detections:
                     p = (box[0] * scalex + rect.x())
                     q = (box[1] * scaley + rect.y())
                     r = (box[2] - box[0]) * scalex
@@ -158,11 +158,11 @@ class Display(QLabel):
                 # draw stream border
                 painter.setPen(QPen(Qt.GlobalColor.lightGray, 2, Qt.PenStyle.SolidLine))
                 painter.drawRect(rect)
-                if self.mw.list.currentItem() and thread.name == self.mw.list.currentItem().text():
+                if self.mw.list.currentItem() and stream.name == self.mw.list.currentItem().text():
                     painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
                     painter.drawRect(rect.adjusted(2, 2, -2, -2))
 
-            if len(self.mw.manager.threads) or self.blank_display:
+            if len(self.mw.manager.streams) or self.blank_display:
                 blanks = self.mw.manager.getBlankSpace(self.image.size(), self.stream_aspect_ratio)
                 for blank in blanks:
                     painter.fillRect(blank, QColorConstants.Black)
@@ -191,7 +191,7 @@ class Display(QLabel):
 
     def mousePressEvent(self, event: QMouseEvent):
         self.mw.manager.lock()
-        for name in self.mw.manager.threads:
+        for name in self.mw.manager.streams:
             rect = self.mw.manager.displayRect(name, self.size(), self.stream_aspect_ratio)
             if rect.contains(event.position()):
                 self.mw.list.setCurrentText(name)

@@ -1,5 +1,5 @@
 /********************************************************************
-* wabash/include/Thread.hpp
+* wabash/include/Stream.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *
@@ -17,8 +17,8 @@
 *
 *********************************************************************/
 
-#ifndef THREAD_HPP
-#define THREAD_HPP
+#ifndef STREAM_HPP
+#define STREAM_HPP
 
 #include <thread>
 #include <sstream>
@@ -35,7 +35,7 @@
 
 namespace wabash {
 
-class Thread {
+class Stream {
 public:
     std::function<void(const std::string& arg)> finish = nullptr;
     std::function<void(const std::string& name, const std::string& msgShow, const std::string& msgLog, ErrorTag tag)> showError = nullptr;
@@ -49,11 +49,11 @@ public:
     Frame frame;
     std::vector<std::array<double, 4>> detections;
 
-    Thread(const std::string& name, const std::string& filename) : name(name), filename(filename) {
+    Stream(const std::string& name, const std::string& filename) : name(name), filename(filename) {
         av_log_set_level(AV_LOG_QUIET);
     }
 
-    ~Thread() { }
+    ~Stream() { }
 
     void run() {
         try {
@@ -129,4 +129,4 @@ public:
 
 }
 
-#endif // THREAD_HPP
+#endif // STREAM_HPP

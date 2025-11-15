@@ -80,10 +80,10 @@ class MainWindow(QMainWindow):
             self.waitDialog = WaitDialog(self)
             self.errorDialog = ErrorDialog(self)
 
-            btnAdd = QPushButton("Add Thread")
+            btnAdd = QPushButton("Add Stream")
             btnAdd.clicked.connect(self.btnAddClicked)
 
-            btnEnd = QPushButton("End Thread")
+            btnEnd = QPushButton("End Stream")
             btnEnd.clicked.connect(self.btnEndClicked)
 
             btnCloseAll = QPushButton("Close All")
@@ -231,26 +231,28 @@ class MainWindow(QMainWindow):
         self.lblFeedback.setText(msg)
 
     def foolish(self, name: str, pts: int):
-        print("foolish", name, pts)
-        self.signals.feedback.emit(f'{name} - {pts}')
+        #print("foolish", name, pts)
+        #self.signals.feedback.emit(f'{name} - {pts}')
+        ...
 
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
 
     def btnAddClicked(self):
-        self.manager.startThread(self.name(), self.fileSelector.text())
+        self.manager.startStream(self.name(), self.fileSelector.text())
 
     def btnEndClicked(self):
         if item := self.list.currentItem():
-            if thread := self.manager.threads.get(item.text()):
-                thread.running = False
+            self.manager.stopStream(item.text())
+            #if thread := self.manager.threads.get(item.text()):
+            #    thread.running = False
 
     def btnCloseAllClicked(self):
-        self.manager.closeAllThreads()
+        self.manager.closeAllStreams()
 
     def btnStartNineClicked(self):
         for i in range(9):
-            self.manager.startThread(self.name(), self.fileSelector.text())
+            self.manager.startStream(self.name(), self.fileSelector.text())
 
     def btnTestClicked(self):
         print("btnTestClicked")
@@ -285,7 +287,7 @@ class MainWindow(QMainWindow):
         return result
     
     def closeEvent(self, event: QCloseEvent):
-        self.manager.closeAllThreads()
+        self.manager.closeAllStreams()
         self.settings.setValue(self.geometryKey, self.geometry())
         super().closeEvent(event)
 

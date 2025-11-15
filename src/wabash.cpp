@@ -21,7 +21,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include "wabash.hpp"
-#include "Thread.hpp"
+#include "Stream.hpp"
 
 namespace py = pybind11;
 
@@ -31,20 +31,20 @@ PYBIND11_MODULE(_wabash, m)
 {
     m.doc() = "pybind11 parallel processing plugin";
 
-    py::class_<Thread>(m, "Thread")
+    py::class_<Stream>(m, "Stream")
         .def(py::init<const std::string&, const std::string&>())
-        .def("start", &Thread::start)
-        .def_readwrite("counter", &Thread::counter)
-        .def_readwrite("last_pts", &Thread::last_pts)
-        .def_readwrite("detections", &Thread::detections)
-        .def_readwrite("frame", &Thread::frame)
-        .def_readwrite("name", &Thread::name)
-        .def_readwrite("filename", &Thread::filename)
-        .def_readwrite("running", &Thread::running)
-        .def_readwrite("reconnect", &Thread::reconnect)
-        .def_readwrite("finish", &Thread::finish)
-        .def_readwrite("foolish", &Thread::foolish)
-        .def_readwrite("showError", &Thread::showError);
+        .def("start", &Stream::start)
+        .def_readwrite("counter", &Stream::counter)
+        .def_readwrite("last_pts", &Stream::last_pts)
+        .def_readwrite("detections", &Stream::detections)
+        .def_readwrite("frame", &Stream::frame)
+        .def_readwrite("name", &Stream::name)
+        .def_readwrite("filename", &Stream::filename)
+        .def_readwrite("running", &Stream::running)
+        .def_readwrite("reconnect", &Stream::reconnect)
+        .def_readwrite("finish", &Stream::finish)
+        .def_readwrite("foolish", &Stream::foolish)
+        .def_readwrite("showError", &Stream::showError);
  
     py::class_<Frame>(m, "Frame", py::buffer_protocol())
         .def(py::init<>())
