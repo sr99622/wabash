@@ -136,7 +136,7 @@ class Display(QLabel):
                     stream.counter = 0
 
                 # draw stream image
-                rect = self.mw.manager.displayRect(stream.name, self.image.size(), self.stream_aspect_ratio)
+                rect = self.mw.manager.layout.displayRect(stream.name, self.image.size(), self.stream_aspect_ratio)
                 painter.drawImage(rect, data)
                 
                 # draw stream name
@@ -163,7 +163,7 @@ class Display(QLabel):
                     painter.drawRect(rect.adjusted(2, 2, -2, -2))
 
             if len(self.mw.manager.streams) or self.blank_display:
-                blanks = self.mw.manager.getBlankSpace(self.image.size(), self.stream_aspect_ratio)
+                blanks = self.mw.manager.layout.getBlankSpace(self.image.size(), self.stream_aspect_ratio)
                 for blank in blanks:
                     painter.fillRect(blank, QColorConstants.Black)
                 self.setPixmap(QPixmap.fromImage(self.image))
@@ -192,7 +192,7 @@ class Display(QLabel):
     def mousePressEvent(self, event: QMouseEvent):
         self.mw.manager.lock()
         for name in self.mw.manager.streams:
-            rect = self.mw.manager.displayRect(name, self.size(), self.stream_aspect_ratio)
+            rect = self.mw.manager.layout.displayRect(name, self.size(), self.stream_aspect_ratio)
             if rect.contains(event.position()):
                 self.mw.list.setCurrentText(name)
                 break

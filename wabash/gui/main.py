@@ -27,15 +27,11 @@ import wabash
 from enum import Enum
 from pathlib import Path
 from wabash.gui import Display, Manager
-from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog
+from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog, Theme, Style
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
 import traceback
-
-class Style(Enum):
-    DARK = 0
-    LIGHT = 1
 
 class List(QListWidget):
     def __init__(self):
@@ -176,7 +172,8 @@ class MainWindow(QMainWindow):
             self.split.splitterMoved.connect(self.splitterMoved)
             self.setCentralWidget(self.split)
 
-            self.setStyleSheet(self.style(Style.DARK))        
+            theme = Theme(self)
+            self.setStyleSheet(theme.style(Style.DARK))        
             if rect := self.settings.value(self.geometryKey):
                 if screen := QGuiApplication.screenAt(rect.topLeft()):
                     self.setGeometry(rect)
@@ -244,8 +241,6 @@ class MainWindow(QMainWindow):
     def btnEndClicked(self):
         if item := self.list.currentItem():
             self.manager.stopStream(item.text())
-            #if thread := self.manager.threads.get(item.text()):
-            #    thread.running = False
 
     def btnCloseAllClicked(self):
         self.manager.closeAllStreams()
@@ -294,57 +289,6 @@ class MainWindow(QMainWindow):
     def getCachePath(self) -> Path:
         return Path(QStandardPaths.standardLocations(QStandardPaths.StandardLocation.HomeLocation)[0]) / ".cache" / "wabash"
 
-    def style(self, appearance: Style) -> str:
-        filename = Path(__file__).parent.parent / "gui" / "resources" / "darkstyle.qss"
-        with open(filename, 'r') as file:
-            strStyle = file.read()
-
-        match appearance:
-            case Style.DARK:
-                blDefault = "#5B5B5B"
-                bmDefault = "#4B4B4B"
-                bdDefault = "#3B3B3B"
-                flDefault = "#C6D9F2"
-                fmDefault = "#9DADC2"
-                fdDefault = "#808D9E"
-                slDefault = "#FFFFFF"
-                smDefault = "#DDEEFF"
-                sdDefault = "#306294"
-                isDefault = "#323232"
-                strStyle = strStyle.replace("background_light",  blDefault)
-                strStyle = strStyle.replace("background_medium", bmDefault)
-                strStyle = strStyle.replace("background_dark",   bdDefault)
-                strStyle = strStyle.replace("foreground_light",  flDefault)
-                strStyle = strStyle.replace("foreground_medium", fmDefault)
-                strStyle = strStyle.replace("foreground_dark",   fdDefault)
-                strStyle = strStyle.replace("selection_light",   slDefault)
-                strStyle = strStyle.replace("selection_medium",  smDefault)
-                strStyle = strStyle.replace("selection_dark",    sdDefault)
-                strStyle = strStyle.replace("selection_item",    isDefault)
-            case Style.LIGHT:
-                blDefault = "#AAAAAA"
-                bmDefault = "#CCCCCC"
-                bdDefault = "#FFFFFF"
-                flDefault = "#111111"
-                fmDefault = "#222222"
-                fdDefault = "#999999"
-                slDefault = "#111111"
-                smDefault = "#222222"
-                sdDefault = "#999999"
-                isDefault = "#888888"
-                strStyle = strStyle.replace("background_light",  blDefault)
-                strStyle = strStyle.replace("background_medium", bmDefault)
-                strStyle = strStyle.replace("background_dark",   bdDefault)
-                strStyle = strStyle.replace("foreground_light",  flDefault)
-                strStyle = strStyle.replace("foreground_medium", fmDefault)
-                strStyle = strStyle.replace("foreground_dark",   fdDefault)
-                strStyle = strStyle.replace("selection_light",   slDefault)
-                strStyle = strStyle.replace("selection_medium",  smDefault)
-                strStyle = strStyle.replace("selection_dark",    sdDefault)
-                strStyle = strStyle.replace("selection_item",    isDefault)
-
-        return strStyle
-    
 def run():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
