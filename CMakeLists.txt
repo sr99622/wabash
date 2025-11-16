@@ -48,6 +48,8 @@ target_link_libraries(_wabash PRIVATE
 
 target_include_directories(_wabash SYSTEM PUBLIC
     include
+    include/media
+    include/network
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

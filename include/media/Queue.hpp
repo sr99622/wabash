@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Queue.hpp
+* wabash/include/media/Queue.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

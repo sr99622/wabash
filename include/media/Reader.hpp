@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Reader.hpp
+* wabash/include/media/Reader.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

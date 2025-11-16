@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Packet.hpp
+* wabash/include/media/Packet.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

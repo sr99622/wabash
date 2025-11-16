@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Audio.hpp
+* wabash/include/media/Audio.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

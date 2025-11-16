@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Display.hpp
+* wabash/include/media/Display.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

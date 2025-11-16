@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Writer.hpp
+* wabash/include/media/Writer.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

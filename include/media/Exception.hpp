@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Exception.hpp
+* wabash/include/media/Exception.hpp
 *
 * Copyright (c) 2022, 2025  Stephen Rhodes
 *

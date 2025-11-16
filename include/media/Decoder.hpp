@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Decoder.hpp
+* wabash/include/media/Decoder.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

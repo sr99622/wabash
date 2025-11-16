@@ -1,5 +1,5 @@
 /********************************************************************
-* libavio/include/Filter.hpp
+* wabash/include/media/Filter.hpp
 *
 * Copyright (c) 2025  Stephen Rhodes
 *

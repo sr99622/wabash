@@ -88,6 +88,36 @@ PYBIND11_MODULE(_wabash, m)
         .value("END_OF_FILE", ErrorTag::END_OF_FILE)
         .value("NO_SUCH_FILE_OR_DIRECTORY", ErrorTag::NO_SUCH_FILE_OR_DIRECTORY)
         .export_values();
+        
+    py::class_<Server>(m, "Server")
+        .def(py::init<const std::string&, int>())
+        .def("start", &Server::start)
+        .def("stop", &Server::stop)
+        .def_readwrite("errorCallback", &Server::errorCallback)
+        .def_readwrite("serverCallback", &Server::serverCallback)
+        .def_readwrite("running", &Server::running);
+
+    py::class_<Client>(m, "Client")
+        .def(py::init<const std::string&>())
+        .def("transmit", &Client::transmit)
+        .def("setEndpoint", &Client::setEndpoint)
+        .def_readwrite("errorCallback", &Client::errorCallback)
+        .def_readwrite("clientCallback", &Client::clientCallback);
+
+    py::class_<Broadcaster>(m, "Broadcaster")
+        .def(py::init<const std::vector<std::string>&>())
+        .def("send", &Broadcaster::send)
+        .def("enableLoopback", &Broadcaster::enableLoopback)
+        .def_readwrite("errorCallback", &Broadcaster::errorCallback);
+
+    py::class_<Listener>(m, "Listener")
+        .def(py::init<const std::vector<std::string>&>())
+        .def("start", &Listener::start)
+        .def("stop", &Listener::stop)
+        .def_readwrite("running", &Listener::running)
+        .def_readwrite("errorCallback", &Listener::errorCallback)
+        .def_readwrite("listenCallback", &Listener::listenCallback);
+
 
     m.attr("__version__") = "0.0.2";
 
