@@ -63,9 +63,9 @@ class Display(QLabel):
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setFont(QFont("Arial", 20))
 
-            self.mw.manager.lock()
+            self.mw.streamPanel.manager.lock()
             
-            for stream in self.mw.manager.streams.values():
+            for stream in self.mw.streamPanel.manager.streams.values():
                 if not stream.running:
                     continue
                 if stream.frame.is_null():
@@ -94,14 +94,15 @@ class Display(QLabel):
                     if self.mw.streamPanel.chkInfer.isChecked():
                         if not self.mw.model:
                             self.mw.startModel()
-                        if self.mw.model.loaded:
-                            boxes = self.mw.model(ary)
-                            if boxes is not None:
-                                stream.detections = boxes
+                        else:
+                            if self.mw.model.loaded:
+                                boxes = self.mw.model(ary)
+                                if boxes is not None:
+                                    stream.detections = boxes
                     stream.counter = 0
 
                 # draw stream image
-                rect = self.mw.manager.layout.displayRect(stream.name, self.image.size(), self.stream_aspect_ratio)
+                rect = self.mw.streamPanel.manager.layout.displayRect(stream.name, self.image.size(), self.stream_aspect_ratio)
                 painter.drawImage(rect, data)
                 
                 # draw stream name
@@ -127,8 +128,8 @@ class Display(QLabel):
                     painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
                     painter.drawRect(rect.adjusted(2, 2, -2, -2))
 
-            if len(self.mw.manager.streams) or self.blank_display:
-                blanks = self.mw.manager.layout.getBlankSpace(self.image.size(), self.stream_aspect_ratio)
+            if len(self.mw.streamPanel.manager.streams) or self.blank_display:
+                blanks = self.mw.streamPanel.manager.layout.getBlankSpace(self.image.size(), self.stream_aspect_ratio)
                 for blank in blanks:
                     painter.fillRect(blank, QColorConstants.Black)
                 self.setPixmap(QPixmap.fromImage(self.image))
@@ -136,11 +137,11 @@ class Display(QLabel):
             else:
                 self.blank_display = True
 
-            self.mw.manager.unlock()
+            self.mw.streamPanel.manager.unlock()
         except Exception as ex:
             logger.debug(f'Display Refresh Error: {ex}')
             logger.debug(traceback.format_exc())
-            self.mw.manager.unlock()
+            self.mw.streamPanel.manager.unlock()
 
     def sizeHint(self) -> QSize:
         return QSize(480,480)
@@ -155,10 +156,10 @@ class Display(QLabel):
         return painter.fontMetrics().boundingRect(estimate, 0, text).toRectF()
 
     def mousePressEvent(self, event: QMouseEvent):
-        self.mw.manager.lock()
-        for name in self.mw.manager.streams:
-            rect = self.mw.manager.layout.displayRect(name, self.size(), self.stream_aspect_ratio)
+        self.mw.streamPanel.manager.lock()
+        for name in self.mw.streamPanel.manager.streams:
+            rect = self.mw.streamPanel.manager.layout.displayRect(name, self.size(), self.stream_aspect_ratio)
             if rect.contains(event.position()):
-                self.mw.list.setCurrentText(name)
+                self.mw.streamPanel.list.setCurrentText(name)
                 break
-        self.mw.manager.unlock()
+        self.mw.streamPanel.manager.unlock()

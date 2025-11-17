@@ -2,13 +2,14 @@ import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
         QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox
-from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal
+from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
 import wabash
 from enum import Enum
 from pathlib import Path
-from wabash.gui import Display, Manager
-from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog, Theme, Style
+from .manager import Manager
+from wabash.gui import Display
+from wabash.gui.components import FileSelector
 from .memoryplot import MemoryPlot
 from loguru import logger
 import pyqtgraph as pg
@@ -27,7 +28,9 @@ class StreamPanel(QWidget):
     def __init__(self, mw):
         super().__init__(mw)
         self.mw = mw
+        self.manager = Manager(self.mw)
         self.counter = 0
+        QApplication.instance().aboutToQuit.connect(self.onClose)
 
         self.reconnectKey = "MainWindow/reconnect"
         self.inferKey = "MainWindow/infer"
@@ -100,18 +103,18 @@ class StreamPanel(QWidget):
         lytMain.addWidget(pnlControl, 0, 0, 1, 1)
 
     def btnAddClicked(self):
-        self.mw.manager.startStream(self.name(), self.fileSelector.text())
+        self.manager.startStream(self.name(), self.fileSelector.text())
 
     def btnEndClicked(self):
         if item := self.list.currentItem():
-            self.mw.manager.stopStream(item.text())
+            self.manager.stopStream(item.text())
 
     def btnCloseAllClicked(self):
-        self.mw.manager.closeAllStreams()
+        self.manager.closeAllStreams()
 
     def btnStartNineClicked(self):
         for i in range(9):
-            self.mw.manager.startStream(self.name(), self.fileSelector.text())
+            self.manager.startStream(self.name(), self.fileSelector.text())
 
     def chkReconnectChecked(self, state: int):
         self.mw.settings.setValue(self.reconnectKey, state)
@@ -130,6 +133,25 @@ class StreamPanel(QWidget):
         self.counter += 1
         return result
     
+    def showError(self, name: str, msgShow: str, msgLog: str, tag: wabash.ErrorTag):
+        logger.error(f'{name} : {msgLog}')
+
+        if tag == wabash.ErrorTag.NO_SUCH_FILE_OR_DIRECTORY:
+            self.manager.lock()
+            if thread := self.manager.threads.get(name):
+                thread.reconnect = False
+            self.manager.unlock()
+
+        if len(msgShow):
+            self.errorDialog.signals.show.emit(msgShow)
+
+    def onClose(self):
+        print("stream panel on close")
+        self.manager.closeAllStreams()
+
     def btnTestClicked(self):
         print("btnTestClicked")
-        self.lblFeedback.setText("THINGY BOB")
+        #self.lblFeedback.setText("THINGY BOB")
+        self.mw.waitDialog.signals.show.emit("THIS IS A TEST")
+        timer = QTimer(self)
+        timer.singleShot(1000, self.startModel)

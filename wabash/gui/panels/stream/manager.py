@@ -20,7 +20,7 @@
 from PyQt6.QtCore import QSize, QSizeF, Qt, QRectF, QPointF
 from PyQt6.QtWidgets import QMainWindow
 from wabash import Stream
-from wabash.gui.components import Layout
+from .layout import Layout
 from time import sleep
 from loguru import logger
 import traceback
@@ -47,7 +47,7 @@ class Manager():
             stream = Stream(name, filename)
             stream.finish = self.removeStream
             stream.reconnect = self.mw.streamPanel.chkReconnect.isChecked()
-            stream.showError = self.mw.showError
+            stream.showError = self.mw.streamPanel.showError
             stream.foolish = self.mw.foolish
             self.layout.addOrdinal(stream.name)
             self.streams[stream.name] = stream

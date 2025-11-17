@@ -7,8 +7,7 @@ from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
 import wabash
 from enum import Enum
 from pathlib import Path
-from wabash.gui import Display, Manager
-from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog, Theme, Style
+from wabash.gui import Display
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata

@@ -21,18 +21,20 @@ import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
         QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox, QTabWidget
-from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal
+from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
 import wabash
 from enum import Enum
 from pathlib import Path
-from wabash.gui import Display, Manager
+from wabash.gui import Display
 from wabash.gui.panels import StreamPanel, NetworkPanel
 from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog, Theme, Style
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
 import traceback
+from time import sleep
+import threading
 
 class MainWindowSignals(QObject):
     feedback = pyqtSignal(str)
@@ -41,15 +43,15 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         try:
+            QDir.addSearchPath("image", str(Path(__file__).parent.parent / "gui" / "resources"))
             self.logger_id = logger.add(self.getCachePath() / "logs" / "log.txt", rotation="1 MB")
-            self.manager = Manager(self)
             self.model = None
+            self.model_starting = False
             self.waitDialog = WaitDialog(self)
             self.errorDialog = ErrorDialog(self)
             self.signals = MainWindowSignals()
             self.signals.feedback.connect(self.foolUpdate)
 
-            QDir.addSearchPath("image", str(Path(__file__).parent.parent / "gui" / "resources"))
             self.settings = QSettings("wabash", "gui")
             self.setWindowIcon(QIcon('image:wabash.png'))
             self.setWindowTitle(f"wabash version {self.getVersion()}")
@@ -90,16 +92,26 @@ class MainWindow(QMainWindow):
             logger.error(f"Initialization Error: {ex}")
             logger.debug(traceback.format_exc())
 
+    def initializeModel(self):
+        self.waitDialog.signals.update.emit("Loading Python libraries")
+        from wabash.gui.model import Model
+        self.waitDialog.signals.update.emit("Starting model load")
+        self.model = Model(self)
+
     def startModel(self):
         try:
-            if not self.model:
+            if not self.model and not self.model_starting:
+                self.model_starting = True
+                self.waitDialog.signals.show.emit("Please wait while the model is initialized")
+                thread = threading.Thread(target=self.initializeModel)
+                thread.start()
                 logger.debug(f'starting model using api: {self.streamPanel.cmbAPI.currentText()}')
                 #if api == "rknn":
                 #    from rockchip import Model
                 #else:
                 #    from wabash.gui.model import Model
-                from wabash.gui.model import Model
-                self.model = Model(self)
+                #from wabash.gui.model import Model
+                #self.model = Model(self)
         except Exception as ex:
             logger.error(f'Error starting model: {ex}')
             logger.debug(traceback.format_exc())
@@ -120,18 +132,6 @@ class MainWindow(QMainWindow):
             logger.debug(traceback.format_exc())
         return "Unknown"
 
-    def showError(self, name: str, msgShow: str, msgLog: str, tag: wabash.ErrorTag):
-        logger.error(f'{name} : {msgLog}')
-
-        if tag == wabash.ErrorTag.NO_SUCH_FILE_OR_DIRECTORY:
-            self.manager.lock()
-            if thread := self.manager.threads.get(name):
-                thread.reconnect = False
-            self.manager.unlock()
-
-        if len(msgShow):
-            self.errorDialog.signals.show.emit(msgShow)
-
     def foolUpdate(self, msg: str):
         self.lblFeedback.setText(msg)
 
@@ -144,7 +144,6 @@ class MainWindow(QMainWindow):
         self.settings.setValue(self.splitKey, self.split.saveState())
 
     def closeEvent(self, event: QCloseEvent):
-        self.manager.closeAllStreams()
         self.settings.setValue(self.geometryKey, self.geometry())
         super().closeEvent(event)
 

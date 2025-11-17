@@ -39,7 +39,6 @@ import traceback
 if (sys.platform != "darwin") and (platform.machine() != "aarch64"):
     import openvino as ov
 
-
 NUM_CLASSES = 80
 INF_DIMENSION = 640
 
@@ -51,10 +50,10 @@ class Model():
         self.mw = mw
         self.loaded = False
 
-        thread = threading.Thread(target=self.load_model)
-        thread.start()
-        mw.waitDialog.signals.show.emit("Please wait while the model is initialized")
-        #self.load_model()
+        #thread = threading.Thread(target=self.load_model)
+        #thread.start()
+        #mw.waitDialog.signals.show.emit("Please wait while the model is initialized")
+        self.load_model()
 
     def __call__(self, ary):
         # collect the thread frame image data
@@ -130,6 +129,7 @@ class Model():
 
             # if using openvino, the model needs to be converted on the first pass
             if self.api == "PyTorch" or (self.api == "OpenVINO" and not ov_model):
+                self.mw.waitDialog.signals.update.emit("Loading YOLO model")
                 # find the hardware for the model
                 self.torch_device_name = "cpu"
                 if torch.cuda.is_available():
@@ -148,6 +148,7 @@ class Model():
                 self.model_name = "yolox_s"
                 self.ckpt_file = ckpt_path = self.mw.getCachePath() / f"{self.model_name}.pth"
                 if not os.path.exists(self.ckpt_file):
+                    self.mw.waitDialog.signals.update.emit("Downloading model weights")
                     print("DID NOT FIND FILE", self.ckpt_file, ckpt_path)
                     self.download_ckpt()
                 self.model.load_state_dict(torch.load(self.ckpt_file, map_location="cpu")["model"])
@@ -157,6 +158,7 @@ class Model():
                 self.model(initializer_data.to(self.torch_device))
 
             if self.api == "OpenVINO":
+                self.mw.waitDialog.signals.update.emit("converting model to OpenVINO format")
                 if not self.torch_device:
                     self.torch_device = torch.device("cpu")
                 initializer_data = torch.rand(1, 3, INF_DIMENSION, INF_DIMENSION)
