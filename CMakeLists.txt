@@ -23,11 +23,11 @@ project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__STDC_CONSTANT_MACROS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSOCKLEN_T=socklen_t -D__STDC_CONSTANT_MACROS")
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(WIN32)
     add_compile_options(/EHsc /MT)
 endif()
 
@@ -45,6 +45,13 @@ target_link_libraries(_wabash PRIVATE
     FFmpeg::FFmpeg
 #    SDL2::SDL2
 )
+
+if(WIN32)
+    target_link_libraries(_wabash PRIVATE
+        wsock32
+        ws2_32
+    )
+endif()
 
 target_include_directories(_wabash SYSTEM PUBLIC
     include
