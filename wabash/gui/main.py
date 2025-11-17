@@ -20,26 +20,19 @@
 import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
-        QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox
+        QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox, QTabWidget
 from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
 import wabash
 from enum import Enum
 from pathlib import Path
 from wabash.gui import Display, Manager
+from wabash.gui.panels import StreamPanel, NetworkPanel
 from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog, Theme, Style
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
 import traceback
-
-class List(QListWidget):
-    def __init__(self):
-        super().__init__()
-
-    def setCurrentText(self, text):
-        if items := self.findItems(text, Qt.MatchFlag.MatchExactly):
-            self.setCurrentItem(items[0])
 
 class MainWindowSignals(QObject):
     feedback = pyqtSignal(str)
@@ -49,7 +42,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         try:
             self.logger_id = logger.add(self.getCachePath() / "logs" / "log.txt", rotation="1 MB")
-            self.counter = 0
             self.manager = Manager(self)
             self.model = None
             self.signals = MainWindowSignals()
@@ -58,118 +50,32 @@ class MainWindow(QMainWindow):
             QDir.addSearchPath("image", str(Path(__file__).parent.parent / "gui" / "resources"))
             self.settings = QSettings("wabash", "gui")
             self.setWindowIcon(QIcon('image:wabash.png'))
+            self.setWindowTitle(f"wabash version {self.getVersion()}")
+            self.setMinimumSize(QSize(320, 240))
+
             #self.settings.clear()
             logger.debug(f'Settings loaded from file {self.settings.fileName()} using format {self.settings.format()}')
             self.geometryKey = "MainWindow/geometry"
             self.splitKey = "MainWindow/split"
-            self.reconnectKey = "MainWindow/reconnect"
-            self.inferKey = "MainWindow/infer"
-            self.apiKey = "MainWindow/API"
-            self.sampleSizeKey = "MainWindow/sampleSize"
-            self.memoryTypeKey = "MainWindow/memoryType"
-            self.intervalKey = "MainWindow/interval"
 
-            self.setWindowTitle(f"wabash version {self.getVersion()}")
-            self.setMinimumSize(QSize(320, 240))
-
-            self.fileSelector = FileSelector(self, "File")
-            self.waitDialog = WaitDialog(self)
-            self.errorDialog = ErrorDialog(self)
-
-            btnAdd = QPushButton("Add Stream")
-            btnAdd.clicked.connect(self.btnAddClicked)
-
-            btnEnd = QPushButton("End Stream")
-            btnEnd.clicked.connect(self.btnEndClicked)
-
-            btnCloseAll = QPushButton("Close All")
-            btnCloseAll.clicked.connect(self.btnCloseAllClicked)
-
-            btnStartNine = QPushButton("Start Nine")
-            btnStartNine.clicked.connect(self.btnStartNineClicked)
-
-            btnTest = QPushButton("Test")
-            btnTest.clicked.connect(self.btnTestClicked)
-
-            self.chkReconnect = QCheckBox("Reconnect")
-            self.chkReconnect.setChecked(int(self.settings.value(self.reconnectKey, 0)))
-            self.chkReconnect.stateChanged.connect(self.chkReconnectChecked)
-
-            self.cmbAPI = QComboBox()
-            self.cmbAPI.addItems(["PyTorch", "OpenVINO", "rknn"])
-            self.cmbAPI.setCurrentText(self.settings.value(self.apiKey, "PyTorch"))
-            self.cmbAPI.currentTextChanged.connect(self.cmbAPIChanged)
-
-            self.chkInfer = QCheckBox("Infer")
-            self.chkInfer.setChecked(int(self.settings.value(self.inferKey, 0)))
-            self.chkInfer.stateChanged.connect(self.chkInferChecked)
-
-            pnlModel = QWidget()
-            lytModel = QGridLayout(pnlModel)
-            lytModel.addWidget(QLabel("Model API"), 0, 0, 1, 1)
-            lytModel.addWidget(self.cmbAPI,         0, 1, 1, 1)
-            lytModel.addWidget(self.chkInfer,       0, 2, 1, 1)
-            lytModel.setContentsMargins(0, 0, 0, 0)
-            lytModel.setColumnStretch(1, 10)
+            self.streamPanel = StreamPanel(self)
+            self.networkPanel = NetworkPanel(self)
+            self.tab = QTabWidget(self)
+            self.tab.setContentsMargins(0, 0, 0, 0)
+            self.tab.addTab(self.streamPanel, "Stream")
+            self.tab.addTab(self.networkPanel, "Network")
 
             self.display = Display(self)
-            self.list = List()
-
-            self.plot_widget = pg.PlotWidget()
-            self.plot_widget.setLabel('bottom', 'Time', 'seconds')
-            self.plot_widget.setLabel('left', 'Memory', 'MiB')
-            self.cmbMemoryType = QComboBox()
-            self.cmbMemoryType.addItems(["Unique", "Resident", "Virtual"])
-            self.cmbMemoryType.setCurrentText(self.settings.value(self.memoryTypeKey, "Unique"))
-            self.cmbMemoryType.currentTextChanged.connect(self.cmbPlotDataChanged)
-            self.spnSampleSize = QSpinBox()
-            self.spnSampleSize.setMaximum(1000)
-            self.spnSampleSize.setValue(int(self.settings.value(self.sampleSizeKey, 120)))
-            self.spnSampleSize.valueChanged.connect(self.spnSampleSizeChanged)
-            self.spnInterval = QSpinBox()
-            self.spnInterval.setMaximum(600)
-            self.spnInterval.setValue(int(self.settings.value(self.intervalKey, 5)))
-            self.spnInterval.valueChanged.connect(self.spnIntervalChanged)
-            pnlPlot = QWidget()
-            lytPlot = QGridLayout(pnlPlot)
-            lytPlot.addWidget(QLabel("Memory Type"),   0, 0, 1, 1, Qt.AlignmentFlag.AlignRight)
-            lytPlot.addWidget(self.cmbMemoryType,      0, 1, 1, 1)
-            lytPlot.addWidget(QLabel("Sample Size"),   0, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
-            lytPlot.addWidget(self.spnSampleSize,      0, 3, 1, 1)
-            lytPlot.addWidget(QLabel("Interval"),      0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
-            lytPlot.addWidget(self.spnInterval,        0, 5, 1, 1)
-            lytPlot.addWidget(self.plot_widget,        1, 0, 1, 6)
-            lytPlot.setContentsMargins(0, 0, 0, 0)
-
-            control_split = QSplitter(Qt.Orientation.Vertical)
-            control_split.addWidget(self.list)
-            control_split.addWidget(pnlPlot)
-
-            self.lblFeedback = QLabel("TESTING")
-
-            pnlFeedback = QWidget()
-            lytFeedback = QGridLayout(pnlFeedback)
-            lytFeedback.addWidget(self.lblFeedback,   0, 0, 1, 1)
-
-            pnlControl = QWidget()
-            lytControl = QGridLayout(pnlControl)
-            lytControl.addWidget(self.fileSelector, 0, 0, 1, 2)
-            lytControl.addWidget(btnAdd,            1, 0 ,1, 1)
-            lytControl.addWidget(btnEnd,            2, 0, 1, 1)
-            lytControl.addWidget(btnCloseAll,       1, 1, 1, 1)
-            lytControl.addWidget(btnStartNine,      2, 1, 1, 1)
-            lytControl.addWidget(btnTest,           3, 0, 1, 1)
-            lytControl.addWidget(self.chkReconnect, 3, 1, 1, 1, Qt.AlignmentFlag.AlignCenter)
-            lytControl.addWidget(pnlModel,          4, 0, 1, 2)
-            lytControl.addWidget(pnlFeedback,       0, 2, 1, 1)
-            lytControl.addWidget(control_split,     5, 0, 1, 3)
 
             self.split = QSplitter()
-            self.split.addWidget(pnlControl)
+            self.split.setContentsMargins(0, 0, 0, 0)
+            self.split.addWidget(self.tab)
             self.split.addWidget(self.display)
             if splitterState := self.settings.value(self.splitKey):
                 self.split.restoreState(splitterState)
             self.split.splitterMoved.connect(self.splitterMoved)
+
+            self.setContentsMargins(0, 0, 0, 0)
             self.setCentralWidget(self.split)
 
             theme = Theme(self)
@@ -235,52 +141,6 @@ class MainWindow(QMainWindow):
     def splitterMoved(self, pos: int, index: int):
         self.settings.setValue(self.splitKey, self.split.saveState())
 
-    def btnAddClicked(self):
-        self.manager.startStream(self.name(), self.fileSelector.text())
-
-    def btnEndClicked(self):
-        if item := self.list.currentItem():
-            self.manager.stopStream(item.text())
-
-    def btnCloseAllClicked(self):
-        self.manager.closeAllStreams()
-
-    def btnStartNineClicked(self):
-        for i in range(9):
-            self.manager.startStream(self.name(), self.fileSelector.text())
-
-    def btnTestClicked(self):
-        print("btnTestClicked")
-        self.lblFeedback.setText("THINGY BOB")
-
-    def chkReconnectChecked(self, state: int):
-        self.settings.setValue(self.reconnectKey, state)
-
-    def cmbAPIChanged(self, arg):
-        print("cmbAPIChanged", arg)
-        self.settings.setValue(self.apiKey, arg)
-
-    def chkInferChecked(self, state: int):
-        self.settings.setValue(self.inferKey, state)
-        if state:
-            self.startModel()
-    
-    def cmbPlotDataChanged(self, arg):
-        print("cmbPlotDataChanged", arg)
-        self.settings.setValue(self.memoryTypeKey, arg)
-
-    def spnSampleSizeChanged(self, arg):
-        print("spnSampleSizeChanged", arg)
-        self.settings.setValue(self.sampleSizeKey, arg)
-
-    def spnIntervalChanged(self, arg):
-        self.settings.setValue(self.intervalKey, arg)
-
-    def name(self) -> str:
-        result = f"thread_{self.counter:0{3}d}"
-        self.counter += 1
-        return result
-    
     def closeEvent(self, event: QCloseEvent):
         self.manager.closeAllStreams()
         self.settings.setValue(self.geometryKey, self.geometry())

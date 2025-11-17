@@ -54,10 +54,10 @@ class Display(QLabel):
             current_time = time.time()
             cycle_elapsed_time = current_time - self.cycle_start_time
             global_elapsed_time = current_time - self.global_start_time
-            if cycle_elapsed_time > self.mw.spnInterval.value():
+            if cycle_elapsed_time > self.mw.streamPanel.spnInterval.value():
                 #print(f"time (seconds): {global_elapsed_time:.2f} memory (bytes): {self.process.memory_info().rss}")
                 self.cycle_start_time = current_time
-                if len(self.x) > self.mw.spnSampleSize.value():
+                if len(self.x) > self.mw.streamPanel.spnSampleSize.value():
                     print("trimming data", len(self.x))
                     self.x.popleft()
                     self.rss.popleft()
@@ -69,16 +69,16 @@ class Display(QLabel):
                 self.uss.append(self.process.memory_full_info().uss / MB)
                 self.vms.append(self.process.memory_info().vms / MB)
 
-                if self.mw.cmbMemoryType.currentText() == "Unique":
+                if self.mw.streamPanel.cmbMemoryType.currentText() == "Unique":
                     dataset = self.uss
-                elif self.mw.cmbMemoryType.currentText() == "Resident":
+                elif self.mw.streamPanel.cmbMemoryType.currentText() == "Resident":
                     dataset = self.rss
-                elif self.mw.cmbMemoryType.currentText() == "Virtual":
+                elif self.mw.streamPanel.cmbMemoryType.currentText() == "Virtual":
                     dataset = self.vms
                 if self.line:
                     self.line.setData(self.x, dataset)
                 else:
-                    self.line = self.mw.plot_widget.plot(self.x, dataset)
+                    self.line = self.mw.streamPanel.plot_widget.plot(self.x, dataset)
 
             if self.image.isNull():
                 return
@@ -126,7 +126,7 @@ class Display(QLabel):
                 stream.last_pts = stream.frame.pts()
 
                 if stream.counter > 3:
-                    if self.mw.chkInfer.isChecked():
+                    if self.mw.streamPanel.chkInfer.isChecked():
                         if not self.mw.model:
                             self.mw.startModel()
                         if self.mw.model.loaded:
@@ -158,7 +158,7 @@ class Display(QLabel):
                 # draw stream border
                 painter.setPen(QPen(Qt.GlobalColor.lightGray, 2, Qt.PenStyle.SolidLine))
                 painter.drawRect(rect)
-                if self.mw.list.currentItem() and stream.name == self.mw.list.currentItem().text():
+                if self.mw.streamPanel.list.currentItem() and stream.name == self.mw.streamPanel.list.currentItem().text():
                     painter.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine))
                     painter.drawRect(rect.adjusted(2, 2, -2, -2))
 

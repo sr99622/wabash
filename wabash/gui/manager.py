@@ -46,13 +46,13 @@ class Manager():
         try:
             stream = Stream(name, filename)
             stream.finish = self.removeStream
-            stream.reconnect = self.mw.chkReconnect.isChecked()
+            stream.reconnect = self.mw.streamPanel.chkReconnect.isChecked()
             stream.showError = self.mw.showError
             stream.foolish = self.mw.foolish
             self.layout.addOrdinal(stream.name)
             self.streams[stream.name] = stream
             stream.start()
-            self.mw.list.addItem(stream.name)
+            self.mw.streamPanel.list.addItem(stream.name)
         except Exception as ex:
             logger.error(f'Error starting stream: {ex}')
             logger.debug(traceback.format_exc())
@@ -66,12 +66,12 @@ class Manager():
 
     def removeStream(self, name: str):
         reconnect = False
-        filename = self.mw.fileSelector.text()
+        filename = self.mw.streamPanel.fileSelector.text()
         self.lock()
         if stream := self.streams.get(name):
             reconnect = stream.reconnect
             filename = stream.filename
-            list = self.mw.list
+            list = self.mw.streamPanel.list
             items = list.findItems(name, Qt.MatchFlag.MatchExactly)
             if len(items):
                 list.takeItem(list.row(items[0]))
