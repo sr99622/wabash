@@ -39,46 +39,11 @@ class Display(QLabel):
         self.timer.start(10)
         self.image = QImage(self.size(), QImage.Format.Format_ARGB32)
         self.stream_aspect_ratio = 16/9
-        self.global_start_time = time.time()
-        self.cycle_start_time = time.time()
-        self.process = psutil.Process(os.getpid())
         self.blank_display = True
-        self.line = None
-        self.x = deque()
-        self.rss = deque()
-        self.uss = deque()
-        self.vms = deque()
 
     def timeout(self):
         try:
-            current_time = time.time()
-            cycle_elapsed_time = current_time - self.cycle_start_time
-            global_elapsed_time = current_time - self.global_start_time
-            if cycle_elapsed_time > self.mw.streamPanel.spnInterval.value():
-                #print(f"time (seconds): {global_elapsed_time:.2f} memory (bytes): {self.process.memory_info().rss}")
-                self.cycle_start_time = current_time
-                if len(self.x) > self.mw.streamPanel.spnSampleSize.value():
-                    print("trimming data", len(self.x))
-                    self.x.popleft()
-                    self.rss.popleft()
-                    self.uss.popleft()
-                    self.vms.popleft()
-                self.x.append(global_elapsed_time)
-                MB = 1024 * 1024
-                self.rss.append(self.process.memory_info().rss / MB)
-                self.uss.append(self.process.memory_full_info().uss / MB)
-                self.vms.append(self.process.memory_info().vms / MB)
-
-                if self.mw.streamPanel.cmbMemoryType.currentText() == "Unique":
-                    dataset = self.uss
-                elif self.mw.streamPanel.cmbMemoryType.currentText() == "Resident":
-                    dataset = self.rss
-                elif self.mw.streamPanel.cmbMemoryType.currentText() == "Virtual":
-                    dataset = self.vms
-                if self.line:
-                    self.line.setData(self.x, dataset)
-                else:
-                    self.line = self.mw.streamPanel.plot_widget.plot(self.x, dataset)
+            self.mw.streamPanel.memoryPlot.update()
 
             if self.image.isNull():
                 return

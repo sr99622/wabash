@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from wabash.gui import Display, Manager
 from wabash.gui.components import FileSelector, WaitDialog, ErrorDialog, Theme, Style
+from .memoryplot import MemoryPlot
 from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
@@ -31,9 +32,6 @@ class StreamPanel(QWidget):
         self.reconnectKey = "MainWindow/reconnect"
         self.inferKey = "MainWindow/infer"
         self.apiKey = "MainWindow/API"
-        self.sampleSizeKey = "MainWindow/sampleSize"
-        self.memoryTypeKey = "MainWindow/memoryType"
-        self.intervalKey = "MainWindow/interval"
 
         self.fileSelector = FileSelector(self.mw, "File")
 
@@ -73,41 +71,14 @@ class StreamPanel(QWidget):
         lytModel.setContentsMargins(0, 0, 0, 0)
         lytModel.setColumnStretch(1, 10)
 
-        #self.display = Display(self)
         self.list = List()
-
-        self.plot_widget = pg.PlotWidget()
-        self.plot_widget.setLabel('bottom', 'Time', 'seconds')
-        self.plot_widget.setLabel('left', 'Memory', 'MiB')
-        self.cmbMemoryType = QComboBox()
-        self.cmbMemoryType.addItems(["Unique", "Resident", "Virtual"])
-        self.cmbMemoryType.setCurrentText(self.mw.settings.value(self.memoryTypeKey, "Unique"))
-        self.cmbMemoryType.currentTextChanged.connect(self.cmbPlotDataChanged)
-        self.spnSampleSize = QSpinBox()
-        self.spnSampleSize.setMaximum(1000)
-        self.spnSampleSize.setValue(int(self.mw.settings.value(self.sampleSizeKey, 120)))
-        self.spnSampleSize.valueChanged.connect(self.spnSampleSizeChanged)
-        self.spnInterval = QSpinBox()
-        self.spnInterval.setMaximum(600)
-        self.spnInterval.setValue(int(self.mw.settings.value(self.intervalKey, 5)))
-        self.spnInterval.valueChanged.connect(self.spnIntervalChanged)
-        pnlPlot = QWidget()
-        lytPlot = QGridLayout(pnlPlot)
-        lytPlot.addWidget(QLabel("Memory Type"),   0, 0, 1, 1, Qt.AlignmentFlag.AlignRight)
-        lytPlot.addWidget(self.cmbMemoryType,      0, 1, 1, 1)
-        lytPlot.addWidget(QLabel("Sample Size"),   0, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
-        lytPlot.addWidget(self.spnSampleSize,      0, 3, 1, 1)
-        lytPlot.addWidget(QLabel("Interval"),      0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
-        lytPlot.addWidget(self.spnInterval,        0, 5, 1, 1)
-        lytPlot.addWidget(self.plot_widget,        1, 0, 1, 6)
-        lytPlot.setContentsMargins(0, 0, 0, 0)
+        self.memoryPlot = MemoryPlot(mw)
 
         control_split = QSplitter(Qt.Orientation.Vertical)
         control_split.addWidget(self.list)
-        control_split.addWidget(pnlPlot)
+        control_split.addWidget(self.memoryPlot)
 
         self.lblFeedback = QLabel("TESTING")
-
         pnlFeedback = QWidget()
         lytFeedback = QGridLayout(pnlFeedback)
         lytFeedback.addWidget(self.lblFeedback,   0, 0, 1, 1)
@@ -142,10 +113,6 @@ class StreamPanel(QWidget):
         for i in range(9):
             self.mw.manager.startStream(self.name(), self.fileSelector.text())
 
-    def btnTestClicked(self):
-        print("btnTestClicked")
-        self.lblFeedback.setText("THINGY BOB")
-
     def chkReconnectChecked(self, state: int):
         self.mw.settings.setValue(self.reconnectKey, state)
 
@@ -158,19 +125,11 @@ class StreamPanel(QWidget):
         if state:
             self.startModel()
     
-    def cmbPlotDataChanged(self, arg):
-        print("cmbPlotDataChanged", arg)
-        self.mw.settings.setValue(self.memoryTypeKey, arg)
-
-    def spnSampleSizeChanged(self, arg):
-        print("spnSampleSizeChanged", arg)
-        self.mw.settings.setValue(self.sampleSizeKey, arg)
-
-    def spnIntervalChanged(self, arg):
-        self.mw.settings.setValue(self.intervalKey, arg)
-
     def name(self) -> str:
         result = f"thread_{self.counter:0{3}d}"
         self.counter += 1
         return result
     
+    def btnTestClicked(self):
+        print("btnTestClicked")
+        self.lblFeedback.setText("THINGY BOB")
