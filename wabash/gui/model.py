@@ -118,7 +118,7 @@ class Model():
 
     def load_model(self):
         try:
-            self.api = self.mw.cmbAPI.currentText()
+            self.api = self.mw.streamPanel.cmbAPI.currentText()
             self.torch_device = None
             self.ov_device = "AUTO"
             ov_model = None

@@ -44,6 +44,8 @@ class MainWindow(QMainWindow):
             self.logger_id = logger.add(self.getCachePath() / "logs" / "log.txt", rotation="1 MB")
             self.manager = Manager(self)
             self.model = None
+            self.waitDialog = WaitDialog(self)
+            self.errorDialog = ErrorDialog(self)
             self.signals = MainWindowSignals()
             self.signals.feedback.connect(self.foolUpdate)
 
@@ -91,7 +93,7 @@ class MainWindow(QMainWindow):
     def startModel(self):
         try:
             if not self.model:
-                logger.debug(f'starting model using api: {self.cmbAPI.currentText()}')
+                logger.debug(f'starting model using api: {self.streamPanel.cmbAPI.currentText()}')
                 #if api == "rknn":
                 #    from rockchip import Model
                 #else:

@@ -36,8 +36,6 @@ class StreamPanel(QWidget):
         self.intervalKey = "MainWindow/interval"
 
         self.fileSelector = FileSelector(self.mw, "File")
-        self.waitDialog = WaitDialog(self.mw)
-        self.errorDialog = ErrorDialog(self.mw)
 
         btnAdd = QPushButton("Add Stream")
         btnAdd.clicked.connect(self.btnAddClicked)
