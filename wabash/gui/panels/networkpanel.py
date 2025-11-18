@@ -12,6 +12,7 @@ from loguru import logger
 import pyqtgraph as pg
 import importlib.metadata
 import traceback
+from wabash import Client, Server, Broadcaster, Listener
 
 class NetworkPanel(QWidget):
     def __init__(self, mw):
@@ -23,22 +24,45 @@ class NetworkPanel(QWidget):
         self.btnConnect.clicked.connect(self.btnConnectClicked)
         
         lytClient = QGridLayout(grpClient)
-        lytClient.addWidget(self.btnConnect,    0, 0, 1, 1)
+        lytClient.addWidget(self.btnConnect,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         grpServer = QGroupBox("Server")
         self.btnStart = QPushButton("Start")
         self.btnStart.clicked.connect(self.btnStartClicked)
 
         lytServer = QGridLayout(grpServer)
-        lytServer.addWidget(self.btnStart, 0, 0, 1, 1)
+        lytServer.addWidget(self.btnStart,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
+        grpBroadcast = QGroupBox("Broadcast")
+        self.btnBroadcast = QPushButton("Broadcast")
+        self.btnBroadcast.clicked.connect(self.btnBroadcastClicked)
+
+        lytBroadcast = QGridLayout(grpBroadcast)
+        lytBroadcast.addWidget(self.btnBroadcast,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+
+        grpListen = QGroupBox("Listen")
+        self.btnListen = QPushButton("Listen")
+        self.btnListen.clicked.connect(self.btnListenClicked)
+
+        lytListen = QGridLayout(grpListen)
+        lytListen.addWidget(self.btnListen,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         lytMain = QGridLayout(self)
-        lytMain.addWidget(grpClient,   0, 0, 1, 1)
-        lytMain.addWidget(grpServer,   1, 0, 1, 1)
+        lytMain.addWidget(grpClient,    0, 0, 1, 1)
+        lytMain.addWidget(grpServer,    0, 1, 1, 1)
+        lytMain.addWidget(grpBroadcast, 1, 0, 1, 1)
+        lytMain.addWidget(grpListen,    1, 1, 1, 1)
 
     def btnConnectClicked(self):
         print("btnConnectClicked")
 
     def btnStartClicked(self):
-        print("btnStgartClicekdc")
+        print("btnStartClicked")
+
+    def btnBroadcastClicked(self):
+        print("btnBroadscastClicked")
+
+    def btnListenClicked(self):
+        print("btnListenClicked")
+
+    
