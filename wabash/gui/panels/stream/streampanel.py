@@ -126,7 +126,7 @@ class StreamPanel(QWidget):
     def chkInferChecked(self, state: int):
         self.mw.settings.setValue(self.inferKey, state)
         if state:
-            self.startModel()
+            self.mw.startModel()
     
     def name(self) -> str:
         result = f"thread_{self.counter:0{3}d}"

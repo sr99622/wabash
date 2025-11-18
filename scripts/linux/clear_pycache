@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Starting directory (default is current directory)
+START_DIR="${1:-.}"
+
+echo "Searching for __pycache__ directories in: $START_DIR"
+echo
+
+# Find and remove all __pycache__ directories
+find "$START_DIR" -type d -name "__pycache__" -print -exec rm -rf {} +
+
+echo
+echo "Done."
