@@ -329,6 +329,16 @@ sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt
 
 </details>
 
+<details><summary><b>pacman</b> (Arch)</summary>
+&nbsp;
+
+```
+sudo pacman -S --needed virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft
+```
+&nbsp;
+
+</details>
+
 &nbsp;
 ### Configure libvirt
 ---
