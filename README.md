@@ -151,7 +151,10 @@ A Python version greater than or equal to 3.10 and less than or equal to 3.13 wi
 
 ### Install build tools
 ---
-<details><summary><b>apt</b> (Ubuntu and Debian)</summary>
+
+Choose the instructions for your package manager
+
+<details><summary><b>apt</b></summary>
 &nbsp;
 
 Install the Python devlopment libraries based on the Python version, substituting the Host Python version for `X.XX`
@@ -175,7 +178,7 @@ Install the X11 development libraries if necessary (not needed for Wayland only 
 &nbsp;
 </details>
 
-<details><summary><b>dnf</b> (Fedora and Red Hat)</summary>
+<details><summary><b>dnf</b></summary>
 &nbsp;
 
 Install the Python developement libraries based on the Python version. If you are on Fedora 43, please note that some dependencies (OpenVINO) will not work with the installed Python version 3.14, so it is necessary to install Python version 3.13.
@@ -203,7 +206,7 @@ sudo dnf install git cmake g++
 &nbsp;
 </details>
 
-<details><summary><b>pacman</b> (Arch)</summary>
+<details><summary><b>pacman</b></summary>
 &nbsp;
 
 Install build tools
@@ -233,9 +236,9 @@ Dependency libraries are needed on the Host development machine in order to comp
 <details><summary><b>Package Manager Libraries (Quick and Easy)</b></summary>
 &nbsp;
 
-Select the instructions for your distribution.
+Choose the instructions for your package manager.
 
-<details><summary>apt package manager for Ubuntu and Debian style systems</summary>
+<details><summary><b>apt</b></summary>
 &nbsp;
 
 ```
@@ -246,7 +249,7 @@ sudo apt install libavdevice-dev
 &nbsp;
 </details>
 
-<details><summary>dnf package manager for Fedora and Red Hat style systems</summary>
+<details><summary><b>dnf</b></summary>
 &nbsp;
 
 ```
@@ -259,7 +262,7 @@ sudo dnf -y install ffmpeg-devel --allowerasing
 &nbsp;
 </details>
 
-<details><summary>pacman package manager for Arch style systems</summary>
+<details><summary><b>pacman</b></summary>
 &nbsp;
 
 ```
@@ -308,7 +311,9 @@ There exist several methods to achieve the goal of maximum compatibilty through 
 ### Install libvirt on the Host
 ---
 
-<details><summary><b>apt</b> (Ubuntu and Debian)</summary>
+Choose the instructions for your package manager
+
+<details><summary><b>apt</b></summary>
 &nbsp;
 
 ```
@@ -319,7 +324,7 @@ chmod o+x $HOME
 
 </details>
 
-<details><summary><b>dnf</b> (Fedora and Red Hat)</summary>
+<details><summary><b>dnf</b></summary>
 &nbsp;
 
 ```
@@ -329,7 +334,7 @@ sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt
 
 </details>
 
-<details><summary><b>pacman</b> (Arch)</summary>
+<details><summary><b>pacman</b></summary>
 &nbsp;
 
 ```
