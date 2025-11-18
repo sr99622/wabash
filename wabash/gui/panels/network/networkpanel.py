@@ -1,23 +1,20 @@
 import os
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, \
-        QListWidget, QSplitter, QCheckBox, QComboBox, QLabel, QSpinBox, QGroupBox
-from PyQt6.QtCore import QSize, Qt, QSettings, QDir, QStandardPaths, QObject, pyqtSignal
-from PyQt6.QtGui import QGuiApplication, QCloseEvent, QIcon
-import wabash
-from enum import Enum
-from pathlib import Path
-from wabash.gui import Display
+from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, \
+        QGroupBox
+from PyQt6.QtCore import Qt
 from loguru import logger
-import pyqtgraph as pg
-import importlib.metadata
-import traceback
 from wabash import Client, Server, Broadcaster, Listener
+from wabash.gui.panels.network.protocols import ClientProtocols, ServerProtocols, ListenProtocols
 
 class NetworkPanel(QWidget):
     def __init__(self, mw):
         super().__init__(mw)
         self.mw = mw
+        self.client = None
+        self.server = None
+        self.broadcaster = None
+        self.listener = None
 
         grpClient = QGroupBox("Client")
         self.btnConnect = QPushButton("Connect")
