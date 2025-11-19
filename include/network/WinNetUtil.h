@@ -19,6 +19,8 @@
 #include <errno.h>
 #include <vector>
 #include <map>
+#include <sstream>
+#include <iomanip>
 
 #define WORKING_BUFFER_SIZE 15000
 #define MAX_TRIES 3
@@ -134,20 +136,18 @@ public:
                 printf("\tDescription: %wS\n", pCurrAddresses->Description);
                 printf("\tFriendly name: %wS\n", pCurrAddresses->FriendlyName);
 
-                if (pCurrAddresses->PhysicalAddressLength != 0) {
-                    printf("\tPhysical address: ");
-                    for (i = 0; i < (int) pCurrAddresses->PhysicalAddressLength;
-                        i++) {
-                        if (i == (pCurrAddresses->PhysicalAddressLength - 1))
-                            printf("%.2X\n",
-                                (int) pCurrAddresses->PhysicalAddress[i]);
-                        else
-                            printf("%.2X-",
-                                (int) pCurrAddresses->PhysicalAddress[i]);
+                int length = (int)pCurrAddresses->PhysicalAddressLength;
+                if (length != 0) {
+                    std::stringstream str;
+                    for (i = 0; i < length; i++) {
+                        str << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << (int) pCurrAddresses->PhysicalAddress[i];
+                        if (i < length - 1) str << "-";
                     }
+                    std::cout << "\tPhysical Address: " << str.str() << std::endl;
                 }
                 std::cout << "\tIF Type: " << getTypeName(pCurrAddresses->IfType) << std::endl;
                 std::cout << "\tOperStatus: " << getOperStatusName(pCurrAddresses->OperStatus) << std::endl;
+                std::cout << "\tNetwork Priority: " << GetNetworkPriority(pCurrAddresses->IfIndex) << std::endl;
 
                 pCurrAddresses = pCurrAddresses->Next;
             }
@@ -261,8 +261,8 @@ public:
 
         DWORD dwRetVal = GetIpInterfaceEntry(&row);
         if (dwRetVal == NO_ERROR) {
-            printf("Interface Index: %d\n", row.InterfaceIndex);
-            printf("Metric: %d\n", row.Metric);
+            //printf("Interface Index: %d\n", row.InterfaceIndex);
+            //printf("Metric: %d\n", row.Metric);
             result = row.Metric;
         } else {
             printf("GetIpInterfaceEntry failed with error: %d\n", dwRetVal);
