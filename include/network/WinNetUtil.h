@@ -1,3 +1,6 @@
+#ifndef WINNETUTIL_HPP
+#define WINNETUTIL_HPP
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -186,8 +189,8 @@ public:
         str << msg << " : " << errorToString(err);
         throw std::runtime_error(str.str());
     }
-
 };
 
-    
 }
+
+#endif // WINNETUTIL_HPP

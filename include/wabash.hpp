@@ -24,6 +24,7 @@
     #include "Client.h"
     #include "Server.h"
     #include "Listener.h"
+    #include "NetUtil.h"
 #endif
 
 
