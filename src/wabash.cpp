@@ -118,6 +118,10 @@ PYBIND11_MODULE(_wabash, m)
         .def_readwrite("errorCallback", &Listener::errorCallback)
         .def_readwrite("listenCallback", &Listener::listenCallback);
 
+    py::class_<NetUtil>(m, "NetUtil")
+        .def(py::init<>())
+        .def("getIPAddress", &NetUtil::getIPAddress)
+        .def("getActiveNetworkInterfaces", &NetUtil::getActiveNetworkInterfaces);
 
     m.attr("__version__") = "0.0.2";
 

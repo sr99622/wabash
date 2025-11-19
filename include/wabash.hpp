@@ -19,6 +19,7 @@
     #include "WinClient.h"
     #include "WinServer.h"
     #include "WinListener.h"
+    #include "WinNetUtil.h"
 #else
     #include "Client.h"
     #include "Server.h"

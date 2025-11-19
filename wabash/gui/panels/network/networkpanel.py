@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, \
         QGroupBox
 from PyQt6.QtCore import Qt
 from loguru import logger
-from wabash import Client, Server, Broadcaster, Listener
+from wabash import Client, Server, Broadcaster, Listener, NetUtil
 from wabash.gui.panels.network.protocols import ClientProtocols, ServerProtocols, ListenProtocols
 
 class NetworkPanel(QWidget):
@@ -15,20 +15,21 @@ class NetworkPanel(QWidget):
         self.server = None
         self.broadcaster = None
         self.listener = None
+        self.netutil = None
 
         grpClient = QGroupBox("Client")
-        self.btnConnect = QPushButton("Connect")
-        self.btnConnect.clicked.connect(self.btnConnectClicked)
+        self.btnClient = QPushButton("Client")
+        self.btnClient.clicked.connect(self.btnClientClicked)
         
         lytClient = QGridLayout(grpClient)
-        lytClient.addWidget(self.btnConnect,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        lytClient.addWidget(self.btnClient,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         grpServer = QGroupBox("Server")
-        self.btnStart = QPushButton("Start")
-        self.btnStart.clicked.connect(self.btnStartClicked)
+        self.btnServer = QPushButton("Server")
+        self.btnServer.clicked.connect(self.btnServerClicked)
 
         lytServer = QGridLayout(grpServer)
-        lytServer.addWidget(self.btnStart,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        lytServer.addWidget(self.btnServer,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         grpBroadcast = QGroupBox("Broadcast")
         self.btnBroadcast = QPushButton("Broadcast")
@@ -50,11 +51,16 @@ class NetworkPanel(QWidget):
         lytMain.addWidget(grpBroadcast, 1, 0, 1, 1)
         lytMain.addWidget(grpListen,    1, 1, 1, 1)
 
-    def btnConnectClicked(self):
-        print("btnConnectClicked")
+    def btnClientClicked(self):
+        print("btnClientClicked")
 
-    def btnStartClicked(self):
-        print("btnStartClicked")
+    def btnServerClicked(self):
+        print("btnServerClicked")
+        self.netutil = NetUtil()
+        ip = self.netutil.getIPAddress()
+        print("IP:", ip)
+        dt = self.netutil.getActiveNetworkInterfaces()
+        print("DT:", dt)
 
     def btnBroadcastClicked(self):
         print("btnBroadscastClicked")
