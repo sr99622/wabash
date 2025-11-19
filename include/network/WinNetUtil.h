@@ -158,6 +158,9 @@ public:
                 printf("\tNo addresses were found for the requested parameters\n");
             }
             else {
+                std::string msg = errorToString(dwRetVal);
+                std::cout << msg << std::endl;
+                /*
                 if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
                         NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),   
@@ -169,6 +172,7 @@ public:
                         FREE(pAddresses);
                     return results;
                 }
+                */
             }
         }
 
@@ -261,8 +265,6 @@ public:
 
         DWORD dwRetVal = GetIpInterfaceEntry(&row);
         if (dwRetVal == NO_ERROR) {
-            //printf("Interface Index: %d\n", row.InterfaceIndex);
-            //printf("Metric: %d\n", row.Metric);
             result = row.Metric;
         } else {
             printf("GetIpInterfaceEntry failed with error: %d\n", dwRetVal);
@@ -325,7 +327,7 @@ public:
         return result;
     }
 
-    const std::string errorToString(int err) {
+    std::string errorToString(int err) const {
         wchar_t *lpwstr = nullptr;
         FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
