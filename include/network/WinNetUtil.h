@@ -158,21 +158,7 @@ public:
                 printf("\tNo addresses were found for the requested parameters\n");
             }
             else {
-                std::string msg = errorToString(dwRetVal);
-                std::cout << msg << std::endl;
-                /*
-                if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
-                        NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),   
-                        // Default language
-                        (LPTSTR) & lpMsgBuf, 0, NULL)) {
-                    printf("\tError: %s", lpMsgBuf);
-                    LocalFree(lpMsgBuf);
-                    if (pAddresses)
-                        FREE(pAddresses);
-                    return results;
-                }
-                */
+                std::cout << errorToString(dwRetVal) << std::endl;
             }
         }
 
@@ -181,6 +167,25 @@ public:
         }
 
         return results;
+    }
+
+    std::string errorToString(int err) const {
+        wchar_t *lpwstr = nullptr;
+        FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&lpwstr, 0, nullptr
+        );
+        int size = WideCharToMultiByte(CP_UTF8, 0, lpwstr, -1, NULL, 0, NULL, NULL);
+        std::string output(size, 0);
+        WideCharToMultiByte(CP_UTF8, 0, lpwstr, -1, &output[0], size, NULL, NULL);
+        LocalFree(lpwstr);
+        return output;
+    }
+
+    void error(const std::string& msg, int err) {
+        std::stringstream str;
+        str << msg << " : " << errorToString(err);
+        throw std::runtime_error(str.str());
     }
 
     std::string getSockIPAddress(SOCKADDR* sockAddr) const {
@@ -327,24 +332,6 @@ public:
         return result;
     }
 
-    std::string errorToString(int err) const {
-        wchar_t *lpwstr = nullptr;
-        FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&lpwstr, 0, nullptr
-        );
-        int size = WideCharToMultiByte(CP_UTF8, 0, lpwstr, -1, NULL, 0, NULL, NULL);
-        std::string output(size, 0);
-        WideCharToMultiByte(CP_UTF8, 0, lpwstr, -1, &output[0], size, NULL, NULL);
-        LocalFree(lpwstr);
-        return output;
-    }
-
-    void error(const std::string& msg, int err) {
-        std::stringstream str;
-        str << msg << " : " << errorToString(err);
-        throw std::runtime_error(str.str());
-    }
 };
 
 }
