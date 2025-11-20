@@ -26,6 +26,12 @@
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include <stdio.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <net/if_dl.h>
+#include <string.h>
+
 
 namespace wabash 
 {
@@ -52,42 +58,29 @@ public:
 
         char *address;
         struct ifaddrs *interfaces = NULL;
-        struct ifaddrs *temp_addr = NULL;
+        struct ifaddrs *ifa = NULL;
         int success = 0;
         success = getifaddrs(&interfaces);
         if (success == 0) {
-            temp_addr = interfaces;
-            while (temp_addr != NULL) {
+            ifa = interfaces;
+            while (ifa != NULL) {
 
-                sa_family_t fam = temp_addr->ifa_addr->sa_family;
+                sa_family_t fam = ifa->ifa_addr->sa_family;
                 
-                address = inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr);
-                if (strcmp(address, "127.0.0.1") != 0)
-                    strcpy(buf, address);
-                std::cout << "address: " << address <<std::endl;
-                std::cout << "name: " << temp_addr->ifa_name << std::endl;
-                std::cout << "data: " << temp_addr->ifa_data << std::endl;
-                std::cout << "flags: " << temp_addr->ifa_flags << std::endl;
-                printInterfaceFlags(temp_addr->ifa_flags);
-
-                if (fam == AF_LINK && temp_addr->ifa_data) {
-                    struct if_data* d = (struct if_data*)temp_addr->ifa_data;
+                if (fam == AF_LINK && ifa->ifa_data) {
+                    struct if_data* d = (struct if_data*)ifa->ifa_data;
                     std::cout << "  [if_data] MTU=" << d->ifi_mtu
                             << " RX=" << d->ifi_ipackets
                             << " TX=" << d->ifi_opackets << "\n";
-                }
-                /*
-                else if ((fam == AF_INET || fam == AF_INET6) && temp_addr->ifa_data) {
-                    struct ifa_data* ad = (struct ifa_data*)temp_addr->ifa_data;
-                    std::cout << "  [ifa_data] packets=" << ad->ifa_packets
-                            << " bytes="   << ad->ifa_bytes << "\n";
-                }
-                */
 
-
-                temp_addr = temp_addr->ifa_next;
+                    struct sockaddr_dl *sdl = (struct sockaddr_dl *)ifa->ifa_addr;
+                    unsigned char* ptr = (unsigned char *)LLADDR(sdl);
+                    
+                    printf("Interface: %s, MAC Address: %02x:%02x:%02x:%02x:%02x:%02x\n",
+                        ifa->ifa_name, *ptr, *(ptr+1), *(ptr+2), *(ptr+3), *(ptr+4), *(ptr+5));             
+                }
+                ifa = ifa->ifa_next;
             }
-            
         }
         freeifaddrs(interfaces);
         return result;
@@ -96,11 +89,9 @@ public:
     std::map<std::string, int> getActiveNetworkInterfaces() const {
         std::map<std::string, int> result;
 
-
         struct ifaddrs *ifaddr;
         int family, s;
         char host[NI_MAXHOST];
-        int count = 0;
 
         if (getifaddrs(&ifaddr) == -1) {
             printf("Error: getifaddrs failed - %s\n", strerror(errno));
@@ -114,85 +105,153 @@ public:
             family = ifa->ifa_addr->sa_family;
 
             if (family == AF_INET ) {
-                s = getnameinfo(ifa->ifa_addr, 
-                        sizeof(struct sockaddr_in),
-                        host, NI_MAXHOST,
-                        NULL, 0, NI_NUMERICHOST);
-
-                if (s != 0) {
-                    printf("getnameinfo() failed: %s\n", gai_strerror(s));
-                    continue;
-                }
-
-                //if (strcmp(host, "127.0.0.1")) {
-                    std::cout << "HOST: " << host << std::endl;
-                    //strcpy(onvif_session->active_network_interfaces[count], host);
-                    //strcat(onvif_session->active_network_interfaces[count], " - ");
-                    //strcat(onvif_session->active_network_interfaces[count], ifa->ifa_name);
-                    count += 1;
-                //}
+                std::string address = inet_ntoa(((struct sockaddr_in *)ifa->ifa_addr)->sin_addr);
+                std::cout << "address: " << address <<std::endl;
+                std::cout << "name: " << ifa->ifa_name << std::endl;
+                std::cout << "data: " << ifa->ifa_data << std::endl;
+                std::cout << "flags: " << ifa->ifa_flags << std::endl;
+                printInterfaceFlags(ifa->ifa_flags);
             } 
         }
         freeifaddrs(ifaddr);
-
         printInterfacePriority();
-
         return result;
     }
 
     void printInterfacePriority() const
     {
-        // Load system network preferences
-        SCPreferencesRef prefs = SCPreferencesCreate(NULL, CFSTR("ifprio"), NULL);
-        if (!prefs) return;
+        SCPreferencesRef prefs = nullptr;
+        SCNetworkSetRef set = nullptr;
+        CFArrayRef order = nullptr;
 
-        // Get current network set
-        SCNetworkSetRef set = SCNetworkSetCopyCurrent(prefs);
-        if (!set) {
-            CFRelease(prefs);
-            return;
-        }
+        try {
+            prefs = SCPreferencesCreate(NULL, CFSTR("ifprio"), NULL);
+            if (!prefs) throw std::runtime_error("NULL");
 
-        // Get service order (priority list)
-        CFArrayRef order = SCNetworkSetGetServiceOrder(set);
-        if (!order) {
-            CFRelease(set);
-            CFRelease(prefs);
-            return;
-        }
+            set = SCNetworkSetCopyCurrent(prefs);
+            if (!set) throw std::runtime_error("NULL");
 
-        std::cout << "Service Order (priority):\n";
-        for (CFIndex i = 0; i < CFArrayGetCount(order); i++) {
-            CFStringRef sid = (CFStringRef)CFArrayGetValueAtIndex(order, i);
+            order = SCNetworkSetGetServiceOrder(set);
+            if (!order) throw std::runtime_error("NULL");
 
-            SCNetworkServiceRef service = SCNetworkServiceCopy(prefs, sid);
+            std::cout << "Service Order (priority):\n";
+            for (CFIndex i = 0; i < CFArrayGetCount(order); i++) {
+                CFStringRef sid = (CFStringRef)CFArrayGetValueAtIndex(order, i);
+                SCNetworkServiceRef service = SCNetworkServiceCopy(prefs, sid);
 
+                char buf[256];
+                if (CFStringGetCString(sid, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+                    std::cout << "  " << i << ": " << buf << "\n";
+                }
 
-            char buf[256];
-            if (CFStringGetCString(sid, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                std::cout << "  " << i << ": " << buf << "\n";
+                SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
+                CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
+                std::cout << "NAME: " << bsdName << std::endl;
+
+                if (bsdName && CFStringGetCString(bsdName, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+                    std::cout << "Priority " << i << " → interface " << buf << "\n";
+                }
             }
 
-            SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
-            CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
-            std::cout << "NAME: " << bsdName << std::endl;
-
-            //char buf[256];
-            if (bsdName && CFStringGetCString(bsdName, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                std::cout << "Priority " << i << " → interface " << buf << "\n";
-            }
-
-            // buf == temp_addr->ifa_name
-
+            getAllDHCPservers();
+        }
+        catch (const std::exception& e) {
+            std::cout << "ERROR: " << e.what() << std::endl;
         }
 
-        CFRelease(set);
-        CFRelease(prefs);
+        if (set) CFRelease(set);
+        if (prefs) CFRelease(prefs);
+        if (order) CFRelease(order);
     }
 
+    static void print_dhcp_server_for_service(CFStringRef serviceID)
+    {
+        // Build key: State:/Network/Service/<service-id>/DHCP
+        CFStringRef dhcpKey = CFStringCreateWithFormat(
+            NULL, NULL,
+            CFSTR("State:/Network/Service/%@/DHCP"),
+            serviceID
+        );
+
+        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
+        CFDictionaryRef dhcpInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dhcpKey);
+
+        std::cout << "shoew dhcp info" << std::endl;
+        CFShow(dhcpInfo);
+
+        if (dhcpInfo) {
+            CFStringRef server = (CFStringRef)CFDictionaryGetValue(dhcpInfo, CFSTR("ServerIdentifier"));
+            if (server) {
+                char buf[256];
+                if (CFStringGetCString(server, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+                    printf("DHCP Server for %s: %s\n",
+                        CFStringGetCStringPtr(serviceID, kCFStringEncodingMacRoman),
+                        buf);
+                }
+            } else {
+                printf("No DHCP server info\n");
+            }
+            CFRelease(dhcpInfo);
+        }
+
+        CFRelease(store);
+        CFRelease(dhcpKey);
+    }
+
+    void getAllDHCPservers() const
+    {
+        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
+        CFArrayRef serviceIDs = SCDynamicStoreCopyKeyList(store, CFSTR("State:/Network/Service/.+"));
+
+        if (!serviceIDs) {
+            std::cout << "did not find service ids" << std::endl;
+            return;
+        }
+
+        CFIndex count = CFArrayGetCount(serviceIDs);
+        std::cout << "service id count: " << count << std::endl;
+
+        for (CFIndex i = 0; i < count; i++) {
+            CFStringRef key = (CFStringRef)CFArrayGetValueAtIndex(serviceIDs, i);
+            
+            if (!CFStringHasSuffix(key, CFSTR("/IPv4"))) {
+                std::cout << "NOT IPV4" << std::endl;
+                continue;
+            }
+
+            // Extract the service ID from the path
+            // Key looks like: State:/Network/Service/<id>/IPv4
+            CFArrayRef parts = CFStringCreateArrayBySeparatingStrings(
+                NULL, key, CFSTR("/")
+            );
+
+            if (CFArrayGetCount(parts) >= 4) {
+                CFStringRef serviceID = (CFStringRef)CFArrayGetValueAtIndex(parts, 3);
+                std::cout << "wtf 1: " << serviceID << std::endl;
+                print_dhcp_server_for_service(serviceID);
+                std::cout << "wtf 2" << std::endl;
+            }
+
+            CFRelease(parts);
+        }
+
+        CFRelease(serviceIDs);
+        CFRelease(store);
+    }
 
 };
 
 }
 
 #endif // NETUTIL_HPP
+
+
+
+                /*
+                else if ((fam == AF_INET || fam == AF_INET6) && temp_addr->ifa_data) {
+                    struct ifa_data* ad = (struct ifa_data*)temp_addr->ifa_data;
+                    std::cout << "  [ifa_data] packets=" << ad->ifa_packets
+                            << " bytes="   << ad->ifa_bytes << "\n";
+                }
+                */
+
