@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <vector>
 #include <map>
+#include <iomanip>
 
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -38,6 +39,8 @@ namespace wabash
 
 class NetUtil {
 public:
+
+
     NetUtil() { }
     ~NetUtil() { }
 
@@ -164,38 +167,90 @@ public:
         if (order) CFRelease(order);
     }
 
-    static void print_dhcp_server_for_service(CFStringRef serviceID)
+    void print_dhcp_server_for_service(CFStringRef serviceID) const
     {
-        // Build key: State:/Network/Service/<service-id>/DHCP
-        CFStringRef dhcpKey = CFStringCreateWithFormat(
-            NULL, NULL,
-            CFSTR("State:/Network/Service/%@/DHCP"),
-            serviceID
-        );
 
-        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
-        CFDictionaryRef dhcpInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dhcpKey);
+        std::unordered_map<std::string, std::string> dhcpOptionFriendlyNames = {
+            {"Option_1",  "SubnetMask"},
+            {"Option_3",  "Router"},
+            {"Option_6",  "DNSServer"},
+            {"Option_15", "DomainName"},
+            {"Option_28", "BroadcastAddress"},
+            {"Option_51", "LeaseTime"},
+            {"Option_53", "MessageType"},
+            {"Option_54", "ServerIdentifier"},  // <- your DHCP server
+            {"Option_58", "RenewalTime"},
+            {"Option_59", "RebindTime"},
+            {"Option_61", "ClientIdentifier"}
+        };
+    
+        try {
+            // Build key: State:/Network/Service/<service-id>/DHCP
+            CFStringRef dhcpKey = CFStringCreateWithFormat(
+                NULL, NULL,
+                CFSTR("State:/Network/Service/%@/DHCP"),
+                serviceID
+            );
 
-        std::cout << "shoew dhcp info" << std::endl;
-        CFShow(dhcpInfo);
+            SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
+            CFDictionaryRef dhcpInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dhcpKey);
 
-        if (dhcpInfo) {
-            CFStringRef server = (CFStringRef)CFDictionaryGetValue(dhcpInfo, CFSTR("ServerIdentifier"));
-            if (server) {
-                char buf[256];
-                if (CFStringGetCString(server, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                    printf("DHCP Server for %s: %s\n",
-                        CFStringGetCStringPtr(serviceID, kCFStringEncodingMacRoman),
-                        buf);
+            std::cout << "show dhcp info" << std::endl;
+            CFShow(dhcpInfo);
+            CFIndex count = CFDictionaryGetCount(dhcpInfo);
+            std::cout << "dictionary count: " << count << std::endl;
+            std::vector<const void*> keys(count);
+            std::vector<const void*> values(count);
+            CFDictionaryGetKeysAndValues(dhcpInfo, keys.data(), values.data());
+            for (CFIndex i = 0; i < count; i++) {
+                CFStringRef key = (CFStringRef)keys[i];
+                CFTypeRef value = values[i];
+                //std::cout << "KEY: " << key << std::endl;
+                char buf[64];
+                CFStringGetCString(key, buf, sizeof(buf), kCFStringEncodingUTF8);
+                std::cout << "BUF: " << buf << std::endl;
+                std::string friendlyName = dhcpOptionFriendlyNames[buf];
+                std::cout << "friendly name: " << friendlyName << std::endl;
+                if (CFGetTypeID(value) == CFDataGetTypeID()) {
+                    CFDataRef data = (CFDataRef)value;
+                    const UInt8* b = CFDataGetBytePtr(data);
+                    CFIndex len = CFDataGetLength(data);
+                    std::cout << "LEN: " << len << std::endl;
+                    if (len == 4) {
+                        printf("%u.%u.%u.%u\n", b[0], b[1], b[2], b[3]);
+                    }
+                    else {
+                        printf("(%ld bytes raw data)\n", len);
+                        std::stringstream str;
+                        for (int j = 0; j < len; j++) {
+                            str << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << (int)b[j];
+                            if (j < len - 1) str << "-";
+                        }
+                        std::cout << "STR: " << str.str() << std::endl;
+                        std::cout << "RAW: " << b << std::endl;
+                    }
                 }
-            } else {
-                printf("No DHCP server info\n");
+                else if (CFGetTypeID(value) == CFNumberGetTypeID()) {
+                    int num = 0;
+                    CFNumberGetValue((CFNumberRef)value, kCFNumberIntType, &num);
+                    printf("$d\n", num);
+                }
+                else {
+                    CFShow(value);
+                }
             }
-            CFRelease(dhcpInfo);
-        }
 
-        CFRelease(store);
-        CFRelease(dhcpKey);
+
+            if (dhcpInfo) {
+                CFRelease(dhcpInfo);
+            }
+
+            CFRelease(store);
+            CFRelease(dhcpKey);
+        }
+        catch (const std::exception& e) {
+            std::cout << "ERROR: " << e.what() << std::endl;
+        }
     }
 
     void getAllDHCPservers() const
