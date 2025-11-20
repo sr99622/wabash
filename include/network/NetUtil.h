@@ -32,6 +32,25 @@
 #include <ifaddrs.h>
 #include <net/if_dl.h>
 #include <string.h>
+#include <net/if_media.h>
+
+
+#include <sys/sysctl.h>
+#include <sys/socket.h>
+#include <net/route.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
+// Compute sockaddr padded size (macOS-safe)
+#ifndef SA_SIZE
+#define SA_SIZE(sa)  \
+    ( ((sa)->sa_len > 0) ? \
+      (1 + (((sa)->sa_len - 1) | (sizeof(uint32_t) - 1))) : \
+      sizeof(uint32_t) )
+#endif
 
 
 namespace wabash 
@@ -350,6 +369,9 @@ public:
             char buf[64];
             CFStringGetCString(bsd, buf, sizeof(buf), kCFStringEncodingUTF8);
             std::cout << "BSD NAME: " << buf << std::endl;
+            //bool is_up = isInterfaceUp(buf);
+            bool is_up = interfaceHasLink(buf);
+            std::cout << "IS INTERFACE UP: " << is_up << std::endl;
             CFStringRef displayName = SCNetworkInterfaceGetLocalizedDisplayName(item);
             CFStringGetCString(displayName, buf, sizeof(buf), kCFStringEncodingUTF8);
             std::cout << "DISPLAY NAME: " << buf << std::endl;
@@ -362,8 +384,160 @@ public:
             CFShow(protocols);
             //CFDictionaryRef configuration = SCNetworkInterfaceGetConfiguration(item);
             //CFShow(configuration);
+            std::string defaultGateway = getDefaultGateway();
+            std::cout << "default gateway: " << defaultGateway << std::endl;
         }
         std::cout << "THINGS DONE: " << count << std::endl;
+    }
+
+    std::string getDefaultGateway() const
+    {
+        int mib[6] = {
+            CTL_NET,
+            PF_ROUTE,
+            0,
+            AF_INET,
+            NET_RT_FLAGS,
+            RTF_GATEWAY
+        };
+
+        size_t len = 0;
+        if (sysctl(mib, 6, NULL, &len, NULL, 0) < 0)
+            return "";
+
+        char* buf = (char*)malloc(len);
+        if (!buf) return "";
+
+        if (sysctl(mib, 6, buf, &len, NULL, 0) < 0) {
+            free(buf);
+            return "";
+        }
+
+        char* end = buf + len;
+        char* next = buf;
+
+        while (next < end) {
+            struct rt_msghdr* rtm = (struct rt_msghdr*)next;
+            struct sockaddr* sa = (struct sockaddr*)(rtm + 1);
+
+            struct sockaddr_in* gateway = nullptr;
+            struct sockaddr_in* dest = nullptr;
+
+            for (int i = 0; i < RTAX_MAX; i++) {
+                if (rtm->rtm_addrs & (1 << i)) {
+
+                    if (sa->sa_family == AF_INET) {
+                        if (i == RTAX_GATEWAY)
+                            gateway = (struct sockaddr_in*)sa;
+                        else if (i == RTAX_DST)
+                            dest = (struct sockaddr_in*)sa;
+                    }
+
+                    sa = (struct sockaddr*)((char*)sa + SA_SIZE(sa));
+                }
+            }
+
+            if (gateway && dest && dest->sin_addr.s_addr == 0) {
+                char addr[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &gateway->sin_addr, addr, sizeof(addr));
+                free(buf);
+                return addr;
+            }
+
+            next += rtm->rtm_msglen;
+        }
+
+        free(buf);
+        return "";
+    }
+
+    bool isInterfaceUp(const std::string& ifname) const
+    {
+        struct ifaddrs* ifaddr;
+
+        if (getifaddrs(&ifaddr) == -1)
+            return false;
+
+        bool up = false;
+
+        for (struct ifaddrs* ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+            if (!ifa->ifa_name) continue;
+
+            if (ifname == ifa->ifa_name) {
+                printFlags(ifa->ifa_flags);
+                std::cout << std::endl;
+                if (ifa->ifa_flags & (IFF_UP | IFF_RUNNING))
+                    up = true;
+                break;
+            }
+        }
+
+        freeifaddrs(ifaddr);
+        return up;
+    }
+
+    bool interfaceHasLink(const char* ifname) const {
+        int s = socket(AF_INET, SOCK_DGRAM, 0);
+        if (s < 0) return false;
+
+        struct ifmediareq ifm;
+        memset(&ifm, 0, sizeof(ifm));
+        strncpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
+
+        if (ioctl(s, SIOCGIFMEDIA, &ifm) < 0) {
+            close(s);
+            return false;
+        }
+        close(s);
+
+        // Check status
+        if (ifm.ifm_status & IFM_AVALID) {
+            if (ifm.ifm_status & IFM_ACTIVE)
+                return true;   // cable plugged, link negotiated
+        }
+        return false;
+    }
+
+    void printFlags(unsigned int flags) const
+    {
+        struct { unsigned int flag; const char* name; } list[] = {
+            {IFF_UP, "UP"},
+            {IFF_BROADCAST, "BROADCAST"},
+            {IFF_DEBUG, "DEBUG"},
+            {IFF_LOOPBACK, "LOOPBACK"},
+            {IFF_POINTOPOINT, "POINTOPOINT"},
+            {IFF_NOTRAILERS, "NOTRAILERS"},
+            {IFF_RUNNING, "RUNNING"},
+            {IFF_NOARP, "NOARP"},
+            {IFF_PROMISC, "PROMISC"},
+            {IFF_ALLMULTI, "ALLMULTI"},
+            //{IFF_DRV_OACTIVE, "DRV_OACTIVE"},
+            {IFF_SIMPLEX, "SIMPLEX"},
+            {IFF_LINK0, "LINK0"},
+            {IFF_LINK1, "LINK1"},
+            {IFF_LINK2, "LINK2"},
+            {IFF_MULTICAST, "MULTICAST"},
+            //{IFF_LQM_ENABLED, "LQM_ENABLED"},
+            //{IFF_LQM_DEGRADED, "LQM_DEGRADED"},
+            //{IFF_LQM_NA, "LQM_NA"},
+            //{IFF_CANTCONFIG, "CANTCONFIG"},
+            //{IFF_PPROMISC, "PPROMISC"},
+            //{IFF_MONITOR, "MONITOR"},
+            //{IFF_STANDBY, "STANDBY"},
+            //{IFF_EEE, "EEE"},
+            //{IFF_DRV_RUNNING, "DRV_RUNNING"},
+            //{IFF_WAKE_ON_MAGIC_PACKET, "WAKE_ON_MAGIC_PACKET"},
+            //{IFF_INTERFACEID, "INTERFACEID"},
+            //{IFF_ROUTER, "ROUTER"},
+            //{IFF_DETACHING, "DETACHING"},
+            //{IFF_TENTATIVE, "TENTATIVE"},
+            //{IFF_DUPLICATED, "DUPLICATED"},
+        };
+
+        for (auto& f : list) {
+            if (flags & f.flag)
+                std::cout << f.name << " ";
+        }
     }
 
 };
