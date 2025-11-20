@@ -165,6 +165,8 @@ public:
         if (set) CFRelease(set);
         if (prefs) CFRelease(prefs);
         if (order) CFRelease(order);
+
+        dothings();
     }
 
     void print_dhcp_server_for_service(CFStringRef serviceID) const
@@ -292,6 +294,76 @@ public:
 
         CFRelease(serviceIDs);
         CFRelease(store);
+    }
+
+    void InspectCFArray(CFArrayRef array) const
+    {
+        CFIndex count = CFArrayGetCount(array);
+        printf("CFArray (%ld elements)\n", count);
+
+        for (CFIndex i = 0; i < count; i++) {
+            CFTypeRef item = CFArrayGetValueAtIndex(array, i);
+            CFTypeID type = CFGetTypeID(item);
+
+            // Print index
+            printf(" [%ld] ", i);
+
+            // Print readable type name
+            if (type == CFStringGetTypeID()) {
+                printf("CFString: ");
+                CFShow(item);
+            }
+            else if (type == CFNumberGetTypeID()) {
+                printf("CFNumber: ");
+                CFShow(item);
+            }
+            else if (type == CFDataGetTypeID()) {
+                printf("CFData (%ld bytes)\n",
+                    CFDataGetLength((CFDataRef)item));
+            }
+            else if (type == CFDictionaryGetTypeID()) {
+                printf("CFDictionary:\n");
+                CFShow(item);
+            }
+            else if (type == CFArrayGetTypeID()) {
+                printf("CFArray:\n");
+                CFShow(item);
+            }
+            else {
+                printf("Unknown CFTypeID = %lu\n", type);
+                CFShow(item);
+            }
+        }
+    }
+
+    void dothings() const
+    {
+        std::cout << "DO THINGS" << std::endl;
+        CFArrayRef ifs = SCNetworkInterfaceCopyAll();
+        CFIndex count = CFArrayGetCount(ifs);
+        CFShow(ifs);
+
+        for (CFIndex i = 0; i < count; i++) {
+            SCNetworkInterfaceRef item = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(ifs, i);
+            CFStringRef bsd = SCNetworkInterfaceGetBSDName(item);
+            CFShow(bsd);
+            char buf[64];
+            CFStringGetCString(bsd, buf, sizeof(buf), kCFStringEncodingUTF8);
+            std::cout << "BSD NAME: " << buf << std::endl;
+            CFStringRef displayName = SCNetworkInterfaceGetLocalizedDisplayName(item);
+            CFStringGetCString(displayName, buf, sizeof(buf), kCFStringEncodingUTF8);
+            std::cout << "DISPLAY NAME: " << buf << std::endl;
+            CFStringRef hardware = SCNetworkInterfaceGetHardwareAddressString(item);
+            CFStringGetCString(hardware, buf, sizeof(buf), kCFStringEncodingUTF8);
+            std::cout << "HARDWARE: " << buf << std::endl;
+            CFStringRef if_type = SCNetworkInterfaceGetInterfaceType(item);
+            CFShow(if_type);
+            CFArrayRef protocols = SCNetworkInterfaceGetSupportedProtocolTypes(item);
+            CFShow(protocols);
+            //CFDictionaryRef configuration = SCNetworkInterfaceGetConfiguration(item);
+            //CFShow(configuration);
+        }
+        std::cout << "THINGS DONE: " << count << std::endl;
     }
 
 };
