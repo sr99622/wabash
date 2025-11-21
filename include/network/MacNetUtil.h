@@ -188,6 +188,63 @@ public:
         dothings();
     }
 
+    std::string getServiceIDForInterface(const std::string& if_name) const 
+    {
+        std::string result;
+        /*
+        std::cout << "PRINT DNS SERVER: " << if_name << std::endl;
+        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dns-reader"), NULL, NULL);
+        if (!store) {
+            std::cout << "NO STORE" << std::endl;
+            return;
+        }
+        */
+        SCPreferencesRef prefs = SCPreferencesCreate(NULL, CFSTR("NetworkServiceLister"), NULL);
+        CFArrayRef services = SCNetworkServiceCopyAll(prefs);
+        if (!services) {
+            CFRelease(prefs);
+            //CFRelease(store);
+            std::cout << "NO SERVICES" << std::endl;
+            return;
+        }
+        CFIndex count = CFArrayGetCount(services);
+        //std::cout << "COUNT: " << count << std::endl;
+        for (CFIndex i = 0; i < count; i++) {
+            SCNetworkServiceRef service = (SCNetworkServiceRef)CFArrayGetValueAtIndex(services, i);
+            CFStringRef serviceName = SCNetworkServiceGetName(service);
+            CFStringRef serviceID = SCNetworkServiceGetServiceID(service);
+            CFShow(serviceName);
+            CFShow(serviceID);
+            SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
+            if (!iface) {
+                std::cout << "DID NOT FIND IFACE" << std::endl;
+                continue;
+            }
+            CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
+            if (!bsdName) {
+                std::cout << "DID NOT FIND BSD NAME" << std::endl;
+                continue;
+            }
+            CFShow(bsdName);
+            char nameBuf[64] = { 0 };
+            CFStringGetCString(bsdName, nameBuf, sizeof(nameBuf), kCFStringEncodingUTF8);
+            //std::cout << "----------------------------------BSD NAME: " << nameBuf << std::endl;
+            //std::cout << "----------------------------------IF NAME: " << if_name << std::endl;
+            if (if_name == nameBuf) {
+                //std::cout << "FOUND SERVICE" << std::endl;
+                char idBuf[256];
+                CFStringGetCString(serviceID, idBuf, sizeof(idBuf), kCFStringEncodingUTF8);
+                result = idBuf;
+            }
+        }
+
+        CFRelease(prefs);
+        CFRelease(services);
+        //CFRelease(store);
+
+        return result;
+    }
+
     void print_dhcp_server_for_service(CFStringRef serviceID) const
     {
 
@@ -369,6 +426,14 @@ public:
             char buf[64];
             CFStringGetCString(bsd, buf, sizeof(buf), kCFStringEncodingUTF8);
             std::cout << "BSD NAME: " << buf << std::endl;
+            std::string serviceID = getServiceIDForInterface(buf);
+            if (!serviceID.empty()) {
+                std::cout << "_____FOUND SERVICE ID______" << serviceID << std::endl;
+                printDNSForService(serviceID);
+            }
+            else {
+                std::cout << "NO SERVICE ID FOUND" << std::endl;
+            } 
             //bool is_up = isInterfaceUp(buf);
             bool is_up = interfaceHasLink(buf);
             std::cout << "IS INTERFACE UP: " << is_up << std::endl;
@@ -539,6 +604,55 @@ public:
                 std::cout << f.name << " ";
         }
     }
+
+    void printDNSForService(const std::string& serviceID) const
+    {
+        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dns-reader"), NULL, NULL);
+        if (!store) return;
+
+        CFStringRef dnsKey = CFStringCreateWithFormat(
+            NULL, NULL,
+            CFSTR("State:/Network/Service/%@/DNS"),
+            CFStringCreateWithCString(NULL, serviceID.c_str(), kCFStringEncodingUTF8)
+        );
+
+        CFDictionaryRef dnsInfo =
+            (CFDictionaryRef)SCDynamicStoreCopyValue(store, dnsKey);
+
+        if (!dnsInfo) {
+            printf("No DNS info for service %s\n", serviceID.c_str());
+            CFRelease(store);
+            CFRelease(dnsKey);
+            return;
+        }
+
+        CFArrayRef servers =
+            (CFArrayRef)CFDictionaryGetValue(dnsInfo, CFSTR("ServerAddresses"));
+
+        if (!servers) {
+            printf("Service %s has no ServerAddresses\n", serviceID.c_str());
+            CFRelease(dnsInfo);
+            CFRelease(store);
+            CFRelease(dnsKey);
+            return;
+        }
+
+        CFIndex count = CFArrayGetCount(servers);
+        for (CFIndex i = 0; i < count; i++) {
+            CFStringRef server =
+                (CFStringRef)CFArrayGetValueAtIndex(servers, i);
+
+            char buf[256];
+            if (CFStringGetCString(server, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+                printf("DNS Server: %s\n", buf);
+            }
+        }
+
+        CFRelease(dnsInfo);
+        CFRelease(store);
+        CFRelease(dnsKey);
+    }
+
 
 };
 
