@@ -1,5 +1,5 @@
-#ifndef NETUTIL_HPP
-#define NETUTIL_HPP
+#ifndef MACNETUTIL_HPP
+#define MACNETUTIL_HPP
 
 #include <string.h>
 #include <stdio.h>
@@ -658,7 +658,7 @@ public:
 
 }
 
-#endif // NETUTIL_HPP
+#endif // MACNETUTIL_HPP
 
 
 

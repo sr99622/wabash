@@ -30,5 +30,8 @@
     #include "MacNetUtil.h"
 #endif
 
+#ifdef __linux__
+    #include "GnuNetUtil.h"
+#endif
 
 #endif // WABASH_HPP
