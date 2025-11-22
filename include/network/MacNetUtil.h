@@ -1,48 +1,35 @@
 #ifndef MACNETUTIL_HPP
 #define MACNETUTIL_HPP
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <sys/stat.h>
-
-#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <ifaddrs.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 #include <netdb.h>
 #include <net/if.h>
+#include <net/if_dl.h>
+#include <net/if_media.h>
+#include <net/route.h>
 #include <netinet/in.h>
-#include <sys/time.h>
-
+#include <math.h>
 #include <stdint.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <vector>
 #include <map>
 #include <iomanip>
-
-#include <SystemConfiguration/SystemConfiguration.h>
-#include <CoreFoundation/CoreFoundation.h>
-
-#include <stdio.h>
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <net/if_dl.h>
-#include <string.h>
-#include <net/if_media.h>
-
-
-#include <sys/sysctl.h>
-#include <sys/socket.h>
-#include <net/route.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 // Compute sockaddr padded size (macOS-safe)
 #ifndef SA_SIZE
@@ -175,7 +162,7 @@ public:
                 }
             }
 
-            getAllDHCPservers();
+            //getAllDHCPservers();
         }
         catch (const std::exception& e) {
             std::cout << "ERROR: " << e.what() << std::endl;
@@ -191,63 +178,45 @@ public:
     std::string getServiceIDForInterface(const std::string& if_name) const 
     {
         std::string result;
-        /*
-        std::cout << "PRINT DNS SERVER: " << if_name << std::endl;
-        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dns-reader"), NULL, NULL);
-        if (!store) {
-            std::cout << "NO STORE" << std::endl;
-            return;
+        SCPreferencesRef prefs = nullptr;
+        CFArrayRef services = nullptr;
+
+        try {
+            if (!(prefs = SCPreferencesCreate(NULL, CFSTR("NetworkServiceLister"), NULL)))
+                throw std::runtime_error("SCPreferencesCreate return nullptr");
+            if (!(services = SCNetworkServiceCopyAll(prefs)))
+                throw std::runtime_error("SCNetworkServiceCopyAll returned nullptr");
+
+            CFIndex count = CFArrayGetCount(services);
+            for (CFIndex i = 0; i < count; i++) {
+                SCNetworkServiceRef service = (SCNetworkServiceRef)CFArrayGetValueAtIndex(services, i);
+                CFStringRef serviceName = SCNetworkServiceGetName(service);
+                CFStringRef serviceID = SCNetworkServiceGetServiceID(service);
+                SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
+                if (!iface) continue;
+                CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
+                if (!bsdName) continue;
+                char nameBuf[64] = { 0 };
+                CFStringGetCString(bsdName, nameBuf, sizeof(nameBuf), kCFStringEncodingUTF8);
+                if (if_name == nameBuf) {
+                    char idBuf[256];
+                    CFStringGetCString(serviceID, idBuf, sizeof(idBuf), kCFStringEncodingUTF8);
+                    result = idBuf;
+                }
+            }
         }
-        */
-        SCPreferencesRef prefs = SCPreferencesCreate(NULL, CFSTR("NetworkServiceLister"), NULL);
-        CFArrayRef services = SCNetworkServiceCopyAll(prefs);
-        if (!services) {
-            CFRelease(prefs);
-            //CFRelease(store);
-            std::cout << "NO SERVICES" << std::endl;
-            return;
-        }
-        CFIndex count = CFArrayGetCount(services);
-        //std::cout << "COUNT: " << count << std::endl;
-        for (CFIndex i = 0; i < count; i++) {
-            SCNetworkServiceRef service = (SCNetworkServiceRef)CFArrayGetValueAtIndex(services, i);
-            CFStringRef serviceName = SCNetworkServiceGetName(service);
-            CFStringRef serviceID = SCNetworkServiceGetServiceID(service);
-            CFShow(serviceName);
-            CFShow(serviceID);
-            SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
-            if (!iface) {
-                std::cout << "DID NOT FIND IFACE" << std::endl;
-                continue;
-            }
-            CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
-            if (!bsdName) {
-                std::cout << "DID NOT FIND BSD NAME" << std::endl;
-                continue;
-            }
-            CFShow(bsdName);
-            char nameBuf[64] = { 0 };
-            CFStringGetCString(bsdName, nameBuf, sizeof(nameBuf), kCFStringEncodingUTF8);
-            //std::cout << "----------------------------------BSD NAME: " << nameBuf << std::endl;
-            //std::cout << "----------------------------------IF NAME: " << if_name << std::endl;
-            if (if_name == nameBuf) {
-                //std::cout << "FOUND SERVICE" << std::endl;
-                char idBuf[256];
-                CFStringGetCString(serviceID, idBuf, sizeof(idBuf), kCFStringEncodingUTF8);
-                result = idBuf;
-            }
+        catch (const std::exception& e) {
+            std::cout << "getServiceIDForInterface error: " << e.what() << std::endl;
         }
 
-        CFRelease(prefs);
-        CFRelease(services);
-        //CFRelease(store);
-
+        if (prefs) CFRelease(prefs);
+        if (services) CFRelease(services);
         return result;
     }
 
-    void print_dhcp_server_for_service(CFStringRef serviceID) const
+    bool dhcpEnabled(const std::string& serviceID) const
     {
-
+        /*
         std::unordered_map<std::string, std::string> dhcpOptionFriendlyNames = {
             {"Option_1",  "SubnetMask"},
             {"Option_3",  "Router"},
@@ -261,22 +230,33 @@ public:
             {"Option_59", "RebindTime"},
             {"Option_61", "ClientIdentifier"}
         };
-    
+        */
+
+        SCDynamicStoreRef store = nullptr;
+        CFDictionaryRef dhcpInfo = nullptr;
+        CFStringRef dhcpKey = nullptr;
+        bool result = false;
+
         try {
             // Build key: State:/Network/Service/<service-id>/DHCP
-            CFStringRef dhcpKey = CFStringCreateWithFormat(
+            dhcpKey = CFStringCreateWithFormat(
                 NULL, NULL,
                 CFSTR("State:/Network/Service/%@/DHCP"),
-                serviceID
+                CFStringCreateWithCString(nullptr, serviceID.c_str(), kCFStringEncodingUTF8)
             );
 
-            SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
-            CFDictionaryRef dhcpInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dhcpKey);
+            if (!(store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL)))
+                throw std::runtime_error("SCDynamicStoreCreate returned nullptr");
+            if (!(dhcpInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dhcpKey)))
+                throw std::runtime_error("dhcp returned nullptr");
 
             std::cout << "show dhcp info" << std::endl;
             CFShow(dhcpInfo);
+            result = true;
+            /*
             CFIndex count = CFDictionaryGetCount(dhcpInfo);
             std::cout << "dictionary count: " << count << std::endl;
+
             std::vector<const void*> keys(count);
             std::vector<const void*> values(count);
             CFDictionaryGetKeysAndValues(dhcpInfo, keys.data(), values.data());
@@ -317,20 +297,19 @@ public:
                     CFShow(value);
                 }
             }
-
-
-            if (dhcpInfo) {
-                CFRelease(dhcpInfo);
-            }
-
-            CFRelease(store);
-            CFRelease(dhcpKey);
+            */
         }
         catch (const std::exception& e) {
             std::cout << "ERROR: " << e.what() << std::endl;
         }
+
+        if (dhcpInfo) CFRelease(dhcpInfo);
+        if (store) CFRelease(store);
+        if (dhcpKey) CFRelease(dhcpKey);
+        return result;
     }
 
+    /*
     void getAllDHCPservers() const
     {
         SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
@@ -371,46 +350,7 @@ public:
         CFRelease(serviceIDs);
         CFRelease(store);
     }
-
-    void InspectCFArray(CFArrayRef array) const
-    {
-        CFIndex count = CFArrayGetCount(array);
-        printf("CFArray (%ld elements)\n", count);
-
-        for (CFIndex i = 0; i < count; i++) {
-            CFTypeRef item = CFArrayGetValueAtIndex(array, i);
-            CFTypeID type = CFGetTypeID(item);
-
-            // Print index
-            printf(" [%ld] ", i);
-
-            // Print readable type name
-            if (type == CFStringGetTypeID()) {
-                printf("CFString: ");
-                CFShow(item);
-            }
-            else if (type == CFNumberGetTypeID()) {
-                printf("CFNumber: ");
-                CFShow(item);
-            }
-            else if (type == CFDataGetTypeID()) {
-                printf("CFData (%ld bytes)\n",
-                    CFDataGetLength((CFDataRef)item));
-            }
-            else if (type == CFDictionaryGetTypeID()) {
-                printf("CFDictionary:\n");
-                CFShow(item);
-            }
-            else if (type == CFArrayGetTypeID()) {
-                printf("CFArray:\n");
-                CFShow(item);
-            }
-            else {
-                printf("Unknown CFTypeID = %lu\n", type);
-                CFShow(item);
-            }
-        }
-    }
+    */
 
     void dothings() const
     {
@@ -429,7 +369,13 @@ public:
             std::string serviceID = getServiceIDForInterface(buf);
             if (!serviceID.empty()) {
                 std::cout << "_____FOUND SERVICE ID______" << serviceID << std::endl;
-                printDNSForService(serviceID);
+                //printDNSForService(serviceID);
+                std::cout << dnsForService(serviceID) << std::endl;
+                //print_dhcp_server_for_service(serviceID);
+                if (dhcpEnabled(serviceID)) 
+                    std::cout << "DHCP ENABLED" << std::endl;
+                else
+                    std::cout << "DHCP NOT ENABLED" << std::endl;
             }
             else {
                 std::cout << "NO SERVICE ID FOUND" << std::endl;
@@ -605,54 +551,48 @@ public:
         }
     }
 
-    void printDNSForService(const std::string& serviceID) const
-    {
-        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dns-reader"), NULL, NULL);
-        if (!store) return;
+    std::string dnsForService(const std::string& serviceID) const {
+        SCDynamicStoreRef store = nullptr;
+        CFDictionaryRef dnsInfo = nullptr;
+        CFStringRef dnsKey = nullptr;
+        CFArrayRef servers = nullptr;
+        std::string result;
+        
+        try {
+            if (!(store = SCDynamicStoreCreate(nullptr, CFSTR("dns-reader"), nullptr, nullptr)))
+                throw std::runtime_error("SCDynamicStoreCreate returned nullptr");
 
-        CFStringRef dnsKey = CFStringCreateWithFormat(
-            NULL, NULL,
-            CFSTR("State:/Network/Service/%@/DNS"),
-            CFStringCreateWithCString(NULL, serviceID.c_str(), kCFStringEncodingUTF8)
-        );
+            CFStringRef dnsKey = CFStringCreateWithFormat(
+                nullptr, nullptr,
+                CFSTR("State:/Network/Service/%@/DNS"),
+                CFStringCreateWithCString(nullptr, serviceID.c_str(), kCFStringEncodingUTF8)
+            );
 
-        CFDictionaryRef dnsInfo =
-            (CFDictionaryRef)SCDynamicStoreCopyValue(store, dnsKey);
+            if (!(dnsInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dnsKey)))
+                throw std::runtime_error("dnsInfo returned nullptr");
 
-        if (!dnsInfo) {
-            printf("No DNS info for service %s\n", serviceID.c_str());
-            CFRelease(store);
-            CFRelease(dnsKey);
-            return;
-        }
+            if (!(servers = (CFArrayRef)CFDictionaryGetValue(dnsInfo, CFSTR("ServerAddresses"))))
+                throw std::runtime_error("servers returned nullptr");
 
-        CFArrayRef servers =
-            (CFArrayRef)CFDictionaryGetValue(dnsInfo, CFSTR("ServerAddresses"));
-
-        if (!servers) {
-            printf("Service %s has no ServerAddresses\n", serviceID.c_str());
-            CFRelease(dnsInfo);
-            CFRelease(store);
-            CFRelease(dnsKey);
-            return;
-        }
-
-        CFIndex count = CFArrayGetCount(servers);
-        for (CFIndex i = 0; i < count; i++) {
-            CFStringRef server =
-                (CFStringRef)CFArrayGetValueAtIndex(servers, i);
-
-            char buf[256];
-            if (CFStringGetCString(server, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                printf("DNS Server: %s\n", buf);
+            CFIndex count = CFArrayGetCount(servers);
+            for (CFIndex i = 0; i < count; i++) {
+                CFStringRef server = (CFStringRef)CFArrayGetValueAtIndex(servers, i);
+                char buf[256];
+                if (CFStringGetCString(server, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+                    printf("DNS Server: %s\n", buf);
+                    result = buf;
+                }
             }
         }
+        catch (const std::exception& e) {
+            std::cout << "DNSForService error: " << e.what() << std::endl;
+        }
 
-        CFRelease(dnsInfo);
-        CFRelease(store);
-        CFRelease(dnsKey);
+        if (dnsInfo) CFRelease(dnsInfo);
+        if (store) CFRelease(store);
+        if (dnsKey) CFRelease(dnsKey);
+        return result;
     }
-
 
 };
 
