@@ -64,7 +64,7 @@ public:
     std::vector<std::string> getIPAddress() const {
         char buf[128] = { 0 };
         std::vector<std::string> result;
-
+        /*
         char *address;
         struct ifaddrs *interfaces = NULL;
         struct ifaddrs *ifa = NULL;
@@ -75,13 +75,10 @@ public:
             while (ifa != NULL) {
 
                 sa_family_t fam = ifa->ifa_addr->sa_family;
-                
-                if (fam == AF_LINK && ifa->ifa_data) {
-                    struct if_data* d = (struct if_data*)ifa->ifa_data;
-                    std::cout << "  [if_data] MTU=" << d->ifi_mtu
-                            << " RX=" << d->ifi_ipackets
-                            << " TX=" << d->ifi_opackets << "\n";
 
+
+                
+                if (fam == AF_LINK) {
                     struct sockaddr_dl *sdl = (struct sockaddr_dl *)ifa->ifa_addr;
                     unsigned char* ptr = (unsigned char *)LLADDR(sdl);
                     
@@ -92,12 +89,165 @@ public:
             }
         }
         freeifaddrs(interfaces);
+        */
         return result;
     }
 
     std::map<std::string, int> getActiveNetworkInterfaces() const {
         std::map<std::string, int> result;
 
+        CFArrayRef ifs = SCNetworkInterfaceCopyAll();
+        CFIndex count = CFArrayGetCount(ifs);
+        std::cout << "interface count: " << count << std::endl;
+        for (CFIndex i = 0; i < count; i++) {
+            SCNetworkInterfaceRef item = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(ifs, i);
+            std::string bsd = getStringFromRef(SCNetworkInterfaceGetBSDName(item));
+            std::string displayName = getStringFromRef(SCNetworkInterfaceGetLocalizedDisplayName(item));
+            std::string ip_address = getIPAddressForName(bsd);
+            int priority = getInterfacePriority(bsd);
+            std::string if_type = getStringFromRef(SCNetworkInterfaceGetInterfaceType(item));
+            std::string hardware = getStringFromRef(SCNetworkInterfaceGetHardwareAddressString(item));
+            CFArrayRef protocols = SCNetworkInterfaceGetSupportedProtocolTypes(item);
+            std::string serviceID = getServiceIDForInterface(bsd);
+            bool dhcp = dhcpEnabled(serviceID); 
+            std::vector<std::string> dns = dnsForService(serviceID);
+            std::cout << "bsd name:   " << bsd << "\n"
+                      << "display:    " << displayName << "\n"
+                      << "ip address: " << ip_address << "\n"
+                      << "if_type:    " << if_type << "\n"
+                      << "priority:   " << (priority < 0 ? "" : std::to_string(priority)) << "\n"
+                      << "hardware:   " << hardware << "\n"
+                      << "service:    " << serviceID << "\n"
+                      << "dhcp:       " << dhcp << "\n";
+            for (int j = 0; j < dns.size(); j++)
+                std::cout << "dns " << j << ":      " << dns[j] << "\n";
+            std::cout << std::endl;
+            std::cout << "GATEWAY: " << gateway(bsd) << std::endl;
+        }
+        //CFShow(ifs);
+        //oldSchoolInterfaces();
+        //printInterfacePriority();
+        //std::string gtwy = gateway();
+        runShellCmd("");
+        return result;
+    }
+
+    void runShellCmd(const std::string& cmd) const
+    {
+        std::array<char, 128> buffer;
+        std::string result;
+        // Open a pipe to the command, "r" indicates reading the output
+        FILE* pipe = popen("netstat -rn | grep default | grep en0", "r");
+        if (!pipe) {
+            throw std::runtime_error("popen() failed!");
+        }
+        try {
+            // Read the output line by line
+            while (std::fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+                result += buffer.data();
+            }
+        } catch (...) {
+            pclose(pipe);
+            throw;
+        }
+        // Close the pipe and get the return status
+        pclose(pipe);
+
+        std::cout << "Output of 'ls -l':\n" << result;
+
+    }
+
+    std::string gateway(const std::string& name) const {
+        std::string result;
+        SCDynamicStoreRef store = nullptr;
+        CFDictionaryRef globalIPv4 = nullptr;
+        CFStringRef interfaceKey = nullptr;
+        CFDictionaryRef interfaceIPv4 = nullptr;
+        CFStringRef bsd = nullptr;
+        try {
+            if (name.empty())
+                throw std::runtime_error("empty name");
+
+            bsd = CFStringCreateWithCString(kCFAllocatorDefault, name.c_str(), kCFStringEncodingUTF8);
+
+            if (!(interfaceKey = CFStringCreateWithFormat(NULL, NULL, CFSTR("State:/Network/Interface/%@/IPv4"), bsd)))
+                throw std::runtime_error("CFStringCreateWithFormat returned nullptr");
+            
+            if (!(interfaceIPv4 = (CFDictionaryRef)SCDynamicStoreCopyValue(store, interfaceKey)))
+                throw std::runtime_error("SCDynamicStoreCopyValue returned nullptr");
+
+            CFShow(interfaceIPv4);
+            
+            CFArrayRef subnetMasks = (CFArrayRef)CFDictionaryGetValue(interfaceIPv4, CFSTR("SubnetMasks"));
+            CFIndex count = CFArrayGetCount(subnetMasks);
+            for (CFIndex i = 0; i < count; i++) {
+                std::string mask = getStringFromRef((CFStringRef)CFArrayGetValueAtIndex(subnetMasks, i));
+                std::cout << "mask: " << mask << std::endl;
+            }
+            CFArrayRef addresses = (CFArrayRef)CFDictionaryGetValue(interfaceIPv4, CFSTR("Addresses"));
+            count = CFArrayGetCount(addresses);
+            for (CFIndex i = 0; i < count; i++) {
+                std::string address = getStringFromRef((CFStringRef)CFArrayGetValueAtIndex(addresses, i));
+                std::cout << "address: " << address << std::endl;
+            }
+            CFArrayRef broadcastAddresses = (CFArrayRef)CFDictionaryGetValue(interfaceIPv4, CFSTR("BroadcastAddresses"));
+            count = CFArrayGetCount(broadcastAddresses);
+            for (CFIndex i = 0; i < count; i++) {
+                std::string broadcastAddress = getStringFromRef((CFStringRef)CFArrayGetValueAtIndex(broadcastAddresses, i));
+                std::cout << "broadcastAddress: " << broadcastAddress << std::endl;
+            }
+            //std::cout << "fuck you faggots " << std::endl;
+            //CFShow(subnetMasks);
+
+            
+            if (!(store = SCDynamicStoreCreate(nullptr, CFSTR("gateway"), nullptr, nullptr)))
+                throw std::runtime_error("SCDynamicStoreCreate returned nullptr");
+            if (!(globalIPv4 = (CFDictionaryRef)SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"))))
+                throw std::runtime_error("SCDynamicStoreCopyValue returned nullptr");
+            CFShow(globalIPv4);
+            CFStringRef router = (CFStringRef)CFDictionaryGetValue(globalIPv4, CFSTR("Router"));
+            std::cout << "router: " << getStringFromRef(router) << std::endl;
+            
+        }
+        catch (const std::exception& e) {
+            std::cout << "gateway error: " << e.what() << std::endl;
+        }
+
+        if (store) CFRelease(store);
+        if (globalIPv4) CFRelease(globalIPv4);
+        if (interfaceIPv4) CFRelease(interfaceIPv4);
+        if (interfaceKey) CFRelease(interfaceKey);
+        if (bsd) CFRelease(bsd);
+        return result;
+    }
+
+    std::string getIPAddressForName(const std::string& name) const
+    {
+        struct ifaddrs *ifaddr = nullptr;
+        std::string ip_address;
+
+        try {
+            if (name.empty()) throw std::runtime_error("empty name");
+            if (getifaddrs(&ifaddr) == -1) throw std::runtime_error("getifaddr failure");
+            for (struct ifaddrs *ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+                if (ifa->ifa_addr == nullptr)
+                    continue;
+
+                if (ifa->ifa_addr->sa_family == AF_INET && name == ifa->ifa_name) {
+                    ip_address = inet_ntoa(((struct sockaddr_in *)ifa->ifa_addr)->sin_addr);
+                } 
+            }
+        }
+        catch (const std::exception& e) {
+            std::cout << "getIPAddressForName error: " << e.what() << std::endl;
+        }
+
+        if (ifaddr) freeifaddrs(ifaddr);
+        return ip_address;
+    }
+
+    void oldSchoolInterfaces() const
+    {
         struct ifaddrs *ifaddr;
         int family, s;
         char host[NI_MAXHOST];
@@ -123,56 +273,48 @@ public:
             } 
         }
         freeifaddrs(ifaddr);
-        printInterfacePriority();
-        return result;
     }
 
-    void printInterfacePriority() const
+    int getInterfacePriority(const std::string& name) const
     {
         SCPreferencesRef prefs = nullptr;
         SCNetworkSetRef set = nullptr;
         CFArrayRef order = nullptr;
+        int priority = -1;
 
         try {
-            prefs = SCPreferencesCreate(NULL, CFSTR("ifprio"), NULL);
-            if (!prefs) throw std::runtime_error("NULL");
+            if (name.empty()) 
+                throw std::runtime_error("empty name");
 
-            set = SCNetworkSetCopyCurrent(prefs);
-            if (!set) throw std::runtime_error("NULL");
+            if (!(prefs = SCPreferencesCreate(NULL, CFSTR("ifprio"), NULL)))
+                throw std::runtime_error("NULL");
 
-            order = SCNetworkSetGetServiceOrder(set);
-            if (!order) throw std::runtime_error("NULL");
+            if (!(set = SCNetworkSetCopyCurrent(prefs)))
+                throw std::runtime_error("NULL");
 
-            std::cout << "Service Order (priority):\n";
+            if (!(order = SCNetworkSetGetServiceOrder(set)))
+                throw std::runtime_error("NULL");
+
             for (CFIndex i = 0; i < CFArrayGetCount(order); i++) {
                 CFStringRef sid = (CFStringRef)CFArrayGetValueAtIndex(order, i);
                 SCNetworkServiceRef service = SCNetworkServiceCopy(prefs, sid);
-
-                char buf[256];
-                if (CFStringGetCString(sid, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                    std::cout << "  " << i << ": " << buf << "\n";
-                }
-
                 SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
                 CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
-                std::cout << "NAME: " << bsdName << std::endl;
+                if (!bsdName) continue;
 
-                if (bsdName && CFStringGetCString(bsdName, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                    std::cout << "Priority " << i << " → interface " << buf << "\n";
-                }
+                if (name == getStringFromRef(bsdName))
+                    priority = i;
             }
-
-            //getAllDHCPservers();
         }
         catch (const std::exception& e) {
-            std::cout << "ERROR: " << e.what() << std::endl;
+            std::cout << "getInterfacePriority error: " << e.what() << std::endl;
         }
 
         if (set) CFRelease(set);
         if (prefs) CFRelease(prefs);
         if (order) CFRelease(order);
 
-        dothings();
+        return priority;
     }
 
     std::string getServiceIDForInterface(const std::string& if_name) const 
@@ -190,18 +332,13 @@ public:
             CFIndex count = CFArrayGetCount(services);
             for (CFIndex i = 0; i < count; i++) {
                 SCNetworkServiceRef service = (SCNetworkServiceRef)CFArrayGetValueAtIndex(services, i);
-                CFStringRef serviceName = SCNetworkServiceGetName(service);
                 CFStringRef serviceID = SCNetworkServiceGetServiceID(service);
                 SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
                 if (!iface) continue;
                 CFStringRef bsdName = SCNetworkInterfaceGetBSDName(iface);
                 if (!bsdName) continue;
-                char nameBuf[64] = { 0 };
-                CFStringGetCString(bsdName, nameBuf, sizeof(nameBuf), kCFStringEncodingUTF8);
-                if (if_name == nameBuf) {
-                    char idBuf[256];
-                    CFStringGetCString(serviceID, idBuf, sizeof(idBuf), kCFStringEncodingUTF8);
-                    result = idBuf;
+                if (if_name == getStringFromRef(bsdName)) {
+                    result = getStringFromRef(serviceID);
                 }
             }
         }
@@ -214,30 +351,23 @@ public:
         return result;
     }
 
+    std::string getStringFromRef(CFStringRef arg) const 
+    {
+        char buf[1024];
+        CFStringGetCString(arg, buf, sizeof(buf), kCFStringEncodingUTF8);
+        return buf;
+    }
+
     bool dhcpEnabled(const std::string& serviceID) const
     {
-        /*
-        std::unordered_map<std::string, std::string> dhcpOptionFriendlyNames = {
-            {"Option_1",  "SubnetMask"},
-            {"Option_3",  "Router"},
-            {"Option_6",  "DNSServer"},
-            {"Option_15", "DomainName"},
-            {"Option_28", "BroadcastAddress"},
-            {"Option_51", "LeaseTime"},
-            {"Option_53", "MessageType"},
-            {"Option_54", "ServerIdentifier"},  // <- your DHCP server
-            {"Option_58", "RenewalTime"},
-            {"Option_59", "RebindTime"},
-            {"Option_61", "ClientIdentifier"}
-        };
-        */
-
         SCDynamicStoreRef store = nullptr;
         CFDictionaryRef dhcpInfo = nullptr;
         CFStringRef dhcpKey = nullptr;
         bool result = false;
 
         try {
+            if (serviceID.empty())
+                throw std::runtime_error("empty service id");
             // Build key: State:/Network/Service/<service-id>/DHCP
             dhcpKey = CFStringCreateWithFormat(
                 NULL, NULL,
@@ -250,8 +380,8 @@ public:
             if (!(dhcpInfo = (CFDictionaryRef)SCDynamicStoreCopyValue(store, dhcpKey)))
                 throw std::runtime_error("dhcp returned nullptr");
 
-            std::cout << "show dhcp info" << std::endl;
-            CFShow(dhcpInfo);
+            //std::cout << "show dhcp info" << std::endl;
+            //CFShow(dhcpInfo);
             result = true;
             /*
             CFIndex count = CFDictionaryGetCount(dhcpInfo);
@@ -300,105 +430,13 @@ public:
             */
         }
         catch (const std::exception& e) {
-            std::cout << "ERROR: " << e.what() << std::endl;
+            //std::cout << "ERROR: " << e.what() << std::endl;
         }
 
         if (dhcpInfo) CFRelease(dhcpInfo);
         if (store) CFRelease(store);
         if (dhcpKey) CFRelease(dhcpKey);
         return result;
-    }
-
-    /*
-    void getAllDHCPservers() const
-    {
-        SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("dhcp-reader"), NULL, NULL);
-        CFArrayRef serviceIDs = SCDynamicStoreCopyKeyList(store, CFSTR("State:/Network/Service/.+"));
-
-        if (!serviceIDs) {
-            std::cout << "did not find service ids" << std::endl;
-            return;
-        }
-
-        CFIndex count = CFArrayGetCount(serviceIDs);
-        std::cout << "service id count: " << count << std::endl;
-
-        for (CFIndex i = 0; i < count; i++) {
-            CFStringRef key = (CFStringRef)CFArrayGetValueAtIndex(serviceIDs, i);
-            
-            if (!CFStringHasSuffix(key, CFSTR("/IPv4"))) {
-                std::cout << "NOT IPV4" << std::endl;
-                continue;
-            }
-
-            // Extract the service ID from the path
-            // Key looks like: State:/Network/Service/<id>/IPv4
-            CFArrayRef parts = CFStringCreateArrayBySeparatingStrings(
-                NULL, key, CFSTR("/")
-            );
-
-            if (CFArrayGetCount(parts) >= 4) {
-                CFStringRef serviceID = (CFStringRef)CFArrayGetValueAtIndex(parts, 3);
-                std::cout << "wtf 1: " << serviceID << std::endl;
-                print_dhcp_server_for_service(serviceID);
-                std::cout << "wtf 2" << std::endl;
-            }
-
-            CFRelease(parts);
-        }
-
-        CFRelease(serviceIDs);
-        CFRelease(store);
-    }
-    */
-
-    void dothings() const
-    {
-        std::cout << "DO THINGS" << std::endl;
-        CFArrayRef ifs = SCNetworkInterfaceCopyAll();
-        CFIndex count = CFArrayGetCount(ifs);
-        CFShow(ifs);
-
-        for (CFIndex i = 0; i < count; i++) {
-            SCNetworkInterfaceRef item = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(ifs, i);
-            CFStringRef bsd = SCNetworkInterfaceGetBSDName(item);
-            CFShow(bsd);
-            char buf[64];
-            CFStringGetCString(bsd, buf, sizeof(buf), kCFStringEncodingUTF8);
-            std::cout << "BSD NAME: " << buf << std::endl;
-            std::string serviceID = getServiceIDForInterface(buf);
-            if (!serviceID.empty()) {
-                std::cout << "_____FOUND SERVICE ID______" << serviceID << std::endl;
-                //printDNSForService(serviceID);
-                std::cout << dnsForService(serviceID) << std::endl;
-                //print_dhcp_server_for_service(serviceID);
-                if (dhcpEnabled(serviceID)) 
-                    std::cout << "DHCP ENABLED" << std::endl;
-                else
-                    std::cout << "DHCP NOT ENABLED" << std::endl;
-            }
-            else {
-                std::cout << "NO SERVICE ID FOUND" << std::endl;
-            } 
-            //bool is_up = isInterfaceUp(buf);
-            bool is_up = interfaceHasLink(buf);
-            std::cout << "IS INTERFACE UP: " << is_up << std::endl;
-            CFStringRef displayName = SCNetworkInterfaceGetLocalizedDisplayName(item);
-            CFStringGetCString(displayName, buf, sizeof(buf), kCFStringEncodingUTF8);
-            std::cout << "DISPLAY NAME: " << buf << std::endl;
-            CFStringRef hardware = SCNetworkInterfaceGetHardwareAddressString(item);
-            CFStringGetCString(hardware, buf, sizeof(buf), kCFStringEncodingUTF8);
-            std::cout << "HARDWARE: " << buf << std::endl;
-            CFStringRef if_type = SCNetworkInterfaceGetInterfaceType(item);
-            CFShow(if_type);
-            CFArrayRef protocols = SCNetworkInterfaceGetSupportedProtocolTypes(item);
-            CFShow(protocols);
-            //CFDictionaryRef configuration = SCNetworkInterfaceGetConfiguration(item);
-            //CFShow(configuration);
-            std::string defaultGateway = getDefaultGateway();
-            std::cout << "default gateway: " << defaultGateway << std::endl;
-        }
-        std::cout << "THINGS DONE: " << count << std::endl;
     }
 
     std::string getDefaultGateway() const
@@ -522,27 +560,11 @@ public:
             {IFF_NOARP, "NOARP"},
             {IFF_PROMISC, "PROMISC"},
             {IFF_ALLMULTI, "ALLMULTI"},
-            //{IFF_DRV_OACTIVE, "DRV_OACTIVE"},
             {IFF_SIMPLEX, "SIMPLEX"},
             {IFF_LINK0, "LINK0"},
             {IFF_LINK1, "LINK1"},
             {IFF_LINK2, "LINK2"},
             {IFF_MULTICAST, "MULTICAST"},
-            //{IFF_LQM_ENABLED, "LQM_ENABLED"},
-            //{IFF_LQM_DEGRADED, "LQM_DEGRADED"},
-            //{IFF_LQM_NA, "LQM_NA"},
-            //{IFF_CANTCONFIG, "CANTCONFIG"},
-            //{IFF_PPROMISC, "PPROMISC"},
-            //{IFF_MONITOR, "MONITOR"},
-            //{IFF_STANDBY, "STANDBY"},
-            //{IFF_EEE, "EEE"},
-            //{IFF_DRV_RUNNING, "DRV_RUNNING"},
-            //{IFF_WAKE_ON_MAGIC_PACKET, "WAKE_ON_MAGIC_PACKET"},
-            //{IFF_INTERFACEID, "INTERFACEID"},
-            //{IFF_ROUTER, "ROUTER"},
-            //{IFF_DETACHING, "DETACHING"},
-            //{IFF_TENTATIVE, "TENTATIVE"},
-            //{IFF_DUPLICATED, "DUPLICATED"},
         };
 
         for (auto& f : list) {
@@ -551,14 +573,16 @@ public:
         }
     }
 
-    std::string dnsForService(const std::string& serviceID) const {
+    std::vector<std::string> dnsForService(const std::string& serviceID) const {
         SCDynamicStoreRef store = nullptr;
         CFDictionaryRef dnsInfo = nullptr;
         CFStringRef dnsKey = nullptr;
         CFArrayRef servers = nullptr;
-        std::string result;
+        std::vector<std::string> result;
         
         try {
+            if (serviceID.empty())
+                throw std::runtime_error("service id is empty");
             if (!(store = SCDynamicStoreCreate(nullptr, CFSTR("dns-reader"), nullptr, nullptr)))
                 throw std::runtime_error("SCDynamicStoreCreate returned nullptr");
 
@@ -577,15 +601,11 @@ public:
             CFIndex count = CFArrayGetCount(servers);
             for (CFIndex i = 0; i < count; i++) {
                 CFStringRef server = (CFStringRef)CFArrayGetValueAtIndex(servers, i);
-                char buf[256];
-                if (CFStringGetCString(server, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-                    printf("DNS Server: %s\n", buf);
-                    result = buf;
-                }
+                result.push_back(getStringFromRef(server));
             }
         }
         catch (const std::exception& e) {
-            std::cout << "DNSForService error: " << e.what() << std::endl;
+            //std::cout << "DNSForService error: " << e.what() << std::endl;
         }
 
         if (dnsInfo) CFRelease(dnsInfo);
@@ -599,14 +619,3 @@ public:
 }
 
 #endif // MACNETUTIL_HPP
-
-
-
-                /*
-                else if ((fam == AF_INET || fam == AF_INET6) && temp_addr->ifa_data) {
-                    struct ifa_data* ad = (struct ifa_data*)temp_addr->ifa_data;
-                    std::cout << "  [ifa_data] packets=" << ad->ifa_packets
-                            << " bytes="   << ad->ifa_bytes << "\n";
-                }
-                */
-
