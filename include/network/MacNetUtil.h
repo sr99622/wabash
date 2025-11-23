@@ -196,9 +196,6 @@ public:
                 std::string broadcastAddress = getStringFromRef((CFStringRef)CFArrayGetValueAtIndex(broadcastAddresses, i));
                 std::cout << "broadcastAddress: " << broadcastAddress << std::endl;
             }
-            //std::cout << "fuck you faggots " << std::endl;
-            //CFShow(subnetMasks);
-
             
             if (!(store = SCDynamicStoreCreate(nullptr, CFSTR("gateway"), nullptr, nullptr)))
                 throw std::runtime_error("SCDynamicStoreCreate returned nullptr");
