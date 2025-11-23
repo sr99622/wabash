@@ -51,6 +51,9 @@ public:
         std::vector<std::string> results;
         /* Declare and initialize variables */
 
+        std::unordered_map<DWORD, std::unordered_map<std::string, std::string>> adapters = GetAllAdapters();
+
+
         DWORD dwRetVal = 0;
 
         unsigned int i = 0;
@@ -148,6 +151,17 @@ public:
                 std::cout << "\tIF Type: " << getTypeName(pCurrAddresses->IfType) << std::endl;
                 std::cout << "\tOperStatus: " << getOperStatusName(pCurrAddresses->OperStatus) << std::endl;
                 std::cout << "\tNetwork Priority: " << GetNetworkPriority(pCurrAddresses->IfIndex) << std::endl;
+
+                auto adapter = adapters.find(pCurrAddresses->IfIndex);
+                if (adapter != adapters.end()) {
+                    auto parameters = adapter->second;
+                    auto broadcast = parameters.find("Broadcast");
+                    if (broadcast != parameters.end())
+                        std::cout << "\tBroadcast: " << broadcast->second << std::endl;
+                    auto mask = parameters.find("SubnetMask");
+                    if (mask != parameters.end()) 
+                        std::cout << "\tSubnet Mask: " << mask->second << std::endl;
+                }
 
                 pCurrAddresses = pCurrAddresses->Next;
             }
@@ -277,17 +291,17 @@ public:
         return result;
     }
 
-    std::map<std::string, int> getActiveNetworkInterfaces() const {
+    std::unordered_map<DWORD, std::unordered_map<std::string, std::string>> GetAllAdapters() const {
+        std::unordered_map<DWORD, std::unordered_map<std::string, std::string>> results;
         PIP_ADAPTER_INFO pAdapterInfo;
         PIP_ADAPTER_INFO pAdapter = NULL;
         DWORD dwRetVal = 0;
-        std::map<std::string, int> result;
 
         ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
         pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof (IP_ADAPTER_INFO));
         if (pAdapterInfo == NULL) {
             printf("Error allocating memory needed to call GetAdaptersinfo\n");
-            return result;
+            return results;
         }
 
         if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) {
@@ -295,7 +309,7 @@ public:
             pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen);
             if (pAdapterInfo == NULL) {
                 printf("Error allocating memory needed to call GetAdaptersinfo\n");
-                return result;
+                return results;
             }
         }
 
@@ -303,21 +317,15 @@ public:
             pAdapter = pAdapterInfo;
             while (pAdapter) {
                 if (strcmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0")) {
-                    std::cout << "Interface: " << pAdapter->IpAddressList.IpAddress.String << std::endl;
-                    std::cout << "Description: " << pAdapter->Description << std::endl;
-                    DWORD priority = GetNetworkPriority(pAdapter->ComboIndex);
-                    std::cout << "Priority: " << priority << std::endl;
-                    std::cout << "Index: " << pAdapter->Index << std::endl;
-                    std::cout << "Mask: " << pAdapter->IpAddressList.IpMask.String << std::endl;
-                    std::cout << "Gateway: " << pAdapter->GatewayList.IpAddress.String << std::endl;
-                    if (pAdapter->DhcpEnabled) {
-                        std::cout << "DHCP is enabled" << std::endl;
-                        std::cout << "DHCP Server: " << pAdapter->DhcpServer.IpAddress.String << std::endl;
-                    }
-                    else {
-                        std::cout << "DHCP is disabled" << std::endl;
-                    }
-                    result.insert({pAdapter->IpAddressList.IpAddress.String, priority});
+                    std::unordered_map<std::string, std::string> parameters;
+                    parameters.insert(std::pair("IPAddress", pAdapter->IpAddressList.IpAddress.String));
+                    parameters.insert(std::pair("Description", pAdapter->Description));
+                    parameters.insert(std::pair("SubnetMask", pAdapter->IpAddressList.IpMask.String));
+                    parameters.insert(std::pair("Gateway", pAdapter->GatewayList.IpAddress.String));
+                    parameters.insert(std::pair("DHCP", (pAdapter->DhcpEnabled ? "TRUE" : "FALSE")));
+                    std::string broadcast = getBroadcast(pAdapter->IpAddressList.IpAddress.String, pAdapter->IpAddressList.IpMask.String);
+                    parameters.insert(std::pair("Broadcast", broadcast));
+                    results.insert(std::pair(pAdapter->Index, parameters));
                 }
                 pAdapter = pAdapter->Next;
             }
@@ -327,6 +335,41 @@ public:
         }
         if (pAdapterInfo)
             free(pAdapterInfo);
+
+        return results;
+    }
+
+    std::string getBroadcast(const std::string& ipStr, const std::string& maskStr) const
+    {
+        std::string result;
+
+        try {
+            in_addr ip{}, mask{}, broadcast{};
+            if (inet_pton(AF_INET, ipStr.c_str(), &ip) != 1)
+                throw std::runtime_error("error converting ip address to in_addr");
+            if (inet_pton(AF_INET, maskStr.c_str(), &mask) != 1)
+                throw std::runtime_error("error converting mask address to in_addr");
+
+            uint32_t ip_i    = ntohl(ip.s_addr);
+            uint32_t mask_i  = ntohl(mask.s_addr);
+            uint32_t bc_i    = (ip_i & mask_i) | (~mask_i);
+
+            broadcast.s_addr = htonl(bc_i);
+
+            char buf[INET_ADDRSTRLEN];
+            if (!inet_ntop(AF_INET, &broadcast, buf, sizeof(buf)))
+                throw std::runtime_error("error converting broadcast address to string");
+
+            result = buf;
+        }
+        catch (const std::exception& e) {
+            std::cout << "getBroadcast error: " << e.what() << std::endl;
+        }
+        return result;
+    }    
+
+    std::map<std::string, int> getActiveNetworkInterfaces() const {
+        std::map<std::string, int> result;
 
         //printf("Primary Interface: %s\n", onvif_session->primary_network_interface);
         return result;
