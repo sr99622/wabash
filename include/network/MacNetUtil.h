@@ -30,7 +30,6 @@
 #include <string>
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
-#include <SystemConfiguration/SCNetworkReachability.h>
 #include <iostream>
 
 
@@ -52,17 +51,6 @@ public:
 
     NetUtil() { }
     ~NetUtil() { }
-
-    void printInterfaceFlags(unsigned int flags) const {
-        if (flags & IFF_UP)           std::cout << "UP ";
-        if (flags & IFF_RUNNING)      std::cout << "RUNNING ";
-        if (flags & IFF_LOOPBACK)     std::cout << "LOOPBACK ";
-        if (flags & IFF_BROADCAST)    std::cout << "BROADCAST ";
-        if (flags & IFF_POINTOPOINT)  std::cout << "P2P ";
-        if (flags & IFF_MULTICAST)    std::cout << "MULTICAST ";
-        if (flags & IFF_PROMISC)      std::cout << "PROMISC ";
-        std::cout << std::endl;
-    }
 
     std::vector<std::string> getIPAddress() const {
         char buf[128] = { 0 };
@@ -103,19 +91,16 @@ public:
         CFIndex count = CFArrayGetCount(ifs);
         std::cout << "interface count: " << count << std::endl;
         for (CFIndex i = 0; i < count; i++) {
-
-            SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, "www.google.com");
-
             SCNetworkInterfaceRef item = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(ifs, i);
             std::string bsd = getStringFromRef(SCNetworkInterfaceGetBSDName(item));
             std::string displayName = getStringFromRef(SCNetworkInterfaceGetLocalizedDisplayName(item));
-            //std::string ip_address = getIPAddressForName(bsd);
             int priority = getInterfacePriority(bsd);
             std::string if_type = getStringFromRef(SCNetworkInterfaceGetInterfaceType(item));
             std::string hardware = getStringFromRef(SCNetworkInterfaceGetHardwareAddressString(item));
             CFArrayRef protocols = SCNetworkInterfaceGetSupportedProtocolTypes(item);
             std::string serviceID = getServiceIDForInterface(bsd);
             bool dhcp = dhcpEnabled(serviceID); 
+            bool hasLink = interfaceHasLink(bsd);
             std::string gateway = getGateway(bsd);
             std::string address;
             std::string netmask;
@@ -125,13 +110,11 @@ public:
                 address = interfaceIPv4.at("Address");
                 netmask = interfaceIPv4.at("SubnetMask");
                 broadcast = interfaceIPv4.at("BroadcastAddress");
-
             }
             catch (const std::out_of_range& e) {}
             std::vector<std::string> dns = dnsForService(serviceID);
             std::cout << "bsd name:   " << bsd << "\n"
                       << "display:    " << displayName << "\n"
-                      //<< "ip address: " << ip_address << "\n"
                       << "if_type:    " << if_type << "\n"
                       << "priority:   " << (priority < 0 ? "" : std::to_string(priority)) << "\n"
                       << "hardware:   " << hardware << "\n"
@@ -140,7 +123,8 @@ public:
                       << "address:    " << address << "\n"
                       << "netmask:    " << netmask << "\n"
                       << "broadcast:  " << broadcast << "\n"
-                      << "gateway:    " << gateway << "\n";
+                      << "gateway:    " << gateway << "\n"
+                      << "status:     " << (hasLink ? "UP" : "DOWN") << "\n";
             for (int j = 0; j < dns.size(); j++)
                 std::cout << "dns " << j << ":      " << dns[j] << "\n";
             std::cout << std::endl;
@@ -231,35 +215,6 @@ public:
         if (interfaceKey) CFRelease(interfaceKey);
         if (bsd) CFRelease(bsd);
         return results;
-    }
-
-    void oldSchoolInterfaces() const
-    {
-        struct ifaddrs *ifaddr;
-        int family, s;
-        char host[NI_MAXHOST];
-
-        if (getifaddrs(&ifaddr) == -1) {
-            printf("Error: getifaddrs failed - %s\n", strerror(errno));
-            return;
-        }
-
-        for (struct ifaddrs *ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-            if (ifa->ifa_addr == nullptr)
-                continue;
-
-            family = ifa->ifa_addr->sa_family;
-
-            if (family == AF_INET ) {
-                std::string address = inet_ntoa(((struct sockaddr_in *)ifa->ifa_addr)->sin_addr);
-                std::cout << "address: " << address <<std::endl;
-                std::cout << "name: " << ifa->ifa_name << std::endl;
-                std::cout << "data: " << ifa->ifa_data << std::endl;
-                std::cout << "flags: " << ifa->ifa_flags << std::endl;
-                printInterfaceFlags(ifa->ifa_flags);
-            } 
-        }
-        freeifaddrs(ifaddr);
     }
 
     int getInterfacePriority(const std::string& name) const
@@ -379,38 +334,13 @@ public:
         return result;
     }
 
-    bool isInterfaceUp(const std::string& ifname) const
-    {
-        struct ifaddrs* ifaddr;
-
-        if (getifaddrs(&ifaddr) == -1)
-            return false;
-
-        bool up = false;
-
-        for (struct ifaddrs* ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
-            if (!ifa->ifa_name) continue;
-
-            if (ifname == ifa->ifa_name) {
-                printFlags(ifa->ifa_flags);
-                std::cout << std::endl;
-                if (ifa->ifa_flags & (IFF_UP | IFF_RUNNING))
-                    up = true;
-                break;
-            }
-        }
-
-        freeifaddrs(ifaddr);
-        return up;
-    }
-
-    bool interfaceHasLink(const char* ifname) const {
+    bool interfaceHasLink(const std::string& name) const {
         int s = socket(AF_INET, SOCK_DGRAM, 0);
         if (s < 0) return false;
 
         struct ifmediareq ifm;
         memset(&ifm, 0, sizeof(ifm));
-        strncpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
+        strncpy(ifm.ifm_name, name.c_str(), sizeof(ifm.ifm_name));
 
         if (ioctl(s, SIOCGIFMEDIA, &ifm) < 0) {
             close(s);
@@ -424,32 +354,6 @@ public:
                 return true;   // cable plugged, link negotiated
         }
         return false;
-    }
-
-    void printFlags(unsigned int flags) const
-    {
-        struct { unsigned int flag; const char* name; } list[] = {
-            {IFF_UP, "UP"},
-            {IFF_BROADCAST, "BROADCAST"},
-            {IFF_DEBUG, "DEBUG"},
-            {IFF_LOOPBACK, "LOOPBACK"},
-            {IFF_POINTOPOINT, "POINTOPOINT"},
-            {IFF_NOTRAILERS, "NOTRAILERS"},
-            {IFF_RUNNING, "RUNNING"},
-            {IFF_NOARP, "NOARP"},
-            {IFF_PROMISC, "PROMISC"},
-            {IFF_ALLMULTI, "ALLMULTI"},
-            {IFF_SIMPLEX, "SIMPLEX"},
-            {IFF_LINK0, "LINK0"},
-            {IFF_LINK1, "LINK1"},
-            {IFF_LINK2, "LINK2"},
-            {IFF_MULTICAST, "MULTICAST"},
-        };
-
-        for (auto& f : list) {
-            if (flags & f.flag)
-                std::cout << f.name << " ";
-        }
     }
 
     std::vector<std::string> dnsForService(const std::string& serviceID) const {
@@ -491,6 +395,72 @@ public:
         if (store) CFRelease(store);
         if (dnsKey) CFRelease(dnsKey);
         return result;
+    }
+
+    void printFlags(unsigned int flags) const
+    {
+        struct { unsigned int flag; const char* name; } list[] = {
+            {IFF_UP, "UP"},
+            {IFF_BROADCAST, "BROADCAST"},
+            {IFF_DEBUG, "DEBUG"},
+            {IFF_LOOPBACK, "LOOPBACK"},
+            {IFF_POINTOPOINT, "POINTOPOINT"},
+            {IFF_NOTRAILERS, "NOTRAILERS"},
+            {IFF_RUNNING, "RUNNING"},
+            {IFF_NOARP, "NOARP"},
+            {IFF_PROMISC, "PROMISC"},
+            {IFF_ALLMULTI, "ALLMULTI"},
+            {IFF_SIMPLEX, "SIMPLEX"},
+            {IFF_LINK0, "LINK0"},
+            {IFF_LINK1, "LINK1"},
+            {IFF_LINK2, "LINK2"},
+            {IFF_MULTICAST, "MULTICAST"},
+        };
+
+        for (auto& f : list) {
+            if (flags & f.flag)
+                std::cout << f.name << " ";
+        }
+    }
+
+    void oldSchoolInterfaces() const
+    {
+        struct ifaddrs *ifaddr;
+        int family, s;
+        char host[NI_MAXHOST];
+
+        if (getifaddrs(&ifaddr) == -1) {
+            printf("Error: getifaddrs failed - %s\n", strerror(errno));
+            return;
+        }
+
+        for (struct ifaddrs *ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == nullptr)
+                continue;
+
+            family = ifa->ifa_addr->sa_family;
+
+            if (family == AF_INET ) {
+                std::string address = inet_ntoa(((struct sockaddr_in *)ifa->ifa_addr)->sin_addr);
+                std::cout << "address: " << address <<std::endl;
+                std::cout << "name: " << ifa->ifa_name << std::endl;
+                std::cout << "data: " << ifa->ifa_data << std::endl;
+                std::cout << "flags: " << ifa->ifa_flags << std::endl;
+                printInterfaceFlags(ifa->ifa_flags);
+            } 
+        }
+        freeifaddrs(ifaddr);
+    }
+
+    void printInterfaceFlags(unsigned int flags) const {
+        if (flags & IFF_UP)           std::cout << "UP ";
+        if (flags & IFF_RUNNING)      std::cout << "RUNNING ";
+        if (flags & IFF_LOOPBACK)     std::cout << "LOOPBACK ";
+        if (flags & IFF_BROADCAST)    std::cout << "BROADCAST ";
+        if (flags & IFF_POINTOPOINT)  std::cout << "P2P ";
+        if (flags & IFF_MULTICAST)    std::cout << "MULTICAST ";
+        if (flags & IFF_PROMISC)      std::cout << "PROMISC ";
+        std::cout << std::endl;
     }
 
 };
