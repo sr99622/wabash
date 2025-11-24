@@ -118,8 +118,24 @@ PYBIND11_MODULE(_wabash, m)
         .def_readwrite("errorCallback", &Listener::errorCallback)
         .def_readwrite("listenCallback", &Listener::listenCallback);
 
+    py::class_<Adapter>(m, "Adapter")
+        .def(py::init<>())
+        .def_readwrite("name", &Adapter::name)
+        .def_readwrite("description", &Adapter::description)
+        .def_readwrite("ip_address", &Adapter::ip_address)
+        .def_readwrite("gateway", &Adapter::gateway)
+        .def_readwrite("broadcast", &Adapter::broadcast)
+        .def_readwrite("netmask", &Adapter::netmask)
+        .def_readwrite("dns", &Adapter::dns)
+        .def_readwrite("mac_address", &Adapter::mac_address)
+        .def_readwrite("type", &Adapter::type)
+        .def_readwrite("up", &Adapter::up)
+        .def_readwrite("dhcp", &Adapter::dhcp)
+        .def_readwrite("priority", &Adapter::priority);
+
     py::class_<NetUtil>(m, "NetUtil")
         .def(py::init<>())
+        .def("getAllAdapters", &NetUtil::getAllAdapters)
         .def("getIPAddress", &NetUtil::getIPAddress)
         .def("getActiveNetworkInterfaces", &NetUtil::getActiveNetworkInterfaces);
 

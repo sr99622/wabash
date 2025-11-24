@@ -1,9 +1,10 @@
 import os
 import sys
 from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, \
-        QGroupBox
+        QGroupBox, QComboBox
 from PyQt6.QtCore import Qt
 from loguru import logger
+from .adapterpanel import AdapterPanel
 from wabash import Client, Server, Broadcaster, Listener, NetUtil
 from wabash.gui.panels.network.protocols import ClientProtocols, ServerProtocols, ListenProtocols
 
@@ -17,33 +18,42 @@ class NetworkPanel(QWidget):
         self.listener = None
         self.netutil = None
 
+
         grpClient = QGroupBox("Client")
         self.btnClient = QPushButton("Client")
         self.btnClient.clicked.connect(self.btnClientClicked)
-        
+        self.clientAdapter = AdapterPanel(self.mw)
+
         lytClient = QGridLayout(grpClient)
-        lytClient.addWidget(self.btnClient,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        lytClient.addWidget(self.clientAdapter,  0, 0, 1, 1)
+        lytClient.addWidget(self.btnClient,      1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         grpServer = QGroupBox("Server")
         self.btnServer = QPushButton("Server")
         self.btnServer.clicked.connect(self.btnServerClicked)
+        self.serverAdapter = AdapterPanel(self.mw)
 
         lytServer = QGridLayout(grpServer)
-        lytServer.addWidget(self.btnServer,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        lytServer.addWidget(self.serverAdapter,   0, 0, 1, 1)
+        lytServer.addWidget(self.btnServer,       1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         grpBroadcast = QGroupBox("Broadcast")
         self.btnBroadcast = QPushButton("Broadcast")
         self.btnBroadcast.clicked.connect(self.btnBroadcastClicked)
+        self.broadcastAdapter = AdapterPanel(self.mw)
 
         lytBroadcast = QGridLayout(grpBroadcast)
-        lytBroadcast.addWidget(self.btnBroadcast,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        lytBroadcast.addWidget(self.broadcastAdapter, 0, 0, 1, 1)
+        lytBroadcast.addWidget(self.btnBroadcast,     1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         grpListen = QGroupBox("Listen")
         self.btnListen = QPushButton("Listen")
         self.btnListen.clicked.connect(self.btnListenClicked)
+        self.listenAdapter = AdapterPanel(self.mw)
 
         lytListen = QGridLayout(grpListen)
-        lytListen.addWidget(self.btnListen,    0, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        lytListen.addWidget(self.listenAdapter,  0, 0, 1, 1)
+        lytListen.addWidget(self.btnListen,         1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         lytMain = QGridLayout(self)
         lytMain.addWidget(grpClient,    0, 0, 1, 1)
@@ -57,10 +67,18 @@ class NetworkPanel(QWidget):
     def btnServerClicked(self):
         print("btnServerClicked")
         self.netutil = NetUtil()
-        ip = self.netutil.getIPAddress()
-        print("IP:", ip)
-        dt = self.netutil.getActiveNetworkInterfaces()
-        print("DT:", dt)
+        adapters = self.netutil.getAllAdapters()
+        for adapter in adapters:
+            if adapter.up:
+                print("name", adapter.name)
+                print("address", adapter.ip_address)
+                print("gateway", adapter.gateway)
+                print("netmask", adapter.netmask)
+                print("broadcast", adapter.broadcast)
+                print("description", adapter.description)
+                print("type", adapter.type)
+                print("mac_address", adapter.mac_address)
+                print("priority", adapter.priority)
 
     def btnBroadcastClicked(self):
         print("btnBroadscastClicked")

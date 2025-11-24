@@ -31,6 +31,7 @@
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <iostream>
+#include "wabash.hpp"
 
 
 // Compute sockaddr padded size (macOS-safe)
@@ -81,6 +82,73 @@ public:
         }
         freeifaddrs(interfaces);
         */
+        return result;
+    }
+
+    std::vector<Adapter> getAllAdapters() const {
+        std::vector<Adapter> result;
+
+        CFArrayRef ifs = SCNetworkInterfaceCopyAll();
+        CFIndex count = CFArrayGetCount(ifs);
+        std::cout << "interface count: " << count << std::endl;
+        for (CFIndex i = 0; i < count; i++) {
+            Adapter adapter;
+            SCNetworkInterfaceRef item = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(ifs, i);
+            std::string bsd = getStringFromRef(SCNetworkInterfaceGetBSDName(item));
+            std::string displayName = getStringFromRef(SCNetworkInterfaceGetLocalizedDisplayName(item));
+            int priority = getInterfacePriority(bsd);
+            std::string if_type = getStringFromRef(SCNetworkInterfaceGetInterfaceType(item));
+            std::string hardware = getStringFromRef(SCNetworkInterfaceGetHardwareAddressString(item));
+            CFArrayRef protocols = SCNetworkInterfaceGetSupportedProtocolTypes(item);
+            std::string serviceID = getServiceIDForInterface(bsd);
+            bool dhcp = dhcpEnabled(serviceID); 
+            bool hasLink = interfaceHasLink(bsd);
+            std::string gateway = getGateway(bsd);
+            std::string address;
+            std::string netmask;
+            std::string broadcast;
+            std::unordered_map<std::string, std::string> interfaceIPv4 = ipV4(bsd);
+            try {
+                address = interfaceIPv4.at("Address");
+                netmask = interfaceIPv4.at("SubnetMask");
+                broadcast = interfaceIPv4.at("BroadcastAddress");
+            }
+            catch (const std::out_of_range& e) {}
+            std::vector<std::string> dns = dnsForService(serviceID);
+
+            adapter.name = bsd;
+            adapter.description = displayName;
+            adapter.ip_address = address;
+            adapter.gateway = gateway;
+            adapter.broadcast = broadcast;
+            adapter.netmask = netmask;
+            adapter.dns = dns;
+            adapter.mac_address = hardware;
+            adapter.type = if_type;
+            adapter.dhcp = dhcp;
+            adapter.up = hasLink;
+            adapter.priority = priority;
+            result.push_back(adapter);
+
+            /*
+            std::cout << "bsd name:   " << bsd << "\n"
+                      << "display:    " << displayName << "\n"
+                      << "if_type:    " << if_type << "\n"
+                      << "priority:   " << (priority < 0 ? "" : std::to_string(priority)) << "\n"
+                      << "hardware:   " << hardware << "\n"
+                      << "service:    " << serviceID << "\n"
+                      << "dhcp:       " << dhcp << "\n"
+                      << "address:    " << address << "\n"
+                      << "netmask:    " << netmask << "\n"
+                      << "broadcast:  " << broadcast << "\n"
+                      << "gateway:    " << gateway << "\n"
+                      << "status:     " << (hasLink ? "UP" : "DOWN") << "\n";
+            for (int j = 0; j < dns.size(); j++)
+                std::cout << "dns " << j << ":      " << dns[j] << "\n";
+            std::cout << std::endl;
+            */
+                
+        }
         return result;
     }
 

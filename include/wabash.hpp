@@ -14,6 +14,7 @@
 #include "Drain.hpp"
 #include "Writer.hpp"
 
+#include "Adapter.h"
 #include "Broadcaster.h"
 #ifdef _WIN32
     #include "WinClient.h"
