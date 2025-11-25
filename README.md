@@ -338,7 +338,7 @@ sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt
 &nbsp;
 
 ```
-sudo pacman -S --needed virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft
+sudo pacman -S --needed virt-manager virt-viewer qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft
 ```
 &nbsp;
 
@@ -407,7 +407,7 @@ virsh list --all
 After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
-sudo apt install -y git jq
+sudo apt install -y git
 git clone https://github.com/sr99622/wabash
 cd wabash
 ```
