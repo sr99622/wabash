@@ -22,6 +22,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include "wabash.hpp"
+
 #define WORKING_BUFFER_SIZE 15000
 #define MAX_TRIES 3
 
@@ -46,11 +48,8 @@ public:
         if (wsaData.wVersion) WSACleanup();
     }
 
-
-    std::vector<std::string> getIPAddress() const {
-        std::vector<std::string> results;
-        /* Declare and initialize variables */
-
+    std::vector<Adapter> getAllAdapters() const {
+        std::vector<Adapter> results;
         std::unordered_map<DWORD, std::unordered_map<std::string, std::string>> adapters = GetAllAdapters();
 
 
@@ -72,7 +71,7 @@ public:
         PIP_ADAPTER_ANYCAST_ADDRESS pAnycast = NULL;
         PIP_ADAPTER_MULTICAST_ADDRESS pMulticast = NULL;
         PIP_ADAPTER_GATEWAY_ADDRESS_LH pGateway = NULL;
-        IP_ADAPTER_DNS_SERVER_ADDRESS *pDnServer = NULL;
+        PIP_ADAPTER_DNS_SERVER_ADDRESS pDnServer = NULL;
         IP_ADAPTER_PREFIX *pPrefix = NULL;
 
         ULONG family = AF_INET;  //  [AF_INET, AF_INET6, AF_UNSPEC]
@@ -100,42 +99,59 @@ public:
             // If successful, output some information from the data we received
             pCurrAddresses = pAddresses;
             while (pCurrAddresses) {
+                Adapter adapter;
                 //printf("\tLength of the IP_ADAPTER_ADDRESS struct: %ld\n", pCurrAddresses->Length);
+
                 printf("\n\tIfIndex (IPv4 interface): %u\n", pCurrAddresses->IfIndex);
                 printf("\tAdapter name: %s\n", pCurrAddresses->AdapterName);
 
+                //adapter.name = pCurrAddresses->AdapterName;
+
                 pUnicast = pCurrAddresses->FirstUnicastAddress;
-                while (pUnicast) {
-                    std::cout << "\tUnicast Address: " << getSockIPAddress(pUnicast->Address.lpSockaddr) << std::endl;
-                    pUnicast = pUnicast->Next;
+                if (pUnicast) {
+                    adapter.ip_address = getSockIPAddress(pUnicast->Address.lpSockaddr);
                 }
 
+                /*
                 pMulticast = pCurrAddresses->FirstMulticastAddress;
                 while (pMulticast) {
                     std::cout << "\tMulticast Address: " << getSockIPAddress(pMulticast->Address.lpSockaddr) << std::endl;
                     pMulticast = pMulticast->Next;
                 }
+                */
 
                 pDnServer = pCurrAddresses->FirstDnsServerAddress;
                 while (pDnServer) {
                     std::cout << "\tDNS Address: " << getSockIPAddress(pDnServer->Address.lpSockaddr) << std::endl;
+                    adapter.dns.push_back(getSockIPAddress(pDnServer->Address.lpSockaddr));
                     pDnServer = pDnServer->Next;
                 }
 
                 pGateway = pCurrAddresses->FirstGatewayAddress;
-                while (pGateway) {
-                    std::cout << "\tGateway Address: " << getSockIPAddress(pGateway->Address.lpSockaddr) << std::endl;
-                    pGateway = pGateway->Next;
+                if (pGateway) {
+                    adapter.gateway = getSockIPAddress(pGateway->Address.lpSockaddr);
                 }
 
+                pPrefix = pCurrAddresses->FirstPrefix;
+                while (pPrefix) {
+                    adapter.dns.push_back(getSockIPAddress(pPrefix->Address.lpSockaddr));
+                    pPrefix = pPrefix->Next;
+                }
+
+                adapter.dhcp = false;
                 if (pCurrAddresses->Flags & IP_ADAPTER_DHCP_ENABLED) {
-                    printf("\tDHCP enabled\n");
+                    adapter.dhcp = true;
                     std::cout << "\tDHCP Server Address: " << getSockIPAddress(pCurrAddresses->Dhcpv4Server.lpSockaddr) << std::endl;
                 }
                 else {
                     printf("\tDHCP not enabled\n");
                 }
 
+                std::wstring str1(pCurrAddresses->Description);
+                adapter.description = std::string(str1.begin(), str1.end());
+                std::wstring str2(pCurrAddresses->FriendlyName);
+                adapter.name = std::string(str2.begin(), str2.end());
+                //adapter.name = pCurrAddresses->FriendlyName;
                 printf("\tDescription: %wS\n", pCurrAddresses->Description);
                 printf("\tFriendly name: %wS\n", pCurrAddresses->FriendlyName);
 
@@ -147,22 +163,31 @@ public:
                         if (i < length - 1) str << "-";
                     }
                     std::cout << "\tPhysical Address: " << str.str() << std::endl;
+                    adapter.mac_address = str.str();
                 }
+                adapter.type = getTypeName(pCurrAddresses->IfType);
                 std::cout << "\tIF Type: " << getTypeName(pCurrAddresses->IfType) << std::endl;
+                adapter.up = std::string(getOperStatusName(pCurrAddresses->OperStatus)) == "Up";
                 std::cout << "\tOperStatus: " << getOperStatusName(pCurrAddresses->OperStatus) << std::endl;
+                adapter.priority = GetNetworkPriority(pCurrAddresses->IfIndex);
                 std::cout << "\tNetwork Priority: " << GetNetworkPriority(pCurrAddresses->IfIndex) << std::endl;
 
-                auto adapter = adapters.find(pCurrAddresses->IfIndex);
-                if (adapter != adapters.end()) {
-                    auto parameters = adapter->second;
+                auto adapter1 = adapters.find(pCurrAddresses->IfIndex);
+                if (adapter1 != adapters.end()) {
+                    auto parameters = adapter1->second;
                     auto broadcast = parameters.find("Broadcast");
-                    if (broadcast != parameters.end())
+                    if (broadcast != parameters.end()) {
+                        adapter.broadcast = broadcast->second;
                         std::cout << "\tBroadcast: " << broadcast->second << std::endl;
+                    }
                     auto mask = parameters.find("SubnetMask");
-                    if (mask != parameters.end()) 
+                    if (mask != parameters.end()) {
+                        adapter.netmask = mask->second;
                         std::cout << "\tSubnet Mask: " << mask->second << std::endl;
+                    } 
                 }
 
+                results.push_back(adapter);
                 pCurrAddresses = pCurrAddresses->Next;
             }
         } 
@@ -179,6 +204,13 @@ public:
         if (pAddresses) {
             FREE(pAddresses);
         }
+        return results;
+    }
+
+    std::vector<std::string> getIPAddress() const {
+        std::vector<std::string> results;
+        /* Declare and initialize variables */
+
 
         return results;
     }
