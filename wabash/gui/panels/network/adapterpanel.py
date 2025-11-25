@@ -94,12 +94,12 @@ class AdapterDialog(QDialog):
         print("REJECT")
         self.hide()
         
-
 class AdapterPanel(QWidget):
-    def __init__(self, mw):
+    def __init__(self, mw, adapters):
         super().__init__(mw)
         self.mw = mw
-        self.adapters = NetUtil().getAllAdapters()
+        #self.adapters = NetUtil().getAllAdapters()
+        self.adapters = adapters
         self.dlgAdapter = AdapterDialog(self.mw)
 
         self.chkOnlyActive = QCheckBox("Only Show Active Adapters")

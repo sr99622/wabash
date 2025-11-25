@@ -18,11 +18,11 @@ class NetworkPanel(QWidget):
         self.listener = None
         self.netutil = None
 
-
+        adapters = NetUtil().getAllAdapters()
         grpClient = QGroupBox("Client")
         self.btnClient = QPushButton("Client")
         self.btnClient.clicked.connect(self.btnClientClicked)
-        self.clientAdapter = AdapterPanel(self.mw)
+        self.clientAdapter = AdapterPanel(self.mw, adapters)
 
         lytClient = QGridLayout(grpClient)
         lytClient.addWidget(self.clientAdapter,  0, 0, 1, 1)
@@ -31,7 +31,7 @@ class NetworkPanel(QWidget):
         grpServer = QGroupBox("Server")
         self.btnServer = QPushButton("Server")
         self.btnServer.clicked.connect(self.btnServerClicked)
-        self.serverAdapter = AdapterPanel(self.mw)
+        self.serverAdapter = AdapterPanel(self.mw, adapters)
 
         lytServer = QGridLayout(grpServer)
         lytServer.addWidget(self.serverAdapter,   0, 0, 1, 1)
@@ -40,7 +40,7 @@ class NetworkPanel(QWidget):
         grpBroadcast = QGroupBox("Broadcast")
         self.btnBroadcast = QPushButton("Broadcast")
         self.btnBroadcast.clicked.connect(self.btnBroadcastClicked)
-        self.broadcastAdapter = AdapterPanel(self.mw)
+        self.broadcastAdapter = AdapterPanel(self.mw, adapters)
 
         lytBroadcast = QGridLayout(grpBroadcast)
         lytBroadcast.addWidget(self.broadcastAdapter, 0, 0, 1, 1)
@@ -49,7 +49,7 @@ class NetworkPanel(QWidget):
         grpListen = QGroupBox("Listen")
         self.btnListen = QPushButton("Listen")
         self.btnListen.clicked.connect(self.btnListenClicked)
-        self.listenAdapter = AdapterPanel(self.mw)
+        self.listenAdapter = AdapterPanel(self.mw, adapters)
 
         lytListen = QGridLayout(grpListen)
         lytListen.addWidget(self.listenAdapter,  0, 0, 1, 1)
