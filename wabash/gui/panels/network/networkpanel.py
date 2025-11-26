@@ -6,7 +6,8 @@ from PyQt6.QtCore import Qt
 from loguru import logger
 from .adapterpanel import AdapterPanel
 from wabash import Client, Server, Broadcaster, Listener, NetUtil
-from wabash.gui.panels.network.protocols import ClientProtocols, ServerProtocols, ListenProtocols
+from wabash.gui.panels.network.protocols import ClientProtocols, \
+        ServerProtocols, ListenProtocols, ProtocolType
 
 class NetworkPanel(QWidget):
     def __init__(self, mw):
@@ -22,7 +23,7 @@ class NetworkPanel(QWidget):
         grpClient = QGroupBox("Client")
         self.btnClient = QPushButton("Client")
         self.btnClient.clicked.connect(self.btnClientClicked)
-        self.clientAdapter = AdapterPanel(self.mw, adapters)
+        self.clientAdapter = AdapterPanel(self.mw, adapters, ProtocolType.CLIENT)
 
         lytClient = QGridLayout(grpClient)
         lytClient.addWidget(self.clientAdapter,  0, 0, 1, 1)
@@ -31,7 +32,7 @@ class NetworkPanel(QWidget):
         grpServer = QGroupBox("Server")
         self.btnServer = QPushButton("Server")
         self.btnServer.clicked.connect(self.btnServerClicked)
-        self.serverAdapter = AdapterPanel(self.mw, adapters)
+        self.serverAdapter = AdapterPanel(self.mw, adapters, ProtocolType.SERVER)
 
         lytServer = QGridLayout(grpServer)
         lytServer.addWidget(self.serverAdapter,   0, 0, 1, 1)
@@ -40,7 +41,7 @@ class NetworkPanel(QWidget):
         grpBroadcast = QGroupBox("Broadcast")
         self.btnBroadcast = QPushButton("Broadcast")
         self.btnBroadcast.clicked.connect(self.btnBroadcastClicked)
-        self.broadcastAdapter = AdapterPanel(self.mw, adapters)
+        self.broadcastAdapter = AdapterPanel(self.mw, adapters, ProtocolType.BROADCAST)
 
         lytBroadcast = QGridLayout(grpBroadcast)
         lytBroadcast.addWidget(self.broadcastAdapter, 0, 0, 1, 1)
@@ -49,7 +50,7 @@ class NetworkPanel(QWidget):
         grpListen = QGroupBox("Listen")
         self.btnListen = QPushButton("Listen")
         self.btnListen.clicked.connect(self.btnListenClicked)
-        self.listenAdapter = AdapterPanel(self.mw, adapters)
+        self.listenAdapter = AdapterPanel(self.mw, adapters, ProtocolType.LISTEN)
 
         lytListen = QGridLayout(grpListen)
         lytListen.addWidget(self.listenAdapter,  0, 0, 1, 1)

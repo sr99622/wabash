@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, \
 from PyQt6.QtCore import Qt, QSize
 from loguru import logger
 from wabash import Client, Server, Broadcaster, Listener, NetUtil
-from wabash.gui.panels.network.protocols import ClientProtocols, ServerProtocols, ListenProtocols
+from wabash.gui.panels.network.protocols import ClientProtocols, ServerProtocols, ListenProtocols, ProtocolType
 
 class AdapterDialog(QDialog):
     def __init__(self, mw):
@@ -95,18 +95,38 @@ class AdapterDialog(QDialog):
         self.hide()
         
 class AdapterPanel(QWidget):
-    def __init__(self, mw, adapters):
+    def __init__(self, mw, adapters, type):
         super().__init__(mw)
         self.mw = mw
-        #self.adapters = NetUtil().getAllAdapters()
         self.adapters = adapters
         self.dlgAdapter = AdapterDialog(self.mw)
+        self.typeName = None
+        self.type = type
+        match type:
+            case ProtocolType.SERVER:
+                self.typeName = "Server"
+            case ProtocolType.CLIENT:
+                self.typeName = "Client"
+            case ProtocolType.LISTEN:
+                self.typeName = "Listen"
+            case ProtocolType.BROADCAST:
+                self.typeName = "Broadcast"
+        self.chkOnlyActiveKey = f'AdapterPanel/{self.typeName}/chkOnlyActive'
+        self.adapterKey = f'AdapterPanel/{self.typeName}/adapter'
 
         self.chkOnlyActive = QCheckBox("Only Show Active Adapters")
+        self.chkOnlyActive.setChecked(int(self.mw.settings.value(self.chkOnlyActiveKey, 1)))
+        self.chkOnlyActive.clicked.connect(self.chkOnlyActiveChecked)
 
         self.cmbAdapter = QComboBox()
         for adapter in self.adapters:
-            self.cmbAdapter.addItem(adapter.name) 
+            if self.chkOnlyActive.isChecked():
+                if adapter.up:
+                    self.cmbAdapter.addItem(adapter.name)
+            else:        
+                self.cmbAdapter.addItem(adapter.name) 
+        self.cmbAdapter.setCurrentText(self.mw.settings.value(self.adapterKey))
+        self.cmbAdapter.currentTextChanged.connect(self.cmbAdapterCurrentTextChanged)
 
         self.btnInfo = QPushButton("...")
         self.btnInfo.clicked.connect(self.btnInfoClicked)
@@ -120,7 +140,6 @@ class AdapterPanel(QWidget):
         lytMain.setColumnStretch(2, 1)
 
     def btnInfoClicked(self):
-        print("btn Info cliecked")
         self.dlgAdapter.setData(self.getAdapter(self.cmbAdapter.currentText()))
         self.dlgAdapter.show()
 
@@ -128,3 +147,16 @@ class AdapterPanel(QWidget):
         for adapter in self.adapters:
             if adapter.name == name:
                 return adapter
+
+    def chkOnlyActiveChecked(self, state):
+        self.mw.settings.setValue(self.chkOnlyActiveKey, str(int(state)))
+        self.cmbAdapter.clear()
+        for adapter in self.adapters:
+            if state:
+                if adapter.up:
+                    self.cmbAdapter.addItem(adapter.name)
+            else:
+                self. cmbAdapter.addItem(adapter.name)        
+
+    def cmbAdapterCurrentTextChanged(self, arg):
+        self.mw.settings.setValue(self.adapterKey, arg)
