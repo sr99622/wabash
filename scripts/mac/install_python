@@ -1,0 +1,62 @@
+#!/bin/bash
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <python version as 'X.XX'>"
+  exit 1 # Exit with an error status
+fi
+
+cd scripts/mac
+
+IFS='.'
+read -ra newarr <<< "$1"
+count=0
+for val in "${newarr[@]}"; do
+    if [ $count == 0 ]; then
+        major="$val"
+    fi
+    if [ $count == 1 ]; then
+        minor="$val"
+    fi
+    ((count=count+1))
+done
+
+version=""
+if [[ "$major.$minor" == "3.10" ]]; then 
+    version="3.10.10"
+fi
+if [[ "$major.$minor" == "3.11" ]]; then 
+    version="3.11.9"
+fi
+if [[ "$major.$minor" == "3.12" ]]; then 
+    version="3.12.10"
+fi
+if [[ "$major.$minor" == "3.13" ]]; then 
+    version="3.13.9"
+fi
+
+if [[ -z "$version" ]]; then
+    echo "Python version $major.$minor is not supported, please use 3.10, 3.11, 3.12 or 3.13"
+    exit 1
+fi
+
+echo "Starting download for Python version $major.$minor"
+
+cp changes_in "changes$major.$minor.plist"
+sed -i "" "s/_VERSION_/$major.$minor/g" "changes$major.$minor.plist"
+curl -o "python$major.$minor-installer.pkg" "https://www.python.org/ftp/python/$version/python-$version-macos11.pkg"
+
+echo "Installing Python version $major.$minor"
+
+sudo installer -pkg "./python$major.$minor-installer.pkg" -applyChoiceChangesXML "./changes$major.$minor.plist" -target /
+result=$?
+
+rm "python$major.$minor-installer.pkg"
+rm "changes$major.$minor.plist"
+
+if [ $result -ne 0 ]; then
+    echo "Python version $major.$minor installation failed"
+    exit 1
+fi
+echo "Python version $major.$minor installed"
+
+cd ../..

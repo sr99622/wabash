@@ -565,6 +565,21 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 
 </details>
 
+<details><summary><b>Mac OS</b></summary>
+
+&nbsp;
+### Project Configuration
+---
+
+A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. Linux distributions ship with a default Python pre-installed and the version can be verified using the command `python3 --version`. In the instructions that follow, some commands may be Python version dependent, and are described using the notation `X.XX` to represent the version. Additionally, some basic tools are required to build the program. Select from the instructions below for your distribution.
+&nbsp;
+
+### Install build tools
+---
+
+
+</details>
+
 &nbsp;
 ### License
 
