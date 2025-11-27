@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <iostream>
@@ -98,7 +99,11 @@ public:
             std::string displayName = getStringFromRef(SCNetworkInterfaceGetLocalizedDisplayName(item));
             int priority = getInterfacePriority(bsd);
             std::string if_type = getStringFromRef(SCNetworkInterfaceGetInterfaceType(item));
-            std::string hardware = getStringFromRef(SCNetworkInterfaceGetHardwareAddressString(item));
+            std::string hardware;
+            if (bsd.substr(0, 16) != "com.redhat.spice") {
+                // hack around vm interface seg fault
+                hardware = getStringFromRef(SCNetworkInterfaceGetHardwareAddressString(item));
+            }
             CFArrayRef protocols = SCNetworkInterfaceGetSupportedProtocolTypes(item);
             std::string serviceID = getServiceIDForInterface(bsd);
             bool dhcp = dhcpEnabled(serviceID); 
