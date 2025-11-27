@@ -1,9 +1,21 @@
 #!/bin/bash
 
-mkdir -p $HOME/libxml2_sources && \
-cd $HOME/libxml2_sources && \
-git -C libxml2 pull 2> /dev/null || git clone --depth 1 https://github.com/GNOME/libxml2.git && \
-cd libxml2 && \
-./autogen.sh  --prefix=$HOME/libxml2_build --without-python && \
-make -j$(nproc) && \
+BASE=$PWD
+
+if [ ! -f "$BUILD_DIR/lib/libxml2.dylib" ]; then
+cd $SOURCE_DIR
+git -C libxml2 pull 2> /dev/null || git clone --depth 1 https://github.com/GNOME/libxml2.git
+cd libxml2
+./autogen.sh  --prefix=$BUILD_DIR --without-python
+make -j$(nproc)
+result=$?
+if [ $result -ne 0 ]; then
+    echo "libxml2 compilation failed"
+    exit 1
+fi
 make install
+else
+    echo "Found existing xml2 library at $BUILD_DIR/lib/libxml2.dylib"
+fi
+
+cd $BASE

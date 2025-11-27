@@ -1,11 +1,30 @@
 #!/bin/bash
 
-cd $HOME/ffmpeg_sources && \
-if [ ! -d "SDL-release-2.32.0" ]; then
-    wget -O release-2.32.0.tar.gz https://github.com/libsdl-org/SDL/archive/refs/tags/release-2.32.0.tar.gz && \
-    tar xzvf release-2.32.0.tar.gz
-fi && \
-cd SDL-release-2.32.0 && \
-./configure --prefix=$HOME/ffmpeg_build && \
-make -j$(nproc) && \
-make install
+BASE=$PWD
+
+if [ ! -f "$BUILD_DIR/lib/libSDL2.dylib" ]; then
+    cd $SOURCE_DIR
+    if [ ! -f release-2.32.0.tar.gz ]; then
+        wget -O release-2.32.0.tar.gz https://github.com/libsdl-org/SDL/archive/refs/tags/release-2.32.0.tar.gz
+    fi
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "sdl2 download failed"
+        exit 1
+    fi
+    if [ ! -d "SDL-release-2.32.0" ]; then
+        tar xzvf release-2.32.0.tar.gz
+    fi
+    cd SDL-release-2.32.0
+    ./configure --prefix=$BUILD_DIR
+    make -j$(nproc)
+    if [ $result -ne 0 ]; then
+        echo "sdl2 compilation failed"
+        exit 1
+    fi
+    make install
+else
+    echo "Found existing sdl2 library at $BUILD_DIR/lib/libSDL2.dylib"
+fi
+
+cd $BASE

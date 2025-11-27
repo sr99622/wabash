@@ -1,16 +1,30 @@
 #!/bin/bash
 
+BASE=$PWD
 FILE="/usr/local/bin/cmake"
 if [ ! -f "$FILE" ]; then
-    cd $HOME/sources && \
+    cd $SOURCE_DIR && \
+    if [ ! -f "cmake-3.20.0.tar.gz" ]; then
+        wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0.tar.gz
+    fi
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "cmake download failed"
+        exit 1
+    fi
     if [ ! -d "cmake-3.20.0" ]; then
-        wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0.tar.gz && \
         tar -zxvf cmake-3.20.0.tar.gz
-    fi && \
-    cd cmake-3.20.0 && \
-    ./bootstrap && \
-    make && \
-    sudo make install && \
-    cmake --version
+    fi
+    cd cmake-3.20.0
+    ./bootstrap
+    make
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "cmake compilation failed"
+        exit 1
+    fi
+    sudo make install
+else
+    echo "Found exsiting cmake installation at $FILE"
 fi
-/usr/local/bin/cmake --version
+cd $BASE

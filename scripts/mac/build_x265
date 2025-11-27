@@ -1,0 +1,45 @@
+#!/bin/bash
+
+BASE=$PWD
+
+if [ ! -f "$BUILD_DIR/lib/libx265.dylib" ]; then
+    cd $SOURCE_DIR
+
+    if [ ! -f "x265_4.1.tar.gz" ]; then
+        wget http://ftp.videolan.org/pub/videolan/x265/x265_4.1.tar.gz
+    fi
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "x265 download failed"
+        exit 1
+    fi
+    if [ ! -d "x265_4.1" ]; then
+        tar xzvf x265_4.1.tar.gz
+    fi && \
+    cd x265_4.1/build/linux
+    PATH="$BUILD_DIR/bin:$PATH" cmake -G "Unix Makefiles" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_INSTALL_PREFIX="$BUILD_DIR" -DENABLE_SHARED=on ../../source
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "x265 cmake configuration failed"
+        exit 1
+    fi
+    PATH="$BUILD_DIR/bin:$PATH" make  -j$(nproc)
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "x265 compilation failed"
+        exit 1
+    fi
+    make install
+
+    # fix rpath for binaries
+    cd $BUILD_DIR/lib
+    for entry in $(otool -l libx265.dylib | grep -A5 LC_ID_DYLIB | grep name | awk '{print $2}'); do
+        echo "entry: $entry"
+        file=$(basename $entry)
+        install_name_tool -id $BUILD_DIR/lib/$file $file
+    done
+else
+    echo "Found existing x265 library at $BUILD_DIR/lib/libx265.dylib"
+fi 
+
+cd $BASE

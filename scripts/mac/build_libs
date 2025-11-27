@@ -1,0 +1,15 @@
+if [ ! -d source ]; then
+    mkdir source
+fi
+if [ ! -d source ]; then
+    mkdir build
+fi
+export SOURCE_DIR=$PWD/source
+export BUILD_DIR=$PWD/build
+scripts/mac/build_cmake && \
+scripts/mac/build_aac && \
+scripts/mac/build_x264 && \
+scripts/mac/build_x265 && \
+scripts/mac/build_sdl2 && \
+scripts/mac/build_ffmpeg && \
+scripts/mac/build_libxml2
