@@ -571,12 +571,37 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 ### Project Configuration
 ---
 
-A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. Linux distributions ship with a default Python pre-installed and the version can be verified using the command `python3 --version`. In the instructions that follow, some commands may be Python version dependent, and are described using the notation `X.XX` to represent the version. Additionally, some basic tools are required to build the program. Select from the instructions below for your distribution.
+A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many way to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
+
+```
+scripts/mac/install_python <X.XX>
+```
+
+Once the Python version has been installed, a virtual environment can be created using the Python version as above and a name for the environment.
+
+```
+scripts/mac/create_venv <X.XX> <env_name>
+```
+
+To activate the environment
+
+```
+source <env_name>/bin/activate
+```
+
 &nbsp;
 
 ### Install build tools
 ---
 
+&nbsp;
+
+### Building Portable Libraries
+---
+
+Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app)
+
+&nbsp;
 
 </details>
 
