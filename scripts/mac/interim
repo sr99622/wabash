@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#pip install -v .
+pyname=$(ls env/lib | awk '{print $1}')
+echo "pyname: $pyname"
+pydir="env/lib/$pyname/site-packages"
+echo "PWD: $PWD"
+echo "pydir: $pydir"
+moddir="$pydir/wabash"
+echo "moddir: $moddir"
+/bin/ls "$moddir" | grep "_wabash"
+modname="$pydir/wabash/$(/bin/ls "$moddir" | grep "_wabash")"
+echo "modname: $modname"
+export executable=$modname
+export sourcedir=wabash
+scripts/mac/copy_libs
+scripts/mac/install_name
+
+#rm -rf dist
+
+#pip uninstall -y wabash
+
+#assets/scripts/mac_pkgs
+#deactivate
