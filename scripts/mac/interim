@@ -2,9 +2,7 @@
 
 deps_list=()   # global list of all unique dependencies found
 
-#
 # Return 0 if $1 is already in deps_list, else 1
-#
 contains() {
     local needle="$1"
     local x
@@ -14,9 +12,7 @@ contains() {
     return 1
 }
 
-#
 # Add item to deps_list if not already present
-#
 add_unique() {
     local item="$1"
     if ! contains "$item"; then
@@ -26,32 +22,20 @@ add_unique() {
     return 1        # means "already existed"
 }
 
-#
 # Recursively walk dependencies of a Mach-O binary
-#
 find_dependencies() {
     local file="$1"
-
-    #echo "Processing: $file"
-
     # Find direct dependencies of $file
     local deps
     deps=$(otool -l "$file" | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}')
 
     local name
     for name in $deps; do
-        # Only skip system libs
-        local dir_name
-        dir_name=$(dirname "$name")
-
         if [[ "$name" == /usr/lib/* ]] || [[ "$name" == /System/Library/Frameworks/* ]]; then
             continue
         fi
-
         # Add to global list — but only recurse if newly added
         if add_unique "$name"; then
-            #echo "Added: $name"
-
             # Recurse only if the dependency file actually exists
             if [[ -e "$name" ]]; then
                 find_dependencies "$name"
@@ -59,7 +43,6 @@ find_dependencies() {
                 echo "WARNING: Dependency not found on disk: $name"
             fi
         fi
-
     done
 }
 
