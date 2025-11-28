@@ -32,7 +32,7 @@ add_unique() {
 find_dependencies() {
     local file="$1"
 
-    echo "Processing: $file"
+    #echo "Processing: $file"
 
     # Find direct dependencies of $file
     local deps
@@ -44,20 +44,22 @@ find_dependencies() {
         local dir_name
         dir_name=$(dirname "$name")
 
-        if [[ "$dir_name" != "/usr/lib" ]]; then
+        if [[ "$name" == /usr/lib/* ]] || [[ "$name" == /System/Library/Frameworks/* ]]; then
+            continue
+        fi
 
-            # Add to global list — but only recurse if newly added
-            if add_unique "$name"; then
-                echo "Added: $name"
+        # Add to global list — but only recurse if newly added
+        if add_unique "$name"; then
+            #echo "Added: $name"
 
-                # Recurse only if the dependency file actually exists
-                if [[ -e "$name" ]]; then
-                    find_dependencies "$name"
-                else
-                    echo "WARNING: Dependency not found on disk: $name"
-                fi
+            # Recurse only if the dependency file actually exists
+            if [[ -e "$name" ]]; then
+                find_dependencies "$name"
+            else
+                echo "WARNING: Dependency not found on disk: $name"
             fi
         fi
+
     done
 }
 
