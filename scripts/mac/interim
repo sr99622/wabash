@@ -4,7 +4,16 @@ find_dependencies() {
     echo "find deps $1"
     for name in $(otool -l $1 | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}'); do
         echo "name: $name"
-        find_dependencies "$name"
+        dir_name=$(dirname $name)
+        file_name=$(basename $name)
+        if [ $dir_name != "/usr/lib" ]; then
+            for sub_name in $(otool -l $name | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}'); do
+                if [[ -e $sub_name ]]; then
+                    echo "sub_name $sub_name"
+                fi
+            #find_dependencies "$name"
+            done
+        fi
     done
 }
 
