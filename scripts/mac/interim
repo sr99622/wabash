@@ -1,35 +1,64 @@
 #!/bin/bash
 
-declare -A deps_seen
-deps_list=()
+deps_list=()   # global list of all unique dependencies found
 
-add_unique() {
-    local item="$1"
-    if [[ -z "${deps_seen[$item]}" ]]; then
-        deps_seen[$item]=1
-        deps_list+=("$item")
-    fi
+#
+# Return 0 if $1 is already in deps_list, else 1
+#
+contains() {
+    local needle="$1"
+    local x
+    for x in "${deps_list[@]}"; do
+        [[ "$x" == "$needle" ]] && return 0
+    done
+    return 1
 }
 
-find_dependencies() {
-    echo "find deps $1"
-    for name in $(otool -l $1 | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}'); do
-        echo "name: $name"
-        add_unique "$name"
+#
+# Add item to deps_list if not already present
+#
+add_unique() {
+    local item="$1"
+    if ! contains "$item"; then
+        deps_list+=("$item")
+        return 0    # means "was added"
+    fi
+    return 1        # means "already existed"
+}
 
-        dir_name=$(dirname $name)
-        file_name=$(basename $name)
-        if [ $dir_name != "/usr/lib" ]; then
-            for sub_name in $(otool -l $name | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}'); do
-                if [[ -e $sub_name ]]; then
-                    echo "sub_name $sub_name"
-                    add_unique "$sub_name"
+#
+# Recursively walk dependencies of a Mach-O binary
+#
+find_dependencies() {
+    local file="$1"
+
+    echo "Processing: $file"
+
+    # Find direct dependencies of $file
+    local deps
+    deps=$(otool -l "$file" | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}')
+
+    local name
+    for name in $deps; do
+        # Only skip system libs
+        local dir_name
+        dir_name=$(dirname "$name")
+
+        if [[ "$dir_name" != "/usr/lib" ]]; then
+
+            # Add to global list — but only recurse if newly added
+            if add_unique "$name"; then
+                echo "Added: $name"
+
+                # Recurse only if the dependency file actually exists
+                if [[ -e "$name" ]]; then
+                    find_dependencies "$name"
+                else
+                    echo "WARNING: Dependency not found on disk: $name"
                 fi
-            done
+            fi
         fi
     done
-    printf '%s\n' "${deps_list[@]}"
-
 }
 
 
@@ -46,7 +75,9 @@ export sourcedir=wabash
 echo "executable: ${executable}"
 find_dependencies "$executable"
 
-
+echo
+echo "All dependencies found:"
+printf '%s\n' "${deps_list[@]}"
 
 
 
