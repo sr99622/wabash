@@ -1,20 +1,33 @@
 #!/bin/bash
 
+find_dependencies() {
+    echo "find deps $1"
+    for name in $(otool -l $1 | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}'); do
+        echo "name: $name"
+        find_dependencies "$name"
+    done
+}
+
+
+echo $VIRTUAL_ENV
 #pip install -v .
-pyname=$(ls env/lib | awk '{print $1}')
-echo "pyname: $pyname"
-pydir="env/lib/$pyname/site-packages"
-echo "PWD: $PWD"
-echo "pydir: $pydir"
+pyname=$(ls $VIRTUAL_ENV/lib | awk '{print $1}')
+pydir="$VIRTUAL_ENV/lib/$pyname/site-packages"
 moddir="$pydir/wabash"
-echo "moddir: $moddir"
 /bin/ls "$moddir" | grep "_wabash"
-modname="$pydir/wabash/$(/bin/ls "$moddir" | grep "_wabash")"
-echo "modname: $modname"
+modname="$pydir/wabash/$(/bin/ls -1 "$moddir" | grep "_wabash")"
 export executable=$modname
 export sourcedir=wabash
-scripts/mac/copy_libs
-scripts/mac/install_name
+
+echo "executable: ${executable}"
+find_dependencies "$executable"
+
+
+
+
+
+#scripts/mac/copy_libs
+#scripts/mac/install_name
 
 #rm -rf dist
 
