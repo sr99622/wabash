@@ -25,7 +25,6 @@ add_unique() {
 # Recursively walk dependencies of a Mach-O binary
 find_dependencies() {
     local file="$1"
-    # Find direct dependencies of $file
     local deps
     deps=$(otool -l "$file" | grep -A5 LC_LOAD_DYLIB | grep name | awk '{print $2}')
 
@@ -46,10 +45,37 @@ find_dependencies() {
     done
 }
 
+if [ -z $VIRTUAL_ENV ]; then
+    echo "**"
+    echo "** This script is meant to be run inside a virtual environment"
+    echo "**"
+    exit 1
+fi
+
+if [ ! -d source ]; then
+    mkdir source
+fi
+if [ ! -d source ]; then
+    mkdir build
+fi
+export SOURCE_DIR=$PWD/source
+export BUILD_DIR=$PWD/build
+scripts/mac/build_cmake && \
+scripts/mac/build_aac && \
+scripts/mac/build_x264 && \
+scripts/mac/build_x265 && \
+scripts/mac/build_sdl2 && \
+scripts/mac/build_ffmpeg && \
+scripts/mac/build_libxml2
+
+export FFMPEG_INSTALL_DIR=$PWD/build
+pip install --upgrade pip
+pip install -v .
+
 
 echo $VIRTUAL_ENV
 #pip install -v .
-pyname=$(ls $VIRTUAL_ENV/lib | awk '{print $1}')
+pyname=$(/bin/ls $VIRTUAL_ENV/lib | awk '{print $1}')
 pydir="$VIRTUAL_ENV/lib/$pyname/site-packages"
 moddir="$pydir/wabash"
 /bin/ls "$moddir" | grep "_wabash"
@@ -57,21 +83,16 @@ modname="$pydir/wabash/$(/bin/ls -1 "$moddir" | grep "_wabash")"
 export executable=$modname
 export sourcedir=wabash
 
-echo "executable: ${executable}"
 find_dependencies "$executable"
 
-echo
-echo "All dependencies found:"
-printf '%s\n' "${deps_list[@]}"
-
-
-
-#scripts/mac/copy_libs
-#scripts/mac/install_name
-
-#rm -rf dist
-
-#pip uninstall -y wabash
-
-#assets/scripts/mac_pkgs
-#deactivate
+# set the rpath
+for name in "${deps_list[@]}"; do
+    echo "DEP: $name"
+    cp "$name" wabash
+    file_name=$(basename "$name")
+    echo $(ls -l wabash/$file_name)
+    install_name_tool -id @loader_path/$file_name wabash/$file_name
+done
+ 
+pip install build
+python -m build --sdist --wheel

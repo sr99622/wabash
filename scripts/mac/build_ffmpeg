@@ -4,7 +4,7 @@ BASE=$PWD
 
 if [ ! -f "$BUILD_DIR/lib/libavcodec.dylib" ]; then
     cd $SOURCE_DIR
-    if [ -f "$SOURCE_DIR/ffmpeg-snapshot.tar.bz2" ]; then
+    if [ ! -f "ffmpeg-snapshot.tar.bz2" ]; then
         wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2
     fi
     result=$?
