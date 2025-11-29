@@ -88,10 +88,19 @@ find_dependencies "$executable"
 # set the rpath
 for name in "${deps_list[@]}"; do
     echo "DEP: $name"
-    cp "$name" wabash
     file_name=$(basename "$name")
-    echo $(ls -l wabash/$file_name)
-    install_name_tool -id @loader_path/$file_name wabash/$file_name
+    install_name_tool -id @loader_path/$file_name $name
+    for sub in $(otool -l $name | grep -A5 DYLIB | grep name | awk '{print $2}'); do
+        if   [[ "$sub" == /usr/lib/* ]] \
+          || [[ "$sub" == /System/Library/Frameworks/* ]] \
+          || [[ "$sub" == @loader_path* ]]; then
+            continue
+        fi
+        echo "THING: $sub"
+        link_name=$(basename "$sub")
+        install_name_tool -change $sub @loader_path/$link_name $name
+    done
+    cp "$name" wabash
 done
  
 pip install build
