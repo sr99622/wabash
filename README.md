@@ -570,29 +570,39 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 &nbsp;
 ### Project Configuration
 ---
-The project requires Xcode command line tools to compile. To install, use the commsnd.
+The project requires Xcode command line tools to compile. To verify if Xcode is installed, use ```xcode-select --version```, which will return a valid version in response if installed. If not installed already, use the command.
 
 ```
 xcode-select --install
 ```
 
-Following the installation of Xcode tools, download the repository using git.
+Following the installation of Xcode tools, download the repository using git and change the working directory to the project directory.
 
 ```
 git clone https://github.com/sr99622/wabash
-```
-
-Install project prerequisites
-
-```
-scripts/mac/prerequisites
-```
-
-Following the installation of prerequisites, it is necessary to close the terminal and re-open it, then navigate back to the project directory.
-
-```
 cd wabash
 ```
+
+### Building Portable Libraries
+---
+
+Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app). An OS image is needed to create the virtual machine. By default, UTM will download the latest Mac OS for your machine. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility.
+
+#### Install project prerequisites
+
+Several tools are needed to compile the project. The tools are installed using Homebrew. To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Please note that if using the script below, it is necessary to close and re-open the terminal to use Homebrew.
+
+```
+scripts/mac/install_brew
+```
+
+Following the installation of Homebrew, it is necessary to close the terminal and re-open it, then navigate back to the project directory. Homebrew can then be used to install the necessary tools.
+
+```
+brew install wget automake nasm libtool pkgconfig
+```
+
+#### Install Python
 
 A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many ways to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
 
@@ -600,7 +610,7 @@ A Python version greater than or equal to 3.10 and less than or equal to 3.13 wi
 scripts/mac/install_python <X.XX>
 ```
 
-Once the Python version has been installed, a virtual environment can be created using the Python version as above and a name for the environment.
+Once the Python version has been installed, a virtual environment can be created using the Python version as above and a name for the environment. If some other existing Python version is being used, please refer to the instructions for that version to create the virtual environment.
 
 ```
 scripts/mac/create_venv <X.XX> <env_name>
@@ -612,25 +622,26 @@ To activate the environment
 source <env_name>/bin/activate
 ```
 
-Now the project can be compiled
+#### Compile the project
+
+Now the project can be compiled. The following script will compile the dependency libraries and install them to a local subdirectory named ```build``` in the project folder. The dependency libraries will then be used during compilation of the Python module which is then installed into the virtual environment and scanned using the ```otool``` utility to recursively enumerate all dependencies. During the scan, system libraries are ignored as they are provided by default in the Operating System. This has implications for the choice of Operating System under which the compilation occurs, in the sense that older Operating Systems can be expected to be forward compatible within their family so that older software can be used on newer systems. Once a list of dependencies has been collected, the dependency files themselves are manipulated using the ```install_name_tool``` utility to change the loader headers in the binary files such that the loader can be invoked in a portable manner. The binary file header and dependency links are changed to display ```@loader_path``` as their location, which gives the parent executable the ability to invoke the dependency from within its local directory.
+
+Following manipulation of the binary file headers, the project is re-compiled with the new loader path settings to bake in the changes. The modified binaries are copied to the project Python staging area, in this case the ```wabash``` subdirectory, so that they will be installed along side the Python module executable in the virtual environment. This configuration allows arbitrary machines to install the Python module and it's dependencies in a portable way such that the Python module can run on the target machine without the requirement to pre-install those files.
 
 ```
 scripts/mac/interim
 ```
 
-At the completion of this script, the installation wheel can be found in the ```dist``` subdirectory.
+The products of this script are a working version of the Python module in the current virtual environment and an installation wheel that can be found in the ```dist``` subdirectory. The installation wheel can be tested by creating a new virtual environment and installing it there. The new installation will be self sufficient and not rely on the previously compiled dependency libraries. As an example
 
-&nbsp;
+```
+scripts/mac/create_venv X.XX test_env
+source test_env/bin/activate
+pip install dist/*.whl
+wabash
+```
 
-### Install build tools
----
-
-&nbsp;
-
-### Building Portable Libraries
----
-
-Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app)
+Please note that there is a quirk in the way that the ```dlopen``` utility works when running executables that will cause the Python module installed into the original development virtual environment to be hard coded to the first pass configuration observed during compilation. In simpler terms, the test virtual enviroment must have a different name than the development virtual environment in order to observe portability.
 
 &nbsp;
 
