@@ -3,6 +3,7 @@ source/
 dist/
 env/
 vm/
+stock/
 installer/
 ffmpeg/
 *.egg-info

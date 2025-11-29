@@ -569,6 +569,9 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 
 &nbsp;
 
+### Project Configuration
+---
+
 The project requires dependency libraries on the development machine in order to compile and run. There are two options for installing these libraries. One option is to use the Homebrew package manager to install dependencies. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that any target machine on which the program would run will require a Homebrew installation. The other approach is to build portable libraries that can be integrated into a single Python module and will work on an arbitrary target machine. The portable library version is recommended and has been developed with script tools to ease the process of creation. Note that the portable libaries require a virtual machine installation, instructions are included.
 
 In either case, Xcode tools are required to build the project. To verify if Xcode is installed, use ```xcode-select --version```, which will return a valid version in response if installed. If not installed already, use the command.
@@ -577,11 +580,16 @@ In either case, Xcode tools are required to build the project. To verify if Xcod
 xcode-select --install
 ```
 
+&nbsp;
+
+### Select Desired Library Type and Set Up Project
+---
+
 <details><summary><b>Homebrew Library Installation</b></summary>
 
 &nbsp;
 
-#### Installing Homebrew
+### Installing Homebrew
 ---
 
 To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Please note that if using the script below, it is necessary to close and re-open the terminal to use Homebrew.
@@ -592,7 +600,7 @@ scripts/mac/install_brew
 
 Following the installation of Homebrew, it is necessary to close the terminal and re-open it, then navigate back to the project directory. Homebrew can then be used to install the necessary tools.
 
-#### Install the Dependency Libraries and CMake
+### Install the Dependency Libraries and CMake
 
 ```
 brew update
@@ -604,7 +612,7 @@ brew install homebrew-ffmpeg/ffmpeg/ffmpeg
 
 <i>Please note that the standard Homebrew core ffmpeg version is incompatible with this project. For this reason, the install procedure calls for the 3rd party tap homebrew-ffmpeg. If you already have another version of ffmpeg installed, this will create a conflict. In order to install this version, it is necessary to run</i> ```brew uninstall ffmpeg``` <i>before this tap can be installed.</i>
 
-#### Install Python
+### Install Python
 
 A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many ways to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
 
@@ -624,7 +632,7 @@ To activate the environment
 source <env_name>/bin/activate
 ```
 
-#### Download the Project
+### Download the Project
 
 The project is downloaded using git. After completion of the download, change the current directory to the project folder.
 
@@ -633,7 +641,7 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-#### Compile and Run the Program
+### Compile and Run the Program
 
 ```
 pip install -v .
@@ -650,16 +658,18 @@ wabash
 
 &nbsp;
 
-### Building Portable Libraries
+### Building Portable Libraries on a Virtual Machine
 ---
 
-Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app). An OS image is needed to create the virtual machine. By default, UTM will download the latest Mac OS for your machine. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility.
+Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app). 
 
-Install UTM and create a virtual machine using an OS image, setting a memory size and CPU count appropriate for the host computer. Adding a shared directory is useful so that files can be transferred to and from the virtual machine. This can be done on the last screen shown before the virtual machine creation starts. Inside the virtual machine, there will be a Shared Directory folder on the sidebar of the Finder app. Note that the Shared Directory will only show files that were present on the host at the time the virtual machine was started.
+An OS image is needed to create the virtual machine. By default, UTM will atomatically download the latest Mac OS for your machine. Note that the latest Operating System version may break some of the older tools. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility. Starting with an early version of the Sequoia Operating System as a starting point is suggested.
+
+Install UTM and create a virtual machine using an OS image, setting a memory size and CPU count appropriate for the host computer. Add a shared directory so that files can be transferred to and from the virtual machine, which can be done on the last screen shown before the virtual machine creation starts. Inside the virtual machine, there will be a Shared Directory folder on the sidebar of the Finder app. Note that the Shared Directory will only show files that were present on the host at the time the virtual machine was started.
 
 ### Project Configuration
 ---
-The project requires Xcode command line tools to compile. To verify if Xcode is installed, use ```xcode-select --version```, which will return a valid version in response if installed. If not installed already, use the command.
+The virtual machine requires Xcode command line tools to compile the project.
 
 ```
 xcode-select --install
@@ -672,21 +682,23 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-#### Install project prerequisites
+### Install project prerequisites
+---
 
-Several tools are needed to compile the project. The tools are installed using Homebrew. To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Please note that if using the script below, it is necessary to close and re-open the terminal to use Homebrew.
+Several tools are needed to compile the project. The following script will install Homebrew which is required to install the tools. Please note that it is necessary to close and re-open the terminal to use Homebrew.
 
 ```
 scripts/mac/install_brew
 ```
 
-Following the installation of Homebrew, it is necessary to close the terminal and re-open it, then navigate back to the project directory. Homebrew can then be used to install the necessary tools.
+After re-opening the terminal, navigate back to the project directory. Homebrew can then be used to install the necessary tools.
 
 ```
 brew install wget automake nasm libtool pkgconfig
 ```
 
-#### Install Python
+### Install Python
+---
 
 A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many ways to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
 
@@ -706,7 +718,8 @@ To activate the environment
 source <env_name>/bin/activate
 ```
 
-#### Compile the project
+### Compile the project
+---
 
 The following script will compile the dependency libraries and install them to a local subdirectory named ```build``` in the project folder. The dependency libraries will then be used during compilation of the Python module which is installed into the virtual environment and scanned using the ```otool``` utility to recursively enumerate all dependencies. 
 
@@ -720,7 +733,23 @@ Following manipulation of the binary file headers, the project is re-compiled wi
 scripts/mac/interim
 ```
 
-The products of this script are a working version of the Python module in the current virtual environment and an installation wheel that can be found in the ```dist``` subdirectory. The installation wheel can be tested by creating a new virtual environment and installing it there. The new installation will be self sufficient and not rely on the previously compiled dependency libraries. As an example
+The products of this script are
+
+* a working version of the Python module in the current virtual environment 
+* an installation wheel that can be found in the ```dist``` subdirectory
+* a stock directory containing portable libraries with include headers
+
+### Test the Build
+---
+
+```
+python run.py
+```
+
+### Test the Python Wheel
+---
+
+The installation wheel can be tested by creating a new virtual environment and installing it there. The new installation will be self sufficient and contains its own compiled dependency libraries. In the following script, use the same Python version X.XX as the virtual environment used to compile the wheel.
 
 ```
 scripts/mac/create_venv X.XX test_env
@@ -731,9 +760,35 @@ wabash
 
 Please note that there is a quirk in the way that the ```dlopen``` utility works when running executables that will cause the Python module installed into the original development virtual environment to be hard coded to the first pass configuration observed during compilation. In simpler terms, the test virtual enviroment must have a different name than the development virtual environment in order to observe portability.
 
-#### Transfer Portable Libraries to Development Host
+### Transfer Portable Libraries to Development Host
+---
 
-Copying the Portable libraries to the Host will depend on the location of the Shared directory set up in the UTM virtual machine configuration. The default case is "My Shared Files/Documents", which corresponds to the Documents folder of the Host machine. Copy the build folder from the project directory to this location, then from the Host machine, copy that folder to the local copy of the project directory and rename it ffmpeg. You need to copy the modified binaries to the wabash sub directory as well, command line instructions to do this from UTM forthcoming.
+Copying the Portable libraries to the Host will depend on the location of the Shared directory set up in the UTM virtual machine configuration. The default case is "My Shared Files/Documents", which corresponds to the Documents folder of the Host machine. From within the virtual machine, copy the ```stock``` folder from the project directory to this location, then from the Host machine, copy that folder to the local copy of the project directory. The top level directory structure of the project should look like
+
+```
+wabash
+    assets
+    cmake
+    include
+    scripts
+    src
+    stock
+    wabash
+    ...
+```
+
+### Install Python on the Host
+---
+
+The virtual machine is no longer needed and can be shut down. The Host development machine will require a Python installation and the creation of a virtual environment. From the Host development machine use the commands to set up and compile the project.
+
+```
+cd wabash
+scripts/mac/install_python X.XX
+scripts/mac/create_venv X.XX env
+scripts/mac/compile
+wabash
+```
 
 &nbsp;
 
