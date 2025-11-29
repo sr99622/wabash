@@ -570,8 +570,31 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 &nbsp;
 ### Project Configuration
 ---
+The project requires Xcode command line tools to compile. To install, use the commsnd.
 
-A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many way to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
+```
+xcode-select --install
+```
+
+Following the installation of Xcode tools, download the repository using git.
+
+```
+git clone https://github.com/sr99622/wabash
+```
+
+Install project prerequisites
+
+```
+scripts/mac/prerequisites
+```
+
+Following the installation of prerequisites, it is necessary to close the terminal and re-open it, then navigate back to the project directory.
+
+```
+cd wabash
+```
+
+A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many ways to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
 
 ```
 scripts/mac/install_python <X.XX>
@@ -588,6 +611,14 @@ To activate the environment
 ```
 source <env_name>/bin/activate
 ```
+
+Now the project can be compiled
+
+```
+scripts/mac/interim
+```
+
+At the completion of this script, the installation wheel can be found in the ```dist``` subdirectory.
 
 &nbsp;
 
