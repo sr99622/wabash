@@ -568,6 +568,95 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 <details><summary><b>Mac OS</b></summary>
 
 &nbsp;
+
+The project requires dependency libraries on the development machine in order to compile and run. There are two options for installing these libraries. One option is to use the Homebrew package manager to install dependencies. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that any target machine on which the program would run will require a Homebrew installation. The other approach is to build portable libraries that can be integrated into a single Python module and will work on an arbitrary target machine. The portable library version is recommended and has been developed with script tools to ease the process of creation. Note that the portable libaries require a virtual machine installation, instructions are included.
+
+In either case, Xcode tools are required to build the project. To verify if Xcode is installed, use ```xcode-select --version```, which will return a valid version in response if installed. If not installed already, use the command.
+
+```
+xcode-select --install
+```
+
+<details><summary><b>Homebrew Library Installation</b></summary>
+
+&nbsp;
+
+#### Installing Homebrew
+---
+
+To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Please note that if using the script below, it is necessary to close and re-open the terminal to use Homebrew.
+
+```
+scripts/mac/install_brew
+```
+
+Following the installation of Homebrew, it is necessary to close the terminal and re-open it, then navigate back to the project directory. Homebrew can then be used to install the necessary tools.
+
+#### Install the Dependency Libraries and CMake
+
+```
+brew update
+brew upgrade
+brew install cmake
+brew tap homebrew-ffmpeg/ffmpeg
+brew install homebrew-ffmpeg/ffmpeg/ffmpeg
+```
+
+<i>Please note that the standard Homebrew core ffmpeg version is incompatible with this project. For this reason, the install procedure calls for the 3rd party tap homebrew-ffmpeg. If you already have another version of ffmpeg installed, this will create a conflict. In order to install this version, it is necessary to run</i> ```brew uninstall ffmpeg``` <i>before this tap can be installed.</i>
+
+#### Install Python
+
+A Python version greater than or equal to 3.10 and less than or equal to 3.13 with the ability to create virtual environments is required. There are many ways to install Python on Mac, so if you have a qualified version installed already, that is fine. Alternatively, a script is included to install Python from the official site without adding it to the system PATH. This will allow installation of different Python versions without creating conflicts with existing installed versions. To use the script, enter the desired Python version X.XX as shown below, where X.XX represents the verison e.g. 3.13
+
+```
+scripts/mac/install_python <X.XX>
+```
+
+Once the Python version has been installed, a virtual environment can be created using the Python version as above and a name for the environment. If some other existing Python version is being used, please refer to the instructions for that version to create the virtual environment.
+
+```
+scripts/mac/create_venv <X.XX> <env_name>
+```
+
+To activate the environment
+
+```
+source <env_name>/bin/activate
+```
+
+#### Download the Project
+
+The project is downloaded using git. After completion of the download, change the current directory to the project folder.
+
+```
+git clone https://github.com/sr99622/wabash
+cd wabash
+```
+
+#### Compile and Run the Program
+
+```
+pip install -v .
+wabash
+```
+
+---
+
+&nbsp;
+
+</details>
+
+<details><summary><b>Portable Library Installation</b></summary>
+
+&nbsp;
+
+### Building Portable Libraries
+---
+
+Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app). An OS image is needed to create the virtual machine. By default, UTM will download the latest Mac OS for your machine. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility.
+
+Install UTM and create a virtual machine using an OS image, setting a memory size and CPU count appropriate for the host computer. Adding a shared directory is useful so that files can be transferred to and from the virtual machine. This can be done on the last screen shown before the virtual machine creation starts. Inside the virtual machine, there will be a Shared Directory folder on the sidebar of the Finder app. Note that the Shared Directory will only show files that were present on the host at the time the virtual machine was started.
+
 ### Project Configuration
 ---
 The project requires Xcode command line tools to compile. To verify if Xcode is installed, use ```xcode-select --version```, which will return a valid version in response if installed. If not installed already, use the command.
@@ -582,11 +671,6 @@ Following the installation of Xcode tools, download the repository using git and
 git clone https://github.com/sr99622/wabash
 cd wabash
 ```
-
-### Building Portable Libraries
----
-
-Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app). An OS image is needed to create the virtual machine. By default, UTM will download the latest Mac OS for your machine. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility.
 
 #### Install project prerequisites
 
@@ -647,7 +731,44 @@ wabash
 
 Please note that there is a quirk in the way that the ```dlopen``` utility works when running executables that will cause the Python module installed into the original development virtual environment to be hard coded to the first pass configuration observed during compilation. In simpler terms, the test virtual enviroment must have a different name than the development virtual environment in order to observe portability.
 
+#### Transfer Portable Libraries to Development Host
+
+Copying the Portable libraries to the Host will depend on the location of the Shared directory set up in the UTM virtual machine configuration. The default case is "My Shared Files/Documents", which corresponds to the Documents folder of the Host machine. Copy the build folder from the project directory to this location, then from the Host machine, copy that folder to the local copy of the project directory and rename it ffmpeg. You need to copy the modified binaries to the wabash sub directory as well, command line instructions to do this from UTM forthcoming.
+
 &nbsp;
+
+</details>
+
+
+&nbsp;
+### Development of the Project
+---
+Project development may include efforts in both Python and C++. There are different methods for observing changes made to the program in these two domains. Further, there is a difference in the compilation procedure for the C++ domain depending on whether the dependency libaries have been installed using the package manager or the portable libraries.
+
+To develop the Python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated like `source env/bin/activate`. 
+
+To develop the Python code and observe changes made, use the following.
+
+```
+pip uninstall wabash
+python run.py
+```
+
+Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile process will install a copy of the Python module binary into the local wabash directory. This enables local development when the Python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`. If the portable libraries are being used, the ffmpeg binaries will also be present in the wabash directory.
+
+To develop C++ code using the portable libraries
+
+```
+scripts/mac/compile
+env/bin/wabash
+```
+
+To develop C++ code using the package manager libraries
+
+```
+pip install -v .
+env/bin/wabash
+```
 
 </details>
 

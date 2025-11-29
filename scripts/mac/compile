@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cd wabash
+rm -R __pycache__
+rm _wabash.*.so
+cd ..
+export FFMPEG_INSTALL_DIR=$PWD/ffmpeg
+echo "FFMPEG_INSTALL_DIR: $FFMPEG_INSTALL_DIR"
+pip install -v .
