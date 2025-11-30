@@ -605,7 +605,7 @@ Following the installation of Homebrew, it is necessary to close the terminal an
 ```
 brew update
 brew upgrade
-brew install cmake
+brew install cmake ninja
 brew tap homebrew-ffmpeg/ffmpeg
 brew install homebrew-ffmpeg/ffmpeg/ffmpeg
 ```
@@ -694,7 +694,7 @@ scripts/mac/install_brew
 After re-opening the terminal, navigate back to the project directory. Homebrew can then be used to install the necessary tools.
 
 ```
-brew install wget automake nasm libtool pkgconfig
+brew install wget automake nasm libtool pkgconfig ninja
 ```
 
 ### Install Python
