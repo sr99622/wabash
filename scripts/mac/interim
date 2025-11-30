@@ -109,5 +109,12 @@ for name in "${deps_list[@]}"; do
     cp "$name" stock/lib
 done
  
+cd stock/lib
+for name in *.dylib; do
+    root="${name%%.[0-9]*}.dylib"
+    ln -s "$name" "$root"
+done
+cd ../..
+
 pip install build
 python -m build --sdist --wheel
