@@ -723,14 +723,14 @@ source <env_name>/bin/activate
 
 The following script will compile the dependency libraries and install them to a local subdirectory named ```build``` in the project folder. The dependency libraries will then be used during compilation of the Python module which is installed into the virtual environment and scanned using the ```otool``` utility to recursively enumerate all dependencies. 
 
-During the ```otool``` scan, system libraries are ignored as they are provided by default in the Operating System. This has implications for the choice of Operating System under which the compilation occurs, in the sense that older Operating Systems can be expected to be forward compatible within their family so that older software can be used on newer systems. 
+During the ```otool``` scan, system libraries are ignored as they are provided by default in the Operating System. This has implications for the choice of Operating System under which the compilation is performed, in the sense that older Operating Systems can be expected to be forward compatible within their family so that older software can be used on newer systems. 
 
 Once a list of dependencies has been collected, the dependency files themselves are manipulated using the ```install_name_tool``` utility to change the loader headers in the binary files such that the loader can be invoked in a portable manner. The binary file header and dependency links are changed to display ```@loader_path``` as their location, which gives the parent executable the ability to invoke the dependency from within its local directory.
 
 Following manipulation of the binary file headers, the project is re-compiled with the new loader path settings to bake in the changes. The modified binaries are copied to the project Python staging area, in this case the ```wabash``` subdirectory, so that they will be installed along side the Python module executable in the virtual environment. This configuration allows arbitrary machines to install the Python module and it's dependencies in a portable way such that the Python module can run on the target machine without the requirement to pre-install those files.
 
 ```
-scripts/mac/interim
+scripts/mac/make_module
 ```
 
 The products of this script are
@@ -743,7 +743,7 @@ The products of this script are
 ---
 
 ```
-python run.py
+wabash
 ```
 
 ### Test the Python Wheel
@@ -758,12 +758,10 @@ pip install dist/*.whl
 wabash
 ```
 
-Please note that there is a quirk in the way that the ```dlopen``` utility works when running executables that will cause the Python module installed into the original development virtual environment to be hard coded to the first pass configuration observed during compilation. In simpler terms, the test virtual enviroment must have a different name than the development virtual environment in order to observe portability.
-
 ### Transfer Portable Libraries to Development Host
 ---
 
-Copying the Portable libraries to the Host will depend on the location of the Shared directory set up in the UTM virtual machine configuration. The default case is "My Shared Files/Documents", which corresponds to the Documents folder of the Host machine. From within the virtual machine, copy the ```stock``` folder from the project directory to this location, then from the Host machine, copy that folder to the local copy of the project directory. The top level directory structure of the project should look like
+Copying the Portable libraries to the Host will depend on the location of the Shared directory set up in the UTM virtual machine configuration. The default case is "My Shared Files/Documents", which corresponds to the Documents folder of the Host machine. From within the virtual machine, copy the ```stock``` folder from the project directory to this location, then from the Host machine, copy that folder to the local copy of the project directory. The top level directory structure of the project should look something like
 
 ```
 wabash

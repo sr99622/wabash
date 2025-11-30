@@ -52,6 +52,7 @@ if [ -z $VIRTUAL_ENV ]; then
     exit 1
 fi
 
+# compile ffmpeg dependencies
 if [ ! -d source ]; then
     mkdir source
 fi
@@ -68,31 +69,24 @@ scripts/mac/build_sdl2 && \
 scripts/mac/build_ffmpeg && \
 scripts/mac/build_libxml2
 
+# build first pass module binary
 export FFMPEG_INSTALL_DIR=$PWD/build
 pip install --upgrade pip
 pip install -v .
 
-
-#echo $VIRTUAL_ENV
-#pip install -v .
+# find dependencies
 pyname=$(/bin/ls $VIRTUAL_ENV/lib | awk '{print $1}')
 pydir="$VIRTUAL_ENV/lib/$pyname/site-packages/wabash"
-#moddir="$pydir/wabash"
-#/bin/ls "$moddir" | grep "_wabash"
-
 executable="$pydir/$(/bin/ls -1 "$pydir" | grep "_wabash")"
-#export executable=$modname
-#export sourcedir=wabash
-
 find_dependencies "$executable"
 
+# clear stock folder to hold portable libs and includes
 rm -R stock
 mkdir -p stock/lib
 cp -R build/include stock
 
 # set the rpath
 for name in "${deps_list[@]}"; do
-    #echo "DEP: $name"
     file_name=$(basename "$name")
     install_name_tool -id @loader_path/$file_name $name
     for sub in $(otool -l $name | grep -A5 DYLIB | grep name | awk '{print $2}'); do
@@ -101,14 +95,15 @@ for name in "${deps_list[@]}"; do
           || [[ "$sub" == @loader_path* ]]; then
             continue
         fi
-        #echo "THING: $sub"
         link_name=$(basename "$sub")
         install_name_tool -change $sub @loader_path/$link_name $name
     done
+    # copy dependency to wabash stage and stock folders
     cp "$name" wabash
     cp "$name" stock/lib
 done
- 
+
+# add symlinks for libraries in stock folder
 cd stock/lib
 for name in *.dylib; do
     root="${name%%.[0-9]*}.dylib"
@@ -116,5 +111,8 @@ for name in *.dylib; do
 done
 cd ../..
 
+# build wheel and install
 pip install build
 python -m build --sdist --wheel
+pip uninstall -y wabash
+pip install dist/*whl
