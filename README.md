@@ -665,10 +665,14 @@ Similar to the Linux environment, Mac programs require special consideration in 
 
 An OS image is needed to create the virtual machine. By default, UTM will atomatically download the latest Mac OS for your machine. Note that the latest Operating System version may break some of the older tools. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility. Starting with an early version of the Sequoia Operating System as a starting point is suggested.
 
+### Create the Virtual Machine
+---
+
 Install UTM and create a virtual machine using an OS image, setting a memory size and CPU count appropriate for the host computer. Add a shared directory so that files can be transferred to and from the virtual machine, which can be done on the last screen shown before the virtual machine creation starts. Inside the virtual machine, there will be a Shared Directory folder on the sidebar of the Finder app. Note that the Shared Directory will only show files that were present on the host at the time the virtual machine was started.
 
 ### Project Configuration
 ---
+
 The virtual machine requires Xcode command line tools to compile the project.
 
 ```
@@ -706,7 +710,7 @@ A Python version greater than or equal to 3.10 and less than or equal to 3.13 wi
 scripts/mac/install_python <X.XX>
 ```
 
-Once the Python version has been installed, a virtual environment can be created using the Python version as above and a name for the environment. If some other existing Python version is being used, please refer to the instructions for that version to create the virtual environment.
+Once the Python version has been installed, a virtual environment can be created using the Python version as above and a name for the environment.
 
 ```
 scripts/mac/create_venv <X.XX> <env_name>
@@ -727,7 +731,9 @@ During the ```otool``` scan, system libraries are ignored as they are provided b
 
 Once a list of dependencies has been collected, the dependency files themselves are manipulated using the ```install_name_tool``` utility to change the loader headers in the binary files such that the loader can be invoked in a portable manner. The binary file header and dependency links are changed to display ```@loader_path``` as their location, which gives the parent executable the ability to invoke the dependency from within its local directory.
 
-Following manipulation of the binary file headers, the project is re-compiled with the new loader path settings to bake in the changes. The modified binaries are copied to the project Python staging area, in this case the ```wabash``` subdirectory, so that they will be installed along side the Python module executable in the virtual environment. This configuration allows arbitrary machines to install the Python module and it's dependencies in a portable way such that the Python module can run on the target machine without the requirement to pre-install those files.
+Following manipulation of the binary file headers, the project is re-compiled with the new loader path settings to bake in the changes. The modified binaries are copied to the project Python staging area, in this case the ```wabash``` subdirectory, so that they will be installed along side the Python module executable in the virtual environment. This configuration allows arbitrary machines to install the Python module and it's dependencies in a portable way such that the Python module can run on the target machine without the requirement to pre-install those dependencies.
+
+Additionally, the script will populate the ```stock``` subdirectory with portable versions of the dependencies for use in project development. The ```stock``` subdirectory can be copied to a develpment machine to allow compilation of the project with portable libraries.
 
 ```
 scripts/mac/make_module
@@ -737,7 +743,7 @@ The products of this script are
 
 * a working version of the Python module in the current virtual environment 
 * an installation wheel that can be found in the ```dist``` subdirectory
-* a stock directory containing portable libraries with include headers
+* a ```stock``` subdirectory containing portable libraries with include headers
 
 ### Test the Build
 ---
@@ -796,7 +802,7 @@ wabash
 &nbsp;
 ### Development of the Project
 ---
-Project development may include efforts in both Python and C++. There are different methods for observing changes made to the program in these two domains. Further, there is a difference in the compilation procedure for the C++ domain depending on whether the dependency libaries have been installed using the package manager or the portable libraries.
+Project development may include efforts in both Python and C++. There are different methods for observing changes made to the program in these two domains. Furthermore, there is a difference in the compilation procedure for the C++ domain depending on whether the dependency libaries have been installed using the package manager or the portable libraries.
 
 To develop the Python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated like `source env/bin/activate`. 
 
@@ -807,7 +813,7 @@ pip uninstall wabash
 python run.py
 ```
 
-Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile process will install a copy of the Python module binary into the local wabash directory. This enables local development when the Python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`. If the portable libraries are being used, the ffmpeg binaries will also be present in the wabash directory.
+Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile process will install a copy of the Python module binary into the local wabash directory. This enables local development when the Python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`. If the portable libraries are being used, the dependency binaries will also be present in the wabash directory.
 
 To develop C++ code using the portable libraries
 
