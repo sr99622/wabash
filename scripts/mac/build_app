@@ -1,12 +1,12 @@
 #!/bin/bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-echo >> $HOME/.zprofile
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
-eval "$(/opt/homebrew/bin/brew shellenv)"
-source $HOME/.zprofile
+#/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#echo >> $HOME/.zprofile
+#echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+#eval "$(/opt/homebrew/bin/brew shellenv)"
+#source $HOME/.zprofile
 brew install readline pkg-config xz tcl-tk mpdecimal
 
-Contents="/Applications/OnvifGUI.app/Contents"
+Contents="/Applications/wabash.app/Contents"
 MacOS="$Contents/MacOS"
 Resources="$Contents/Resources"
 
@@ -20,7 +20,7 @@ mkdir Icon.iconset
 #sips -z 64 64 "$HOME/libonvif/assets/scripts/components/mac/icons/64.png" --out Icon.iconset/icon_64x64.png
 #sips -z 128 128 "$HOME/libonvif/assets/scripts/components/mac/icons/128.png" --out Icon.iconset/icon_128x128.png
 #sips -z 256 256 "$HOME/libonvif/assets/scripts/components/mac/icons/256.png" --out Icon.iconset/icon_256x256.png
-sips -z 256 256 $HOME/libonvif/onvif-gui/onvif_gui/resources/mac_icon.png --out Icon.iconset/icon_256x256.png
+sips -z 512 512 $HOME/wabash/wabash/gui/resources/wabash.png --out Icon.iconset/icon_512x512.png
 iconutil -c icns Icon.iconset -o $Resources/app.icns
 
 echo "-----------------START OPENSSL---------------------------------"
@@ -89,7 +89,7 @@ LIBLZMA_CFLAGS="-I$install_dir/xz/include" LIBLZMA_LIBS="-L$install_dir/xz/lib -
 LIBB2_CFLAGS="-I$install_dir/b2/include" LIBB2_LIBS="-L$install_dir/b2/lib -lb2" \
 LIBMPDEC_CFLAGS="-I$install_dir/mpdec/include" LIBMPDEC_LIBS="-L$install_dir/mpdec/lib -lmpdec" \
     ./configure --enable-optimizations \
-    --enable-framework=/Applications/OnvifGUI.app/Contents/MacOS/Python/Library/Frameworks \
+    --enable-framework=/Applications/wabash.app/Contents/MacOS/Python/Library/Frameworks \
     --with-app-store-compliance \
     --with-system-libmpdec \
     --with-openssl="$install_dir/OpenSSL" \
@@ -97,7 +97,7 @@ LIBMPDEC_CFLAGS="-I$install_dir/mpdec/include" LIBMPDEC_LIBS="-L$install_dir/mpd
 make -j$(nproc)
 make install
 
-cc $HOME/libonvif/assets/scripts/components/mac/launcher.c -o $MacOS/launcher
+cc $HOME/wabash/scripts/mac/launcher.c -o $MacOS/launcher
 
 rm -R $MacOS/Python/Applications
 rm -R $MacOS/Python/bin
@@ -111,28 +111,13 @@ rm -R $MacOS/gdbm/include
 rm -R $MacOS/gdbm/share
 
 framework="$MacOS/Python/Library/Frameworks/Python.framework"
-$framework/Versions/3.13/bin/python3.13 -m venv $framework/Versions/3.13/onvif-gui-env
-source $framework/Versions/3.13/onvif-gui-env/bin/activate
-pip install $HOME/libonvif/onvif-gui torch torchvision
+$framework/Versions/3.13/bin/python3.13 -m venv $framework/Versions/3.13/env
+source $framework/Versions/3.13/env/bin/activate
+export FFMPEG_INSTALL_DIR=$HOME/wabash/stock
+pip install $HOME/wabash
 deactivate
-rm $framework/Versions/3.13/onvif-gui-env/bin/python*
-cp $framework/Versions/3.13/bin/python3.13 $framework/Versions/3.13/onvif-gui-env/bin
-
-cache="$framework/Versions/3.13/onvif-gui-env/lib/python3.13/site-packages/cache"
-mkdir -p $cache/checkpoints
-cd $cache/checkpoints
-curl -OL https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.pth
-
-mkdir -p $cache/proxy
-cd $cache/proxy
-curl -OL https://github.com/bluenviron/mediamtx/releases/download/v1.12.2/mediamtx_v1.12.2_darwin_arm64.tar.gz
-tar xzf mediamtx_v1.12.2_darwin_arm64.tar.gz
-rm mediamtx_v1.12.2_darwin_arm64.tar.gz
-sed -i.bak 's/srt: yes/srt: no/g' mediamtx.yml
-sed -i.bak 's/webrtc: yes/webrtc: no/g' mediamtx.yml
-sed -i.bak 's/hls: yes/hls: no/g' mediamtx.yml
-sed -i.bak 's/rtmp: yes/rtmp: no/g' mediamtx.yml
-rm mediamtx.yml.bak
+rm $framework/Versions/3.13/env/bin/python*
+cp $framework/Versions/3.13/bin/python3.13 $framework/Versions/3.13/env/bin
 
 cat > $Contents/Info.plist <<EOF
 
@@ -142,11 +127,11 @@ cat > $Contents/Info.plist <<EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Onvif GUI</string>
+    <string>wabash</string>
     <key>CFBundleDisplayName</key>
-    <string>Onvif GUI</string>
+    <string>wabash</string>
     <key>CFBundleIdentifier</key>
-    <string>io.github.sr99622.onvif-gui</string>
+    <string>io.github.sr99622.wabash</string>
     <key>CFBundleVersion</key>
     <string>3.0.11</string>
     <key>CFBundleExecutable</key>
@@ -159,6 +144,6 @@ cat > $Contents/Info.plist <<EOF
 </plist>
 EOF
 
-find '/Applications/OnvifGUI.app' \( -type f -perm +111 -o -name "*.dylib" -o -name "*.so" \) -exec codesign --force --deep --options runtime --timestamp --entitlements $HOME/libonvif/assets/scripts/components/mac/entitlements.plist --sign "Developer ID Application: Stephen Rhodes (NPMFEZ6V9H)" {} \;
-codesign --force --deep --options runtime --timestamp --entitlements $HOME/libonvif/assets/scripts/components/mac/entitlements.plist --sign "Developer ID Application: Stephen Rhodes (NPMFEZ6V9H)" /Applications/OnvifGUI.app
-codesign -vvv --deep --strict /Applications/OnvifGUI.app
+find '/Applications/wabash.app' \( -type f -perm +111 -o -name "*.dylib" -o -name "*.so" \) -exec codesign --force --deep --options runtime --timestamp --entitlements scripts/mac/entitlements.plist --sign "Developer ID Application: Stephen Rhodes (NPMFEZ6V9H)" {} \;
+codesign --force --deep --options runtime --timestamp --entitlements scripts/mac/entitlements.plist --sign "Developer ID Application: Stephen Rhodes (NPMFEZ6V9H)" /Applications/wabash.app
+codesign -vvv --deep --strict /Applications/wabash.app
