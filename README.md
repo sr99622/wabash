@@ -689,15 +689,10 @@ cd wabash
 ### Install project prerequisites
 ---
 
-Several tools are needed to compile the project. The following script will install Homebrew which is required to install the tools. Please note that it is necessary to close and re-open the terminal to use Homebrew.
+Several tools are needed to compile the project. The following script will install Homebrew which is then used to install the necessary tools.
 
 ```
 scripts/mac/install_brew
-```
-
-After re-opening the terminal, navigate back to the project directory. Homebrew can then be used to install the necessary tools.
-
-```
 brew install wget automake nasm libtool pkgconfig ninja
 ```
 
@@ -798,8 +793,6 @@ wabash
 
 </details>
 
-
-&nbsp;
 ### Development of the Project
 ---
 Project development may include efforts in both Python and C++. There are different methods for observing changes made to the program in these two domains. Furthermore, there is a difference in the compilation procedure for the C++ domain depending on whether the dependency libaries have been installed using the package manager or the portable libraries.
