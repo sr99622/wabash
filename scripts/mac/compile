@@ -6,4 +6,7 @@ rm _wabash.*.so
 cd ..
 export FFMPEG_INSTALL_DIR=$PWD/stock
 echo "FFMPEG_INSTALL_DIR: $FFMPEG_INSTALL_DIR"
+find "$FFMPEG_INSTALL_DIR/lib" -type f -print0 | while IFS= read -r -d $'\0' file; do
+  cp "$file" wabash
+done
 pip install -v .
