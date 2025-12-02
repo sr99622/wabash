@@ -129,7 +129,7 @@ class StreamPanel(QWidget):
             self.mw.startModel()
     
     def name(self) -> str:
-        result = f"thread_{self.counter:0{3}d}"
+        result = f"stream_{self.counter:0{3}d}"
         self.counter += 1
         return result
     
@@ -138,12 +138,12 @@ class StreamPanel(QWidget):
 
         if tag == wabash.ErrorTag.NO_SUCH_FILE_OR_DIRECTORY:
             self.manager.lock()
-            if thread := self.manager.threads.get(name):
-                thread.reconnect = False
+            if stream := self.manager.streams.get(name):
+                stream.reconnect = False
             self.manager.unlock()
 
         if len(msgShow):
-            self.errorDialog.signals.show.emit(msgShow)
+            self.mw.errorDialog.signals.show.emit(msgShow)
 
     def onClose(self):
         print("stream panel on close")
@@ -151,7 +151,3 @@ class StreamPanel(QWidget):
 
     def btnTestClicked(self):
         print("btnTestClicked")
-        #self.lblFeedback.setText("THINGY BOB")
-        self.mw.waitDialog.signals.show.emit("THIS IS A TEST")
-        timer = QTimer(self)
-        timer.singleShot(1000, self.startModel)
