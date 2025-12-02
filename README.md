@@ -592,10 +592,11 @@ xcode-select --install
 ### Installing Homebrew
 ---
 
-To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Please note that if using the script below, it is necessary to close and re-open the terminal to use Homebrew.
+To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Source the .zprofile to enable brew environment variables.
 
 ```
 scripts/mac/install_brew
+source $HOME/.zprofile
 ```
 
 Following the installation of Homebrew, it is necessary to close the terminal and re-open it, then navigate back to the project directory. Homebrew can then be used to install the necessary tools.
@@ -689,10 +690,11 @@ cd wabash
 ### Install project prerequisites
 ---
 
-Several tools are needed to compile the project. The following script will install Homebrew which is then used to install the necessary tools.
+Several tools are needed to compile the project. The following script will install Homebrew which is then used to install the necessary tools after sourcing the .zprofile to enable brew environment variables.
 
 ```
 scripts/mac/install_brew
+source $HOME/.zprofile
 brew install wget automake nasm libtool pkgconfig ninja
 ```
 
