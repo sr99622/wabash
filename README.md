@@ -663,7 +663,7 @@ wabash
 
 Similar to the Linux environment, Mac programs require special consideration in order to be portable to an arbitrary machine. Dependency libraries should be compiled in a virtual machine using an older operating system for maximum compatibility. A good choice for creating virtual machines is [UTM](https://mac.getutm.app). 
 
-An OS image is needed to create the virtual machine. By default, UTM will atomatically download the latest Mac OS for your machine. Note that the latest Operating System version may break some of the older tools. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility. Starting with an early version of the Sequoia Operating System as a starting point is suggested.
+An OS image is needed to create the virtual machine. By default, UTM will atomatically download the latest Mac OS for your machine. Using an older Mac OS image has the benefit of greater compatability with other machines. Older images can be downloaded from [ipsw.me](https://ipsw.me/product/mac#google_vignette). Experimentation may be required to discover the oldest possible version of compatible OS, those within the same development family can be expected to have the greatest compatibility. Starting with an early version of the Sequoia Operating System as a starting point is suggested.
 
 ### Create the Virtual Machine
 ---
@@ -686,7 +686,7 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-### Install project prerequisites
+### Install Project Prerequisites
 ---
 
 Several tools are needed to compile the project. The following script will install Homebrew which is then used to install the necessary tools after sourcing the .zprofile to enable brew environment variables.
@@ -718,7 +718,7 @@ To activate the environment
 source <env_name>/bin/activate
 ```
 
-### Compile the project
+### Compile the Project
 ---
 
 The following script will compile the dependency libraries and install them to a local subdirectory named ```build``` in the project folder. The dependency libraries will then be used during compilation of the Python module which is installed into the virtual environment and scanned using the ```otool``` utility to recursively enumerate all dependencies. 
@@ -789,6 +789,21 @@ scripts/mac/create_venv X.XX env
 scripts/mac/compile
 wabash
 ```
+
+### Building an Installer Image
+---
+
+Using portable dependencies will facilitate the creation of an installable DMG app image of the program. Additionally, there are some requirements for the DMG app image in order for it to pass Apple security screening such that it can be installed on a target machine with minimal disruption. It will need to be codesigned with the Devloper's keychain and notarized on the Apple server which requires a Developer Account and Certificate. This is a process that involves some complex steps, so a helper application is recommended. [DMG Canvas](https://www.araelium.com/dmgcanvas) is one such app that has been used successfully. An excellent resource for helping to understand this process can be found at [Xojo](https://blog.xojo.com/2024/08/22/macos-apps-from-sandboxing-to-notarization-the-basics/).
+
+The first step in this process is to build the app on the development machine. The following script will perform this build. Please note that the script should not be run from inside a virtual environment, it will be looking for it's own version of Python.
+
+```
+scripts/mac/make_app
+```
+
+The script will compile Python and OpenSSL along with some supporting libraries into the /Applications/wabash.app folder, then it will use it's local pip version to install the necessary components into it's own local virtual environment. A compiled launcher executable is needed for the application as well and will be built and installed into the local folder. Upon completion of the script, a working version of the program should be visible in the Applications folder. Please note that if the program is launched from this location, it can no longer be used for notarization, as it will create artifacts that will pollute the codesigned file structure.
+
+Once the app has been assembled in situ, the DMG Canvas application is used to build the DMG file and notarize it on the Apple Developer site. A valid developer subscription and certificate are required for this operation. If the app has been previously launched as discussed above, the notarization will fail, so it is necessary to assemble the DMG image from a virgin /Applications/wabash.app folder. 
 
 &nbsp;
 
