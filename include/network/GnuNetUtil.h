@@ -3,47 +3,6 @@
 
 #include <string.h>
 #include <stdio.h>
-/*
-#include <stdlib.h>
-#include <math.h>
-#include <sys/stat.h>
-
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <ifaddrs.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <netdb.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <sys/time.h>
-#include <linux/if_packet.h>
-#include <net/if_arp.h>
-
-#include <stdint.h>
-#include <errno.h>
-#include <vector>
-#include <map>
-#include <iomanip>
-
-#include <stdio.h>
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <string.h>
-
-
-#include <sys/socket.h>
-#include <net/route.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <cstdlib>
-#include <cstring>
-#include <string>
-
-#include <string>
-#include <fstream>
-*/
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -70,32 +29,21 @@ public:
         std::vector<Adapter> result;
 
         std::string raw_data = exec("ip -j addr");
-        //std::cout << "raw data: " << raw_data << std::endl;
         json data = json::parse(exec("ip -j addr"));
 
         for (auto& x : data.items()) {
             Adapter adapter;
-            //std::cout << "key: " << x.key() << std::endl;
             auto if_data = x.value();
-            //std::cout << "ifindex: " << if_data["ifindex"] << std::endl;
-            //std::cout << "ifname: " << if_data["ifname"] << std::endl;
             if (if_data["ifname"] != nullptr) adapter.name = if_data["ifname"];
-            //std::cout << "operstate: " << if_data["operstate"] << std::endl;
             if (if_data["operstate"] != nullptr) adapter.up = if_data["operstate"] == "UP";
-            //std::cout << "altnames: " << if_data["altnames"][0] << std::endl;
-            //std::cout << "MAC Address: " << if_data["address"] << std::endl;
             if (if_data["address"] != nullptr) adapter.mac_address = if_data["address"];
             auto addr_info = if_data["addr_info"];
             for (auto& y : addr_info.items()) {
                 auto addr = y.value();
                 if (addr["family"] == "inet") {
-                    //std::cout << "local: " << addr["local"] << std::endl;
                     if (addr["local"] != nullptr) adapter.ip_address = addr["local"];
-                    //std::cout << "prefixlen: " << addr["prefixlen"] << std::endl;
                     if (addr["prefixlen"] != nullptr) adapter.netmask = prefixLengthToMask(addr["prefixlen"]);
-                    //std::cout << "broadcast: " << addr["broadcast"] << std::endl;
                     if (addr["broadcast"] != nullptr) adapter.broadcast = addr["broadcast"];
-                    //std::cout << "dynamic: " << addr["dynamic"] << std::endl;
                     adapter.dhcp = false;
                     if (addr["dynamic"] != nullptr) adapter.dhcp = addr["dynamic"];
                 }
