@@ -599,7 +599,7 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-### Installing Homebrew
+### Install Homebrew
 ---
 
 To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Source the .zprofile to enable brew environment variables.
@@ -608,8 +608,6 @@ To verify if Homebrew is installed, use the command ```brew --version```, which 
 scripts/mac/install_brew
 source $HOME/.zprofile
 ```
-
-Following the installation of Homebrew, it is necessary to close the terminal and re-open it, then navigate back to the project directory. Homebrew can then be used to install the necessary tools.
 
 ### Install the Dependency Libraries and CMake
 
