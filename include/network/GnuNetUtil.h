@@ -69,38 +69,38 @@ public:
     std::vector<Adapter> getAllAdapters() const {
         std::vector<Adapter> result;
 
-        std::string raw_data = exec("ip -j addr | jq");
-        std::cout << "raw data: " << raw_data << std::endl;
-        json data = json::parse(exec("ip -j addr | jq"));
+        std::string raw_data = exec("ip -j addr");
+        //std::cout << "raw data: " << raw_data << std::endl;
+        json data = json::parse(exec("ip -j addr"));
 
         for (auto& x : data.items()) {
             Adapter adapter;
-            std::cout << "key: " << x.key() << std::endl;
+            //std::cout << "key: " << x.key() << std::endl;
             auto if_data = x.value();
-            std::cout << "ifindex: " << if_data["ifindex"] << std::endl;
-            std::cout << "ifname: " << if_data["ifname"] << std::endl;
+            //std::cout << "ifindex: " << if_data["ifindex"] << std::endl;
+            //std::cout << "ifname: " << if_data["ifname"] << std::endl;
             if (if_data["ifname"] != nullptr) adapter.name = if_data["ifname"];
-            std::cout << "operstate: " << if_data["operstate"] << std::endl;
+            //std::cout << "operstate: " << if_data["operstate"] << std::endl;
             if (if_data["operstate"] != nullptr) adapter.up = if_data["operstate"] == "UP";
-            std::cout << "altnames: " << if_data["altnames"][0] << std::endl;
-            std::cout << "MAC Address: " << if_data["address"] << std::endl;
+            //std::cout << "altnames: " << if_data["altnames"][0] << std::endl;
+            //std::cout << "MAC Address: " << if_data["address"] << std::endl;
             if (if_data["address"] != nullptr) adapter.mac_address = if_data["address"];
             auto addr_info = if_data["addr_info"];
             for (auto& y : addr_info.items()) {
                 auto addr = y.value();
                 if (addr["family"] == "inet") {
-                    std::cout << "local: " << addr["local"] << std::endl;
+                    //std::cout << "local: " << addr["local"] << std::endl;
                     if (addr["local"] != nullptr) adapter.ip_address = addr["local"];
-                    std::cout << "prefixlen: " << addr["prefixlen"] << std::endl;
+                    //std::cout << "prefixlen: " << addr["prefixlen"] << std::endl;
                     if (addr["prefixlen"] != nullptr) adapter.netmask = prefixLengthToMask(addr["prefixlen"]);
-                    std::cout << "broadcast: " << addr["broadcast"] << std::endl;
+                    //std::cout << "broadcast: " << addr["broadcast"] << std::endl;
                     if (addr["broadcast"] != nullptr) adapter.broadcast = addr["broadcast"];
-                    std::cout << "dynamic: " << addr["dynamic"] << std::endl;
+                    //std::cout << "dynamic: " << addr["dynamic"] << std::endl;
                     adapter.dhcp = false;
                     if (addr["dynamic"] != nullptr) adapter.dhcp = addr["dynamic"];
                 }
             }
-            json gdata = json::parse(exec("ip -j route show default | jq"));
+            json gdata = json::parse(exec("ip -j route show default"));
             for (auto& y : gdata.items()) {
                 auto g_info = y.value();
                 if (adapter.name == g_info["dev"]) {
@@ -117,8 +117,11 @@ public:
                 adapter.type = fields["GENERAL.TYPE"];
             if (fields.count("IP4.DNS[1]"))
                 adapter.dns.push_back(fields["IP4.DNS[1]"]);
-            std::cout << "DEVICE: " << fields["GENERAL.DEVICE"] << std::endl;
+            if (fields.count("GENERAL.CONNECTION"))
+                adapter.description = fields["GENERAL.CONNECTION"];
 
+            auto metrics = ParseIpRouteOutput(exec("ip route"));
+            (metrics.find(adapter.name) == metrics.end()) ? adapter.priority = -1 : adapter.priority = metrics[adapter.name];
 
             result.push_back(adapter);
         }
@@ -153,12 +156,6 @@ public:
         return fields;
     }
 
-    std::vector<std::string> getIPAddress() const {
-        char buf[128] = { 0 };
-        std::vector<std::string> result;
-        return result;
-    }
-
     std::string prefixLengthToMask(int prefixLength) const {
         if (prefixLength < 0 || prefixLength > 32)
             return {};
@@ -174,12 +171,39 @@ public:
         return oss.str();
     }
 
-
-    std::map<std::string, int> getActiveNetworkInterfaces() const {
+    std::map<std::string, int> ParseIpRouteOutput(const std::string& text) const {
         std::map<std::string, int> result;
+
+        std::istringstream iss(text);
+        std::string line;
+
+        while (std::getline(iss, line)) {
+            std::istringstream ls(line);
+
+            std::string token;
+            std::string iface;
+            int metric = -1;
+
+            while (ls >> token) {
+                if (token == "dev") {
+                    ls >> iface;               // next token is interface name
+                } else if (token == "metric") {
+                    ls >> metric;              // next token is metric value
+                }
+            }
+
+            // Only add if both iface and metric were found
+            if (!iface.empty() && metric >= 0) {
+                // If interface already exists in map, keep the lowest metric
+                auto it = result.find(iface);
+                if (it == result.end() || metric < it->second) {
+                    result[iface] = metric;
+                }
+            }
+        }
+
         return result;
     }
-
 
     std::string exec(const char* cmd) const {
         // Buffer to read chunks of output

@@ -135,9 +135,7 @@ PYBIND11_MODULE(_wabash, m)
 
     py::class_<NetUtil>(m, "NetUtil")
         .def(py::init<>())
-        .def("getAllAdapters", &NetUtil::getAllAdapters)
-        .def("getIPAddress", &NetUtil::getIPAddress)
-        .def("getActiveNetworkInterfaces", &NetUtil::getActiveNetworkInterfaces);
+        .def("getAllAdapters", &NetUtil::getAllAdapters);
 
     m.attr("__version__") = "0.0.2";
 

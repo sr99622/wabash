@@ -82,16 +82,16 @@ class AdapterDialog(QDialog):
         else:
             self.lblState.setText("DOWN")
         if adapter.priority < 0:
-            ...
+            self.txtPriority.setText("")
         else:
             self.txtPriority.setText(f'{adapter.priority}')
 
     def accept(self):
-        print("ACCEPT")
+        #print("ACCEPT")
         self.hide()
 
     def reject(self):
-        print("REJECT")
+        #print("REJECT")
         self.hide()
         
 class AdapterPanel(QWidget):
