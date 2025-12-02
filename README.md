@@ -589,6 +589,16 @@ xcode-select --install
 
 &nbsp;
 
+### Download the Project Repository
+---
+
+Following the installation of Xcode tools, download the repository using git and change the working directory to the project directory.
+
+```
+git clone https://github.com/sr99622/wabash
+cd wabash
+```
+
 ### Installing Homebrew
 ---
 
@@ -631,15 +641,6 @@ To activate the environment
 
 ```
 source <env_name>/bin/activate
-```
-
-### Download the Project
-
-The project is downloaded using git. After completion of the download, change the current directory to the project folder.
-
-```
-git clone https://github.com/sr99622/wabash
-cd wabash
 ```
 
 ### Compile and Run the Program
