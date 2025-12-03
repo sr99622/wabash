@@ -6,6 +6,7 @@ vm/
 stock/
 installer/
 ffmpeg/
+scratch/
 Icon.iconset/
 *.egg-info
 .vscode/

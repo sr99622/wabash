@@ -574,7 +574,7 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
 
 The project requires dependency libraries on the development machine in order to compile and run. There are two options for installing these libraries. One option is to use the Homebrew package manager to install dependencies. This has the advantage of being very simple to implement. The disadvantage is that this type of configuration is non-portable, meaning that any target machine on which the program would run would require a Homebrew installation. The other approach is to build portable libraries that can be integrated into a single Python module and will work on an arbitrary target machine. The portable library version is recommended and has been developed with script tools to ease the process of creation. Note that the portable libaries require a virtual machine installation for which instructions are included.
 
-Regardless of which type of libraries will be used, the development machine will require some tools in order to be able to compile and run the program. Xcode tools, Homebrew and Python are required to build the project. 
+Regardless of which type of libraries will be used, the development machine will require some tools in order to be able to compile and run the program. Xcode, Homebrew and Python are required to build the project. 
 
 ### Install Xcode Tools
 ----
@@ -598,7 +598,7 @@ cd wabash
 ### Install Homebrew
 ---
 
-To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Source the .zprofile to enable brew environment variables.
+To verify if Homebrew is installed, use the command ```brew --version```, which will return a valid version if installed. If not installed, the following script will install Homebrew. Source the .zprofile to enable brew environment variables, then install cmake and ninja using brew.
 
 ```
 scripts/mac/install_brew
@@ -736,11 +736,11 @@ The following script will compile the dependency libraries and install them to a
 
 During the ```otool``` scan, system libraries are ignored as they are provided by default in the Operating System. This has implications for the choice of Operating System under which the compilation is performed, in the sense that older Operating Systems can be expected to be forward compatible within their family so that older software can be used on newer systems. 
 
-Once a list of dependencies has been collected, the dependency files themselves are manipulated using the ```install_name_tool``` utility to change the loader headers in the binary files such that the loader can be invoked in a portable manner. The binary file header and dependency links are changed to display ```@loader_path``` as their location, which gives the parent executable the ability to invoke the dependency from within its local directory.
+Once a list of dependencies has been collected, the dependency files themselves are manipulated using the ```install_name_tool``` utility to change the loader headers in the binary files such that the loader can be invoked in a portable manner. The binary file header and dependency links are changed to display ```@loader_path``` as their location, which gives the consuming executable the ability to invoke the dependency from within its local directory.
 
 Following manipulation of the binary file headers, the project is re-compiled with the new loader path settings to bake in the changes. The modified binaries are copied to the project Python staging area, in this case the ```wabash``` subdirectory, so that they will be installed along side the Python module executable in the virtual environment. This configuration allows arbitrary machines to install the Python module and it's dependencies in a portable way such that the Python module can run on the target machine without the requirement to pre-install those dependencies.
 
-Additionally, the script will populate the ```stock``` subdirectory with portable versions of the dependencies for use in project development. The ```stock``` subdirectory can be copied to a develpment machine to allow compilation of the project with portable libraries.
+Additionally, the script will populate the ```stock``` subdirectory with portable versions of the dependencies for use in project development. The ```stock``` subdirectory can be copied to a develpment machine to facilitate compilation of the project with portable libraries.
 
 ```
 scripts/mac/make_module

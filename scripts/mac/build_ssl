@@ -1,0 +1,20 @@
+#!/bin/bash
+
+BASE=$PWD
+
+cd $SOURCE_DIR
+if [ ! -d openssl ]; then
+    git clone https://github.com/openssl/openssl.git
+fi
+cd openssl
+git switch openssl-3.5
+./Configure --prefix=$BUILD_DIR/OpenSSL
+make -j$(nproc)
+result=$?
+if [ $result -ne 0 ]; then
+    echo "OpenSSL compilation failed"
+    exit 1
+fi
+make install
+
+cd $BASE
