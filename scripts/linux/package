@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+pip install build auditwheel patchelf
+python -m build --sdist --wheel
+auditwheel repair dist/*.whl --plat manylinux_2_35_x86_64

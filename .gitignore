@@ -7,6 +7,7 @@ stock/
 installer/
 ffmpeg/
 scratch/
+wheelhouse/
 Icon.iconset/
 *.egg-info
 .vscode/

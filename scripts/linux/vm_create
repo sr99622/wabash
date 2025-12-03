@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 
 virt-install --name=wabash-vm \
---vcpus=12 \
---memory=16384 \
+--vcpus=4 \
+--memory=8192 \
 --cdrom=vm/iso/linuxmint-21-cinnamon-64bit.iso \
 --disk path=vm/hda/wabash.qcow2,size=32,format=qcow2 \
 --os-variant=linux2020 2>/dev/null

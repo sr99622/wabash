@@ -172,7 +172,7 @@ sudo apt install curl git cmake g++
 Install the X11 development libraries if necessary (not needed for Wayland only configuration)
 
 ```
-'^libxcb.*-dev'
+sudo apt install '^libxcb.*-dev'
 ```
 ---
 &nbsp;
@@ -356,6 +356,13 @@ sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
 sudo usermod -aG libvirt $USER
 sudo usermod -aG kvm $USER
+sudo virsh net-start default
+sudo virsh net-autostart default
+```
+
+It is necessary to re-boot the machine in order to use virtd.
+
+```
 sudo reboot now
 ```
 
@@ -425,6 +432,16 @@ env/bin/wabash
 ```
 
 &nbsp;
+### Package the Module
+---
+
+An installer package for the Python module compatible with PyPi standards can be built using the following script. It will produce a distribution agnostic version of the installer package that includes the portable libraries and can be uploaded to the PyPi server. The package can be found in the ```wheelhouse``` subdirectory.
+
+```
+scripts/linux/package
+```
+
+&nbsp;
 ### Restart the Virtual Machine
 ---
 
@@ -466,9 +483,10 @@ Once the dependency libraries have been built, they can be transferred from the 
 
 ```
 sudo scripts/linux/vm_tar_libs
+cp wheelhouse/*.whl vm/shared
 ```
 
-The file `ffmpeg.tar.gz` should be observable in the shared directory. At this point, the virtual machine is no longer needed
+The file `ffmpeg.tar.gz` and the package installer wheel should be observable in the shared directory. At this point, the virtual machine is no longer needed
 
 ```
 shutdown now
