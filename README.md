@@ -603,6 +603,7 @@ To verify if Homebrew is installed, use the command ```brew --version```, which 
 ```
 scripts/mac/install_brew
 source $HOME/.zprofile
+brew install cmake ninja
 ```
 
 ### Install Python and Create Virtual Environment
