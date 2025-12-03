@@ -6,6 +6,7 @@ vm/
 stock/
 installer/
 ffmpeg/
+Icon.iconset/
 *.egg-info
 .vscode/
 __pycache__/
