@@ -1,5 +1,28 @@
 #!/usr/bin/bash
 
+copy_libs() {
+    executable=$1
+    echo "start copy libs on executable: $executable"
+
+    process_libs() {
+        count=$(ldd $executable 2>/dev/null | awk '/=> not found/ {c++} END {print c+0}')
+        echo "count: $count"
+        if [ "$count" -gt 0 ]; then
+            names=$(ldd $executable | awk '/=> not found/ {print $1}')
+            for name in $names; do
+                echo "dependency name: $name"
+                cp ffmpeg/lib/$name wabash
+            done
+            process_libs "$executable"
+        fi
+    }
+
+    process_libs "$executable"
+}
+
+PYTHON_BIN="${1:-python3.10}"
+echo "Using Python interpreter: $PYTHON_BIN"
+
 cd scripts/linux
 
 export LD_RUN_PATH='$ORIGIN'
@@ -29,13 +52,10 @@ mkdir -p $HOME/libxml2_sources
 
 cd ../..
 cp -R $HOME/ffmpeg_build ffmpeg
-python3.10 -m venv env
+$PYTHON_BIN -m venv env
 source env/bin/activate
 pip install -v .
 executable=$(ls -1 wabash/_wabash* 2>/dev/null | head -n 1)
 echo "executable: $executable"
-scripts/linux/copy_libs $executable
-#export executable=$PWD/wabash/_wabash*
-#scripts/linux/copy_libs
-#process_libs "$executable"
+copy_libs $executable
 pip install -v .
