@@ -25,33 +25,37 @@ echo "Using Python interpreter: $PYTHON_BIN"
 
 cd scripts/linux
 
+export SOURCE_DIR=$HOME/ffmpeg_sources
+export BUILD_DIR=$HOME/ffmpeg_build
+export BIN_DIR=$HOME/bin
+
 export LD_RUN_PATH='$ORIGIN'
 export ACLOCAL_PATH=/usr/share/aclocal
-export LIBXML2_INCLUDE_DIRS=$HOME/libxml2_build/include/libxml2
-export LIBXML2_LIBRARIES=$HOME/libxml2_build/lib/libxml2.so
-export PKG_CONFIG_PATH=$HOME/ffmpeg_build/lib/pkgconfig
-export SDL2_DIR=$HOME/ffmpeg_build
+export LIBXML2_INCLUDE_DIRS=$BUILD_DIR/include/libxml2
+export LIBXML2_LIBRARIES=$BUILD_DIR/lib/libxml2.so
+export PKG_CONFIG_PATH=$BUILD_DIR/lib/pkgconfig
+export SDL2_DIR=$BUILD_DIR
 
-rm -rf $HOME/ffmpeg_build
-mkdir -p $HOME/ffmpeg_sources 
-mkdir -p $HOME/bin
-mkdir -p $HOME/sources
-rm -rf $HOME/libxml2_build
-mkdir -p $HOME/libxml2_sources
+rm -rf $BUILD_DR
+mkdir -p $SOURCE_DIR 
+mkdir -p $BIN_DIR
+#mkdir -p $HOME/sources
+#rm -rf $HOME/libxml2_build
+#mkdir -p $HOME/libxml2_sources
 
 ./prerequisites
 
 ./build_automake && \
 ./build_libxml2 && \
 ./build_nasm && \
-./build_h264 && \
-./build_h265 && \
+./build_x264 && \
+./build_x265 && \
 ./build_aac && \
 ./build_sdl2 && \
 ./build_ffmpeg
 
 cd ../..
-cp -R $HOME/ffmpeg_build ffmpeg
+cp -R $BUILD_DIR ffmpeg
 $PYTHON_BIN -m venv env
 source env/bin/activate
 pip install -v .

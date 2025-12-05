@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+
+#SOURCE_DIR=$HOME/ffmpeg_sources
+#BUILD_DIR=$HOME/ffmpeg_build
+#BIN_DIR=$HOME/bin
+
+if [[ ! -f "$BUILD_DIR/lib/libx265.so" ]]; then
+
+    cd $SOURCE_DIR
+    #wget -O x265.tar.bz2 https://bitbucket.org/multicoreware/x265_git/get/master.tar.bz2
+    #tar xjvf x265.tar.bz2
+    #cd multicoreware*/build/linux
+    #cd multicoreware-x265_git-ef83e1285847/build/linux
+    if [[ ! -f "x265_4.1.tar.gz" ]]; then
+        wget http://ftp.videolan.org/pub/videolan/x265/x265_4.1.tar.gz
+    fi
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "x265 download failed"
+        exit 1
+    fi
+    if [[ ! -d "x265_4.1" ]]; then
+        tar xzvf x265_4.1.tar.gz
+    fi
+    cd x265_4.1/build/linux
+    PATH="$BIN_DIR:$PATH" cmake -G "Unix Makefiles" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_INSTALL_PREFIX="$HOME/ffmpeg_build" -DENABLE_SHARED=on ../../source
+    PATH="$BIN_DIR:$PATH" make  -j$(nproc)
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "x265 compilation failed"
+        exit 1
+    fi
+    make install
+else
+    echo "Found existing x265 installation $BUILD_DIR/lib/libx265.so"
+fi

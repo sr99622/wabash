@@ -1,9 +1,23 @@
 #!/usr/bin/bash
 
-cd $HOME/ffmpeg_sources && \
-git -C fdk-aac pull 2> /dev/null || git clone --depth 1 https://github.com/mstorsjo/fdk-aac && \
-cd fdk-aac && \
-autoreconf -fiv && \
-./configure --prefix="$HOME/ffmpeg_build" --enable-shared && \
-make -j$(nproc) && \
-make install
+#SOURCE_DIR=$HOME/ffmpeg_sources
+#BUILD_DIR=$HOME/ffmpeg_build
+
+if [[ ! -f "$BUILD_DIR/lib/libfdk-aac.so" ]]; then
+    cd $SOURCE_DIR
+    if [ ! -d fdk-aac ]; then
+        git -C fdk-aac pull 2> /dev/null || git clone --depth 1 https://github.com/mstorsjo/fdk-aac
+    fi
+    cd fdk-aac
+    autoreconf -fiv
+    ./configure --prefix="$BUILD_DIR" --enable-shared
+    make -j$(nproc)
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "AAC compilation failed"
+        exit 1
+    fi
+    make install
+else
+    echo "Found existing AAC build $BUILD_DIR/lib/libfdk-aac.so"
+fi

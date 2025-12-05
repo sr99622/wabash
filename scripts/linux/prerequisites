@@ -7,6 +7,8 @@ sudo apt install -y \
   meson \
   texinfo \
   wget \
+  g++ \
+  make \
   yasm \
   libtool \
   zlib1g-dev \
@@ -26,6 +28,5 @@ sudo apt install -y \
   wayland-protocols \
   libdbus-1-dev \
   libnuma-dev \
-  jq \
   python3.10-dev \
   python3.10-venv

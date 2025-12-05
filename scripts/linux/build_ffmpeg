@@ -1,26 +1,46 @@
 #!/usr/bin/bash
 
-cd $HOME/ffmpeg_sources && \
-if [[ ! -d "ffmpeg" ]]; then
-  wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2 && \
-  tar xjvf ffmpeg-snapshot.tar.bz2
+#SOURCE_DIR=$HOME/ffmpeg_sources
+#BUILD_DIR=$HOME/ffmpeg_build
+#BIN_DIR=$HOME/bin
+
+if [[ ! -f "$BUILD_DIR/lib/libavcodec.so" ]]; then
+  cd $SOURCE_DIR
+  if [[ ! -f "ffmpeg-snapshot.tar.bz2" ]]; then
+    wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2
+  fi
+  result=$?
+  if [ $result -ne 0 ]; then
+    echo "FFMPEG download failed"
+    exit 1
+  fi
+  if [[ ! -d "ffmpeg" ]]; then
+    tar xjvf ffmpeg-snapshot.tar.bz2
+  fi
+  cd ffmpeg
+  PATH="$BIN_DIR:$PATH" PKG_CONFIG_PATH="$BUILD_DIR/lib/pkgconfig" ./configure \
+    --prefix="$BUILD_DIR" \
+    --extra-cflags="-I$BUILD_DIR/include" \
+    --extra-ldflags="-L$BUILD_DIR/lib" \
+    --extra-libs="-lpthread -lm" \
+    --ld="g++" \
+    --bindir="$BIN_DIR" \
+    --enable-shared \
+    --enable-pic \
+    --disable-static \
+    --enable-gpl \
+    --enable-libfdk-aac \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-nonfree
+  PATH="$BIN_DIR:$PATH" make -j$(nproc)
+  result=$?
+  if [ $result -ne 0 ]; then
+    echo "FFMPEG compilation failed"
+    exit 1
+  fi
+  make install
+  hash -r
+else
+  echo "Found existing FFMPEG installation $BUILD_DIR/lib/libavcodec.so"
 fi
-cd ffmpeg && \
-PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
-  --prefix="$HOME/ffmpeg_build" \
-  --extra-cflags="-I$HOME/ffmpeg_build/include" \
-  --extra-ldflags="-L$HOME/ffmpeg_build/lib" \
-  --extra-libs="-lpthread -lm" \
-  --ld="g++" \
-  --bindir="$HOME/bin" \
-  --enable-shared \
-  --enable-pic \
-  --disable-static \
-  --enable-gpl \
-  --enable-libfdk-aac \
-  --enable-libx264 \
-  --enable-libx265 \
-  --enable-nonfree && \
-PATH="$HOME/bin:$PATH" make -j$(nproc) && \
-make install && \
-hash -r

@@ -1,15 +1,35 @@
 #!/usr/bin/bash
 
-sudo apt install -y autoconf make wget g++ && \
-sudo apt remove -y automake && \
-mkdir -p $HOME/sources && cd ~/sources && \
-if [ ! -d "automake-1.17" ]; then
-    wget https://ftp.gnu.org/gnu/automake/automake-1.17.tar.gz &&\
-    tar -xzf automake-1.17.tar.gz
-fi && \
-cd automake-1.17 && \
-./configure && \
-make && \
-sudo make install && \
-export ACLOCAL_PATH=/usr/share/aclocal && \
-automake --version
+#SOURCE_DIR=$HOME/ffmpeg_sources
+#BUILD_DIR=$HOME/ffmpeg_build
+#BIN_DIR=$HOME/bin
+
+if [[ ! -f "/usr/local/bin/automake-1.17" ]]; then
+    sudo apt install -y autoconf
+    sudo apt remove -y automake
+    cd $SOURCE_DIR
+    if [ ! -f "automake-1.17.tar.gz" ]; then
+        wget https://ftp.gnu.org/gnu/automake/automake-1.17.tar.gz
+    fi
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "automake download failed"
+        exit 1
+    fi
+    if [ ! -d "automake-1.17" ]; then
+        tar -xzf automake-1.17.tar.gz
+    fi
+    cd automake-1.17
+    ./configure
+    make
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "automake compliation failed"
+        exit 1
+    fi
+    sudo make install
+    export ACLOCAL_PATH=/usr/share/aclocal
+    automake --version
+else
+    echo "Found existing automake installation /usr/local/bin/automake-1.17"
+fi

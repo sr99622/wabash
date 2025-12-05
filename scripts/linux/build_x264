@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+
+#SOURCE_DIR=$HOME/ffmpeg_sources
+#BUILD_DIR=$HOME/ffmpeg_build
+#BIN_DIR=$HOME/bin
+
+if [[ ! -f "$BUILD_DIR/lib/libx264.so" ]]; then
+    cd $SOURCE_DIR
+    git -C x264 pull 2> /dev/null || git clone --depth 1 https://code.videolan.org/videolan/x264.git
+    cd x264
+    PATH="$BIN_DIR:$PATH" PKG_CONFIG_PATH="$BUILD_DIR/lib/pkgconfig" ./configure --prefix="$BUILD_DIR" --bindir="$BIN_DIR" --enable-shared --enable-pic
+    PATH="$BIN_DIR:$PATH" make -j$(nproc)
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "x264 compilation failed"
+        exit 1
+    fi
+    make install
+else
+    echo "Found existing x264 installation: $BUILD_DIR/lib/libx264.so"
+fi
