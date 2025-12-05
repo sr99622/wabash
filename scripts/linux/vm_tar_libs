@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 
-rm -R ffmpeg/share
-rm -R ffmpeg/bin
-rm -R ffmpeg/lib/pkgconfig
-rm -R ffmpeg/lib/cmake
-rm ffmpeg/lib/*.a
-rm ffmpeg/lib/*.la
-tar czf vm/shared/ffmpeg.tar.gz ffmpeg
+rm -R stock/share
+rm -R stock/bin
+rm -R stock/lib/pkgconfig
+rm -R stock/lib/cmake
+rm stock/lib/*.a
+rm stock/lib/*.la
+tar czf vm/shared/stock.tar.gz stock

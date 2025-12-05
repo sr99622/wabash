@@ -1,13 +1,8 @@
 #!/usr/bin/bash
 
-echo "start unpacking"
-tar xvf vm/shared/ffmpeg.tar.gz ffmpeg
-echo "ffmpeg libs unpacked"
-export FFMPEG_INSTALL_DIR=$PWD/ffmpeg
+tar xvf vm/shared/stock.tar.gz
+export FFMPEG_INSTALL_DIR=$PWD/stock
 echo "FFMPEG_INSTALL_DIR: $FFMPEG_INSTALL_DIR"
 pip install -v .
-echo "first pass pip install complete"
-executable=$(ls -1 wabash/_wabash* 2>/dev/null | head -n 1)
-echo "executable: $executable"
-scripts/linux/copy_libs $executable
+cp stock/lib/*.so.+([0-9]) wabash
 pip install -v .
