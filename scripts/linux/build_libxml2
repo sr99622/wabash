@@ -1,13 +1,29 @@
 #!/usr/bin/bash
 
-#SOURCE_DIR=$HOME/ffmpeg_sources
-#BUILD_DIR=$HOME/ffmpeg_build
-#BIN_DIR=$HOME/bin
+#..........................
+#
+# Alternate download location
+#
+# git -C libxml2 pull 2> /dev/null || git clone --depth 1 https://github.com/GNOME/libxml2.git
+#
+#..........................
 
 if [[ ! -f "$BUILD_DIR/lib/libxml2.so" ]]; then
     cd $SOURCE_DIR
-    git -C libxml2 pull 2> /dev/null || git clone --depth 1 https://github.com/GNOME/libxml2.git
-    cd libxml2
+
+    if [ ! -f "libxml2-2.14.6.tar.xz" ]; then
+        wget https://download.gnome.org/sources/libxml2/2.14/libxml2-2.14.6.tar.xz
+    fi
+    result=$?
+    if [ $result -ne 0 ]; then
+        echo "LIBXML2 download failed"
+        exit 1
+    fi
+    if [ ! -d "libxml2-2.14.6" ]; then
+        tar xvf libxml2-2.14.6.tar.xz
+    fi
+
+    cd libxml2-2.14.6
     ./autogen.sh  --prefix=$BUILD_DIR --without-python
     make -j$(nproc)
     result=$?

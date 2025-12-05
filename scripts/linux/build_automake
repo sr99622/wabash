@@ -1,9 +1,5 @@
 #!/usr/bin/bash
 
-#SOURCE_DIR=$HOME/ffmpeg_sources
-#BUILD_DIR=$HOME/ffmpeg_build
-#BIN_DIR=$HOME/bin
-
 if [[ ! -f "/usr/local/bin/automake-1.17" ]]; then
     sudo apt install -y autoconf
     sudo apt remove -y automake

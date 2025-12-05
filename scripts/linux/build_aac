@@ -1,7 +1,12 @@
 #!/usr/bin/bash
 
-#SOURCE_DIR=$HOME/ffmpeg_sources
-#BUILD_DIR=$HOME/ffmpeg_build
+#.....................
+#
+# Alternate source location
+#
+# https://sourceforge.net/projects/opencore-amr/files/latest/download
+#
+#.....................
 
 if [[ ! -f "$BUILD_DIR/lib/libfdk-aac.so" ]]; then
     cd $SOURCE_DIR

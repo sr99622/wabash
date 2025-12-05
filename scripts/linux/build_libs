@@ -11,7 +11,7 @@ copy_libs() {
             names=$(ldd $executable | awk '/=> not found/ {print $1}')
             for name in $names; do
                 echo "dependency name: $name"
-                cp ffmpeg/lib/$name wabash
+                cp $BUILD_DIR/lib/$name wabash
             done
             process_libs "$executable"
         fi
@@ -23,11 +23,9 @@ copy_libs() {
 PYTHON_BIN="${1:-python3.10}"
 echo "Using Python interpreter: $PYTHON_BIN"
 
-cd scripts/linux
-
-export SOURCE_DIR=$HOME/ffmpeg_sources
-export BUILD_DIR=$HOME/ffmpeg_build
-export BIN_DIR=$HOME/bin
+export SOURCE_DIR=$PWD/sources
+export BUILD_DIR=$PWD/stock
+export BIN_DIR=$PWD/bin
 
 export LD_RUN_PATH='$ORIGIN'
 export ACLOCAL_PATH=/usr/share/aclocal
@@ -36,26 +34,27 @@ export LIBXML2_LIBRARIES=$BUILD_DIR/lib/libxml2.so
 export PKG_CONFIG_PATH=$BUILD_DIR/lib/pkgconfig
 export SDL2_DIR=$BUILD_DIR
 
-rm -rf $BUILD_DR
 mkdir -p $SOURCE_DIR 
 mkdir -p $BIN_DIR
-#mkdir -p $HOME/sources
-#rm -rf $HOME/libxml2_build
-#mkdir -p $HOME/libxml2_sources
 
-./prerequisites
+scripts/linux/prerequisites
 
-./build_automake && \
-./build_libxml2 && \
-./build_nasm && \
-./build_x264 && \
-./build_x265 && \
-./build_aac && \
-./build_sdl2 && \
-./build_ffmpeg
+scripts/linux/build_automake && \
+scripts/linux/build_libxml2 && \
+scripts/linux/build_nasm && \
+scripts/linux/build_x264 && \
+scripts/linux/build_x265 && \
+scripts/linux/build_aac && \
+scripts/linux/build_sdl2 && \
+scripts/linux/build_ffmpeg
+result=$?
+if [ $result -ne 0 ]; then
+    echo "LIBRARY BUILD FAILED"
+    exit 1
+fi
 
-cd ../..
-cp -R $BUILD_DIR ffmpeg
+#cp -R $BUILD_DIR ffmpeg
+export FFMPEG_INSTALL_DIR=$BUILD_DIR
 $PYTHON_BIN -m venv env
 source env/bin/activate
 pip install -v .

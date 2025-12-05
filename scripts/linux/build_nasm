@@ -1,9 +1,5 @@
 #!/usr/bin/bash
 
-#SOURCE_DIR=$HOME/ffmpeg_sources
-#BUILD_DIR=$HOME/ffmpeg_build
-#BIN_DIR=$HOME/bin
-
 if [[ ! -f "$BIN_DIR/nasm" ]]; then
 
     cd $SOURCE_DIR

@@ -1,9 +1,5 @@
 #!/usr/bin/bash
 
-#SOURCE_DIR=$HOME/ffmpeg_sources
-#BUILD_DIR=$HOME/ffmpeg_build
-#BIN_DIR=$HOME/bin
-
 if [[ ! -f "$BUILD_DIR/lib/libx265.so" ]]; then
 
     cd $SOURCE_DIR
@@ -23,7 +19,7 @@ if [[ ! -f "$BUILD_DIR/lib/libx265.so" ]]; then
         tar xzvf x265_4.1.tar.gz
     fi
     cd x265_4.1/build/linux
-    PATH="$BIN_DIR:$PATH" cmake -G "Unix Makefiles" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_INSTALL_PREFIX="$HOME/ffmpeg_build" -DENABLE_SHARED=on ../../source
+    PATH="$BIN_DIR:$PATH" cmake -G "Unix Makefiles" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_INSTALL_PREFIX="$BUILD_DIR" -DENABLE_SHARED=on ../../source
     PATH="$BIN_DIR:$PATH" make  -j$(nproc)
     result=$?
     if [ $result -ne 0 ]; then
