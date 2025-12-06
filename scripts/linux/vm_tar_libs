@@ -8,3 +8,11 @@ rm stock/lib/*.a
 rm stock/lib/*.la
 tar czvf vm/shared/stock.tar.gz stock
 cp -R wheelhouse vm/shared
+
+if [[ -f "vm/shared/files.txt" ]]; then
+    rm vm/shared/files.txt
+fi
+cd wabash
+for f in *.so.*; do
+    echo $f >> ../vm/shared/files.txt
+done
