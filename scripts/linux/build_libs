@@ -63,3 +63,7 @@ executable=$(ls -1 wabash/_wabash* 2>/dev/null | head -n 1)
 echo "executable: $executable"
 copy_libs $executable
 pip install -v .
+
+pip install build auditwheel patchelf
+python -m build --sdist --wheel
+auditwheel repair dist/*.whl --plat manylinux_2_35_x86_64

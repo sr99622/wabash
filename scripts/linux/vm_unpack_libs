@@ -1,8 +1,10 @@
 #!/usr/bin/bash
 
+cp -R wheelhouse
 tar xvf vm/shared/stock.tar.gz
 export FFMPEG_INSTALL_DIR=$PWD/stock
 echo "FFMPEG_INSTALL_DIR: $FFMPEG_INSTALL_DIR"
 pip install -v .
+
 cp stock/lib/*.so.+([0-9]) wabash
 pip install -v .

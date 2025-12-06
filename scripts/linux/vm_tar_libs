@@ -6,5 +6,5 @@ rm -R stock/lib/pkgconfig
 rm -R stock/lib/cmake
 rm stock/lib/*.a
 rm stock/lib/*.la
-tar czf vm/shared/stock.tar.gz stock
+tar czvf vm/shared/stock.tar.gz stock
 cp -R wheelhouse vm/shared

@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
-sudo /usr/libexec/virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=vm/shared --cache=always --sandbox=none & \
+virtiofsd="/usr/libexec/virtiofsd"
+if [ -f /usr/lib/virtiofsd ]; then
+  virtiofsd=/usr/lib/virtiofsd
+fi
+
+sudo $virtiofsd --socket-path=/tmp/vhostqemu --shared-dir=vm/shared --cache=always --sandbox=none & \
 sudo qemu-system-x86_64 \
   -enable-kvm \
   -machine type=pc,accel=kvm \

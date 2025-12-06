@@ -303,9 +303,9 @@ env/bin/wabash
 <details><summary><b>Portable Libraries (Recommended)</b></summary>
 &nbsp;
 
-A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest  version of the kernel as possible in order to achieve maximum compatibility.
+A portable version of FFmpeg containing only the necessary library components for the wabash program can be created by compiling from source. There are scripts to do this included with the repository. An important consideration when building a portable program is the version of the Linux kernel on which the library components are built. The Linux kernel is designed to be backward compatible such that programs and libraries built on older versions of the kernel will work on newer versions without modification. This is a very important property of the kernel design. The practical implication is that the program or library under development should be compiled on the oldest version of the kernel as possible in order to achieve maximum compatibility.
 
-There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the historical version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version and provides the 5.15 kernel along with glibc versions 2.34 and 2.35, depending on the application requirements. These versions should provide wide compatibility with most modern Linux versions.
+There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the legacy version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version. It provides the 5.15 kernel along with glibc version 2.35, which should be compatible with most modern Linux versions.
 
 &nbsp;
 ### Install libvirt on the Host
@@ -338,7 +338,7 @@ sudo dnf install @virtualization qemu-kvm libvirt-client libvirt-daemon-kvm virt
 &nbsp;
 
 ```
-sudo pacman -S --needed virt-manager virt-viewer qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft
+sudo pacman -S --needed virt-manager virt-viewer virtiofsd qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft
 ```
 &nbsp;
 
@@ -411,7 +411,9 @@ virsh list --all
 &nbsp;
 ### Build the Program on the Virtual Machine
 ---
-After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. To start the build procedure, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
+After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. If the intention is to maintain the project with updates to the code, it can be worthwhile to update the virtual machine operating system, as there is anag screen that pops up pretty frequently after the machine has been running for a while. If updating the virtual machine operating system, it is worthwhile to look through the alternate download locations to find a fast server. The update does take some time, about same amount of time as the installation.
+
+To start the build procedure, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
 sudo apt install -y git
@@ -419,10 +421,20 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-Run the following script to build and install the program
+Prior to running the build script, it is possible to install alternate Python versions for use during the build. This has some implications for downstream activities. Although there is a range of Python versions that are compatible with the project, some are more compatible than others. Without elaborating too much, Python version 3.12 has been observed to be the most compatible version across environments. In particular, when building a snap installer, selecting Linux 2022 versions will use Python 3.12, which makes it a solid choice when building the package. For this reason, it is suggested that Python 3.12 be installed on the virtual machine and used as the basis for building the package.
+
+Alternatively, a Python verion 3.13 may be a good choice if your operating system supports that version natively. In some cases, it can make sense to build the entire suite of Python versioned packages from 3.10 to 3.13, so that they are available in different envrionments. In the virtual machine, Python 3.10 is supported natively and is the default version used by the scripts if no Python version is specified.
+
+To install Python 3.12
 
 ```
-scripts/linux/build_libs
+scripts/linux/install_python 3.12
+```
+
+Run the following script to build and install the program with Python version 3.12
+
+```
+scripts/linux/build_libs python3.12
 ```
 
 To test that the build was successful, run the command
@@ -431,15 +443,7 @@ To test that the build was successful, run the command
 env/bin/wabash
 ```
 
-&nbsp;
-### Package the Module
----
-
-An installer package for the Python module compatible with PyPi standards can be built using the following script. It will produce a distribution agnostic version of the installer package that includes the portable libraries and can be uploaded to the PyPi server. The package can be found in the ```wheelhouse``` subdirectory.
-
-```
-scripts/linux/package
-```
+The script produces a distribution agnostic version of the installer package that includes the portable libraries and can be uploaded to the PyPi server. The package can be found in the ```wheelhouse``` subdirectory. Additionally, a ```stock``` subdirectory is produced that contains portable versions of the dependency libraries and can be used on a development machine for building the project. The following steps will transfer these products back to the host machine for further use.
 
 &nbsp;
 ### Restart the Virtual Machine
@@ -479,11 +483,11 @@ Please note that if files are added to the shared directory by the Host, they ma
 &nbsp;
 ### Transfer the Dependency Libraries to the Host
 ---
+
 Once the dependency libraries have been built, they can be transferred from the virtual machine to the Host for development of the program. Run the following from the virtual machine.
 
 ```
 sudo scripts/linux/vm_tar_libs
-cp wheelhouse/*.whl vm/shared
 ```
 
 The file `ffmpeg.tar.gz` and the package installer wheel should be observable in the shared directory. At this point, the virtual machine is no longer needed
@@ -495,7 +499,7 @@ shutdown now
 &nbsp;
 ### Install the Dependency Libraries and Build the Program on the Host
 ---
-First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The python version must be >=3.10 and <=3.13. The following snippets are intended to be run from the project directory on the Host.
+First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The following snippets are intended to be run from the project directory on the Host.
 
 ```
 pythonX.XX -m venv env
@@ -547,18 +551,11 @@ env/bin/wabash
 ```
 
 &nbsp;
-### Distribution (Portable Libraries Only)
----
-
-To build the distribution files, install the build module into the environment. For CMake to successfully find FFmpeg in this scenario, it is necessary to set the environment variable first before running build on the source directory. The files will populate in the dist folder.
+### Install VSCode on Manjaro Linux
 
 ```
-pip install build
-set FFMPEG_INSTALL_DIR=$PWD/ffmpeg
-python -m build --sdist --wheel
+sudo pacman -Syu code
 ```
-
-The distribution .whl file can be used to install the program on an arbitrary machine within a python environment. It includes all the necessary runtime binaries so no further configuration is required to run the program on the target machine. The file can be uploaded to pypi or installed using the pip command directly on the local filename. 
 
 &nbsp;
 ### Fixing the Python Linter in VSCode on Fedora
