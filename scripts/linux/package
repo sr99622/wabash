@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
 pip install build auditwheel patchelf
+export FFMPEG_INSTALL_DIR=$PWD/stock
 python -m build --sdist --wheel
 auditwheel repair dist/*.whl --plat manylinux_2_35_x86_64
