@@ -426,29 +426,19 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-Prior to running the build script, it is possible to install alternate Python versions for use during the build. This has some implications for downstream activities. Although there is a range of Python versions that are compatible with the project, some are more compatible than others. Without elaborating too much, Python version 3.12 has been observed to be the most compatible version across environments. In particular, when building a snap installer, selecting Linux 2022 versions will use Python 3.12, which makes it a solid choice when building the package. For this reason, it is suggested that Python 3.12 be installed on the virtual machine and used as the basis for building the package.
-
-Alternatively, a Python verion 3.13 may be a good choice if your operating system supports that version natively. In some cases, it can make sense to build the entire suite of Python versioned packages from 3.10 to 3.13, so that they are available in different envrionments. In the virtual machine, Python 3.10 is supported natively and is the default version used by the scripts if no Python version is specified.
-
-To install Python 3.12
+Run the following script to build the project portable libraries and distribution wheels for all Python versions from 3.10 through 3.13.
 
 ```
-scripts/linux/install_python 3.12
+scripts/linux/build_libs
 ```
 
-Run the following script to build and install the program with Python version 3.12
+At the completion of the script, there will be a virtual environment folder named by version X.XX for each of the Python versions. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
 
 ```
-scripts/linux/build_libs python3.12
+X.XX/bin/wabash
 ```
 
-To test that the build was successful, run the command
-
-```
-env/bin/wabash
-```
-
-The script produces a distribution agnostic version of the installer package that includes the portable libraries and can be uploaded to the PyPi server. The package can be found in the ```wheelhouse``` subdirectory. Additionally, a ```stock``` subdirectory is produced that contains portable versions of the dependency libraries and can be used on a development machine for building the project. The following steps will transfer these products back to the host machine for further use.
+ An installable package for each Python version can be found in the ```wheelhouse``` subdirectory. The script produces a distribution agnostic installer package for each Python version that includes the portable libraries and can be uploaded to the PyPi server. Additionally, a ```stock``` subdirectory is produced that contains portable versions of the dependency libraries and can be used on a development machine for building the project. The following steps will transfer these products back to the host machine for further use.
 
 &nbsp;
 ### Restart the Virtual Machine
@@ -495,7 +485,7 @@ Once the dependency libraries have been built, they can be transferred from the 
 scripts/linux/vm_tar_libs
 ```
 
-The file `ffmpeg.tar.gz` and the package installer wheel should be observable in the shared directory. At this point, the virtual machine is no longer needed
+The file `stock.tar.gz` and the package installer wheel should be observable in the shared directory. At this point, the virtual machine is no longer needed
 
 ```
 shutdown now
@@ -511,7 +501,7 @@ pythonX.XX -m venv env
 source env/bin/activate
 ```
 
-The tar package created in the virtual machine should be visible on the Host at `vm/shared/ffmpeg.tar.gz`. To install the libraries in the correct locations and build the program, use the following command from the Host.
+The tar package created in the virtual machine should be visible on the Host at `vm/shared/stock.tar.gz`. To install the libraries in the correct locations and build the program, use the following command from the Host.
 
 ```
 scripts/linux/vm_unpack_libs
@@ -520,7 +510,7 @@ scripts/linux/vm_unpack_libs
 To test that the build was successful, run the command
 
 ```
-env/bin/wabash
+wabash
 ```
 
 </details>

@@ -60,7 +60,6 @@ if [ $result -ne 0 ]; then
     exit 1
 fi
 
-#cp -R $BUILD_DIR ffmpeg
 export FFMPEG_INSTALL_DIR=$BUILD_DIR
 $PYTHON_BIN -m venv $version
 source $version/bin/activate
@@ -71,6 +70,6 @@ echo "executable: $executable"
 copy_libs $executable
 
 scripts/linux/package
-scripts/linux/vm_mount_host
-scripts/linux/vm_tar_libs
+#scripts/linux/vm_mount_host
+#scripts/linux/vm_tar_libs
 
