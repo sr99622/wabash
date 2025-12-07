@@ -22,12 +22,13 @@ copy_libs() {
 
 get_python_version() {
     local python_string="$1"
-    local version=$(echo "$python_string" | sed 's/^python//')
+    export version=$(echo "$python_string" | sed 's/^python//')
     echo "$version"
 }
 
 PYTHON_BIN="${1:-python3.10}"
 echo "Using Python interpreter: $PYTHON_BIN"
+get_python_version $PYTHON_BIN
 
 export SOURCE_DIR=$PWD/sources
 export BUILD_DIR=$PWD/stock
@@ -62,7 +63,7 @@ fi
 #cp -R $BUILD_DIR ffmpeg
 export FFMPEG_INSTALL_DIR=$BUILD_DIR
 $PYTHON_BIN -m venv $version
-source env/bin/activate
+source $version/bin/activate
 pip install --upgrade pip
 pip install -v .
 executable=$(ls -1 wabash/_wabash* 2>/dev/null | head -n 1)
@@ -72,4 +73,5 @@ pip install -v .
 
 pip install build auditwheel patchelf
 python -m build --sdist --wheel
-auditwheel repair dist/*.whl --plat manylinux_2_35_x86_64
+auditwheel repair dist/*${version//./}*.whl --plat manylinux_2_35_x86_64
+deactivate
