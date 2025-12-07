@@ -520,6 +520,9 @@ wabash
 ---
 Program development may include efforts in both Python and C++. There are different methods for observing changes made to the program in these two domains. Further, there is a difference in the compilation procedure for the C++ domain depending on whether the dependency libaries have been installed using the package manager or the portable libraries.
 
+&nbsp;
+### Python Code Development
+---
 To develop the Python domain of the program, it is necessary to uninstall the wabash python module from the current environment. This is required because the python code will look for the module in the environment first, which has the effect of ignoring changes made to the python source code. The following assumes that the python environment has been activated like `source env/bin/activate`. 
 
 To develop the Python code and observe changes made, use the following.
@@ -529,6 +532,9 @@ pip uninstall wabash
 python run.py
 ```
 
+&nbsp;
+### C++ Code Development
+---
 Any changes made in the C++ domain require re-compiling the project in order to be observed. Note that the compile process will install a copy of the Python module binary into the local wabash directory. This enables local development when the Python module is un-installed from the current environment. The binary filename is prefixed with an underscore, which is namespace translated by `__init__.py`. If the portable libraries are being used, the ffmpeg binaries will also be present in the wabash directory.
 
 To develop C++ code using the portable libraries
