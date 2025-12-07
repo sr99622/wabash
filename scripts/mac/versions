@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Declare an array
+versions=("3.10" "3.11" "3.12" "3.13")
+
+# Iterate through the array elements
+for version in "${versions[@]}"; do
+  echo "Current version: $version"
+done
