@@ -20,6 +20,12 @@ copy_libs() {
     process_libs "$executable"
 }
 
+get_python_version() {
+    local python_string="$1"
+    local version=$(echo "$python_string" | sed 's/^python//')
+    echo "$version"
+}
+
 PYTHON_BIN="${1:-python3.10}"
 echo "Using Python interpreter: $PYTHON_BIN"
 
@@ -55,7 +61,7 @@ fi
 
 #cp -R $BUILD_DIR ffmpeg
 export FFMPEG_INSTALL_DIR=$BUILD_DIR
-$PYTHON_BIN -m venv env
+$PYTHON_BIN -m venv $version
 source env/bin/activate
 pip install --upgrade pip
 pip install -v .
