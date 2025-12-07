@@ -377,6 +377,7 @@ sudo reboot now
 The virtual machine is set up with a Linux Mint ISO. The ISO is a few GB in size, so it will take some time to download. There is a script included with the project for this purpose.
 
 ```
+cd wabash
 scripts/linux/vm_download
 ```
 
@@ -432,13 +433,13 @@ Run the following script to build the project portable libraries and distributio
 scripts/linux/build_libs
 ```
 
-At the completion of the script, there will be a virtual environment folder named by version X.XX for each of the Python versions. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
+The script may require some use input during Python installation. At the completion of the script, there will be a virtual environment folder named by version X.XX for each of the Python versions. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
 
 ```
 X.XX/bin/wabash
 ```
 
- An installable package for each Python version can be found in the ```wheelhouse``` subdirectory. The script produces a distribution agnostic installer package for each Python version that includes the portable libraries and can be uploaded to the PyPi server. Additionally, a ```stock``` subdirectory is produced that contains portable versions of the dependency libraries and can be used on a development machine for building the project. The following steps will transfer these products back to the host machine for further use.
+An installable package for each Python version can be found in the ```wheelhouse``` subdirectory. The script produces a distribution agnostic installer package for each Python version that includes the portable libraries and can be uploaded to the PyPi server. Additionally, a ```stock``` subdirectory is produced that contains portable versions of the dependency libraries and can be used on a development machine for building the project. The following steps will transfer these products back to the host machine for further use.
 
 &nbsp;
 ### Restart the Virtual Machine
