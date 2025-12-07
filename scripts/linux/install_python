@@ -20,10 +20,37 @@ done
 
 int_minor=$((minor))
 
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install -y python$major.$minor-dev
-if [ int_minor -lt 12 ]; then
-    sudo apt install -y python$major.$minor-distutils
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    echo "Distribution Name: $NAME"
+    echo "Distribution ID: $ID"
+    echo "Pretty Name: $PRETTY_NAME"
+    echo "Version ID: $VERSION_ID"
+
+    case "$ID" in
+        ubuntu|debian)
+            echo "This is a Debian-based distribution."
+            sudo add-apt-repository ppa:deadsnakes/ppa
+            sudo apt update
+            sudo apt install -y python$major.$minor-dev
+            if [ int_minor -lt 12 ]; then
+                sudo apt install -y python$major.$minor-distutils
+            fi
+            sudo apt install -y python$major.$minor-venv
+            ;;
+        centos|rhel|fedora)
+            echo "This is a Red Hat-based distribution."
+            version="python$major.$minor-devel"
+            sudo dnf install $version
+            ;;
+        arch)
+            echo "This is Arch Linux."
+            ;;
+        *)
+            echo "Unknown distribution type."
+            ;;
+    esac
+else
+    echo "Error: /etc/os-release not found."
 fi
-sudo apt install -y python$major.$minor-venv
+

@@ -356,6 +356,11 @@ sudo systemctl enable libvirtd
 sudo systemctl status libvirtd
 sudo usermod -aG libvirt $USER
 sudo usermod -aG kvm $USER
+```
+
+For Ubuntu or Arch based system, (apt or pacman), the following commands are needed to start the virtual network. 
+
+```
 sudo virsh net-start default
 sudo virsh net-autostart default
 ```
