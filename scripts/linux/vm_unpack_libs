@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-cp -R wheelhouse
+cp -R vm/shared/wheelhouse .
 tar xvf vm/shared/stock.tar.gz
 export FFMPEG_INSTALL_DIR=$PWD/stock
 echo "FFMPEG_INSTALL_DIR: $FFMPEG_INSTALL_DIR"
