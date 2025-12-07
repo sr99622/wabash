@@ -1,11 +1,15 @@
 #!/usr/bin/bash
 
+export FFMPEG_INSTALL_DIR=$PWD/stock
 versions=("3.11" "3.12" "3.13")
 for version in "${versions[@]}"; do
-    echo "echo \"\" | scripts/linux/install_python $version"
+    echo \"\" | scripts/linux/install_python $version
+    python$version -m venv $version
+    source $version/bin/activate
+    pip install --upgrade pip
+    pip install build auditwheel patchelf
+    python -m build --sdist --wheel
+    auditwheel repair dist/*${version//./}*.whl --plat manylinux_2_35_x86_64
+    deactivate
 done
 
-#pip install build auditwheel patchelf
-#export FFMPEG_INSTALL_DIR=$PWD/stock
-#python -m build --sdist --wheel
-#auditwheel repair dist/*.whl --plat manylinux_2_35_x86_64

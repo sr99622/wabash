@@ -33,7 +33,7 @@ if [ -f /etc/os-release ]; then
             sudo add-apt-repository ppa:deadsnakes/ppa
             sudo apt update
             sudo apt install -y python$major.$minor-dev
-            if [ int_minor -lt 12 ]; then
+            if [ $((minor)) -lt 12 ]; then
                 sudo apt install -y python$major.$minor-distutils
             fi
             sudo apt install -y python$major.$minor-venv

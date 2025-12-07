@@ -10,6 +10,10 @@ installer/
 ffmpeg/
 scratch/
 wheelhouse/
+3.10/
+3.11/
+3.12/
+3.12/
 Icon.iconset/
 *.egg-info
 .vscode/
