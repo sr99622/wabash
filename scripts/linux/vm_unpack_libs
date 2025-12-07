@@ -6,5 +6,10 @@ export FFMPEG_INSTALL_DIR=$PWD/stock
 echo "FFMPEG_INSTALL_DIR: $FFMPEG_INSTALL_DIR"
 pip install -v .
 
-cp stock/lib/*.so.+([0-9]) wabash
+input_file="vm/shared/filenames.txt"
+
+while IFS= read -r line; do
+  cp "stock/lib/$line" wabash
+done < "$input_file"
+
 pip install -v .
