@@ -492,7 +492,7 @@ Please note that if files are added to the shared directory by the Host, they ma
 Once the dependency libraries have been built, they can be transferred from the virtual machine to the Host for development of the program. Run the following from the virtual machine.
 
 ```
-sudo scripts/linux/vm_tar_libs
+scripts/linux/vm_tar_libs
 ```
 
 The file `ffmpeg.tar.gz` and the package installer wheel should be observable in the shared directory. At this point, the virtual machine is no longer needed
