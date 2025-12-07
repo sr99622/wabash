@@ -28,7 +28,7 @@ if [ -f /etc/os-release ]; then
     echo "Version ID: $VERSION_ID"
 
     case "$ID" in
-        ubuntu|debian)
+        ubuntu|debian|linuxmint)
             echo "This is a Debian-based distribution."
             sudo add-apt-repository ppa:deadsnakes/ppa
             sudo apt update
