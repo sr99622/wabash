@@ -1,4 +1,4 @@
 #!/usr/bin/bash
 
-virsh destroy wabash-vm 2>/dev/null
+virsh destroy wabash-vm
 virsh undefine wabash-vm --remove-all-storage

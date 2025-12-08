@@ -318,7 +318,8 @@ Choose the instructions for your package manager
 
 ```
 sudo apt install qemu-kvm libvirt-daemon-system virtinst libvirt-clients bridge-utils virt-manager virt-viewer virtiofsd
-chmod o+x $HOME
+sudo setfacl -m u:libvirt-qemu:--x /home
+sudo setfacl -m u:libvirt-qemu:--x $HOME
 ```
 &nbsp;
 
