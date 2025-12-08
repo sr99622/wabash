@@ -36,3 +36,5 @@ case "$DISTRO" in
         sudo virsh net-autostart default
         ;;
 esac
+
+mkdir -p vm/iso vm/hda vm/shared

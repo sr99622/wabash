@@ -379,11 +379,17 @@ sudo virsh net-start default
 sudo virsh net-autostart default
 ```
 
+Make temporary directories
+
+```
+mkdir -p vm/iso vm/hda vm/shared
+```
+
 </details>
 
 &nbsp;
 
-It is necessary to re-boot the machine in order to use virtd.
+Re-boot the machine in order to initialize the configuration for libvirtd.
 
 ```
 sudo reboot now
@@ -437,7 +443,7 @@ virsh list --all
 ---
 After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. If the intention is to maintain the project with updates to the code, it can be worthwhile to update the virtual machine operating system, as there is a nag screen that pops up pretty frequently after the machine has been running for a while. If updating, it is recommended to look through the alternate download locations to find a fast server. The update does take some time, about same amount of time as the installation.
 
-To start the build, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
+To start the build, open a terminal on the virtual machine and install git to download the repository as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
 sudo apt install -y git
@@ -445,13 +451,13 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-Run the following script to build the project portable libraries and distribution wheels for Python versions from 3.10 through 3.13.
+Run the following script to build the project portable libraries and distribution wheels for Python versions from 3.10 through 3.13. The script will require some user input after a duration of time for Python installation as provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). Once the Python versions are installed, subsequent runs of the script do not require user intervention. As a note, it was observed that if the script were to override the user input prompt during Python installation, the process may become corrputed.
 
 ```
 scripts/linux/build_libs
 ```
 
-The script may require some user input during Python installation provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). At the completion of the script, there will be a virtual environment folder named for the version X.XX for each of the Python versions, which will have the program installed. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
+At the completion of the script, there will be a virtual environment folder named for the version X.XX for each of the Python versions, each of which will have the program installed. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
 
 ```
 X.XX/bin/wabash
