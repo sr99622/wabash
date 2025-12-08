@@ -308,7 +308,7 @@ A portable version of FFmpeg containing only the necessary library components fo
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the legacy version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version. It provides the 5.15 kernel along with glibc version 2.35, which should be compatible with most modern Linux versions.
 
 &nbsp;
-### Install QEMU on the Host
+### Install QEMU (libvirt) on the Host Development Machine
 ---
 
 A script has been set up to install [QEMU](https://www.qemu.org/) virtual machine for a variety of Linux distributions. Those using apt, dnf and pacman are supported. In some cases, the script may not be able to identify the family of the distribution, in which case manual instructions are available for reference.
@@ -575,6 +575,9 @@ To develop C++ code using the package manager libraries
 pip install -v .
 env/bin/wabash
 ```
+&nbsp;
+
+<details><summary><b>Notes for Linux Configurations</b></summary>
 
 &nbsp;
 ### Install VSCode on Manjaro Linux
@@ -599,6 +602,7 @@ Unfortunately, this can be an issue if you are working on Fedora using VSCode. A
     }
 }
 ```
+</details>
 
 &nbsp;
 
