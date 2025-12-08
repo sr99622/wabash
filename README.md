@@ -308,7 +308,20 @@ A portable version of FFmpeg containing only the necessary library components fo
 There exist several methods to achieve the goal of maximum compatibilty through compilation on older kernel versions. Experience with these methods has led to the following suggestion, which is to create a virtual machine and install the oldest maintained version of Linux Mint onto the virtual machine and compile there. Because Linux Mint is based on older versions of Ubuntu, it will provide the legacy version of the kernel which is maintained to avoid security and stability issues. At the time of this writing, [Linux Mint 21 Vanessa](https://linuxmint.com/edition.php?id=299) is the oldest maintained version. It provides the 5.15 kernel along with glibc version 2.35, which should be compatible with most modern Linux versions.
 
 &nbsp;
-### Install libvirt on the Host
+### Install QEMU on the Host
+---
+
+A script has been set up to install [QEMU](https://www.qemu.org/) virtual machine for a variety of Linux distributions. Those using apt, dnf and pacman are supported. In some cases, the script may not be able to identify the family of the distribution, in which case manual instructions are available for reference.
+
+To install by script
+
+```
+scripts/linux/vm_install
+```
+
+<details><summary>Manual installation</summary>
+&nbsp;
+
 ---
 
 Choose the instructions for your package manager
@@ -349,7 +362,7 @@ sudo pacman -S --needed virt-manager virt-viewer virtiofsd qemu-desktop libvirt 
 ### Configure libvirt
 ---
 
-Configure libvrt to run as a service, then add the user to the groups for non-root access, requires reboot.
+Configure libvrt to run as a service, then add the user to the groups for non-root access.
 
 ```
 sudo systemctl start libvirtd
@@ -365,6 +378,10 @@ For Ubuntu or Arch based system, (apt or pacman), the following commands are nee
 sudo virsh net-start default
 sudo virsh net-autostart default
 ```
+
+</details>
+
+&nbsp;
 
 It is necessary to re-boot the machine in order to use virtd.
 
