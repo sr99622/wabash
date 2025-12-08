@@ -510,7 +510,7 @@ The shared directory resides at `vm/shared`. You should be able to observe files
 ls vm/shared
 ```
 
-The file `stock.tar.gz` and the package installer `wheelhouse` should be observable in the shared directory. Please note that if files are added to the shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view in the virtual machine, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
+The file `stock.tar.gz` and the package installer directory `wheelhouse` should be observable in the shared directory. Please note that if files are added to the shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view in the virtual machine, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
 
 At this point, the virtual machine is no longer needed and can be shut down.
 
@@ -521,7 +521,7 @@ shutdown now
 &nbsp;
 ### Install the Dependency Libraries and Build the Program on the Host
 ---
-First create a Python virtual environment on the Host development machine. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The following snippets are intended to be run from the project directory on the Host.
+Create a Python virtual environment on the Host development machine. It is recommended to use the full Python version name explicitly when creating the virtual environment. The version of the system Python can be found with the command `python3 --version`. The command below uses `X.XX` in place of the python version on the machine. The following snippets are intended to be run from the project directory on the Host.
 
 ```
 pythonX.XX -m venv env
