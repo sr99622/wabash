@@ -419,7 +419,7 @@ virsh list --all
 ---
 After installing Linux Mint 21 on the virtual machine, it is optional to update the software as recommended by the operating system. If the intention is to maintain the project with updates to the code, it can be worthwhile to update the virtual machine operating system, as there is a nag screen that pops up pretty frequently after the machine has been running for a while. If updating, it is recommended to look through the alternate download locations to find a fast server. The update does take some time, about same amount of time as the installation.
 
-To start the build procedure, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
+To start the build, install git and download the repository into the virtual machine as follows. Please note the `cd wabash` command to change the current directory to `wabash`. This is the location from which repository scripts should be run.
 
 ```
 sudo apt install -y git
@@ -433,7 +433,7 @@ Run the following script to build the project portable libraries and distributio
 scripts/linux/build_libs
 ```
 
-The script may require some user input during Python installation provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). At the completion of the script, there will be a virtual environment folder named for the version X.XX for each of the Python versions, each of which will have the program installed. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
+The script may require some user input during Python installation provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). At the completion of the script, there will be a virtual environment folder named for the version X.XX for each of the Python versions, which will have the program installed. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
 
 ```
 X.XX/bin/wabash
@@ -468,14 +468,6 @@ cd wabash
 sudo scripts/linux/vm_mount_host
 ```
 
-The shared directory resides at `vm/shared`. You should be able to observe files on the Host from the virtual machine at the same location relative to the project directory. 
-
-```
-ls vm/shared
-```
-
-Please note that if files are added to the shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view in the virtual machine, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
-
 &nbsp;
 ### Transfer the Dependency Libraries to the Host
 ---
@@ -486,7 +478,15 @@ Once the dependency libraries have been built, they can be transferred from the 
 scripts/linux/vm_tar_libs
 ```
 
-The file `stock.tar.gz` and the package installer `wheelhouse` should be observable in the shared directory. At this point, the virtual machine is no longer needed
+The shared directory resides at `vm/shared`. You should be able to observe files on the Host from the virtual machine at the same location relative to the project directory. 
+
+```
+ls vm/shared
+```
+
+The file `stock.tar.gz` and the package installer `wheelhouse` should be observable in the shared directory. Please note that if files are added to the shared directory by the Host, they may not be immediately observable from the virtual machine. To refresh the directory view in the virtual machine, use `umount vm/shared`, then repeat the `vm_mount_host` command from above.
+
+At this point, the virtual machine is no longer needed and can be shut down.
 
 ```
 shutdown now
@@ -495,7 +495,7 @@ shutdown now
 &nbsp;
 ### Install the Dependency Libraries and Build the Program on the Host
 ---
-First create a Python virtual environment. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The following snippets are intended to be run from the project directory on the Host.
+First create a Python virtual environment on the Host development machine. It is recommended to use the full Python version name explicitly when creating the virtual environment. The command below uses `X.XX` in place of the python version on the machine. The following snippets are intended to be run from the project directory on the Host.
 
 ```
 pythonX.XX -m venv env
