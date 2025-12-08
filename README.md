@@ -498,7 +498,7 @@ sudo scripts/linux/vm_mount_host
 ### Transfer the Dependency Libraries to the Host
 ---
 
-Once the dependency libraries have been built, they can be transferred from the virtual machine to the Host for development of the program. Run the following from the virtual machine.
+The dependency libraries and package wheels can be transferred from the virtual machine to the Host for development of the program. Run the following from the virtual machine.
 
 ```
 scripts/linux/vm_tar_libs
