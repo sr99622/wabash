@@ -25,6 +25,16 @@ detect_distro() {
         return 0
     fi
 
+    # last ditch effort to find oddball distros that have /etc/os-release
+    while IFS= read -r line; do
+        set $line
+    done < /etc/os-release
+
+    if [[ "$ID" = "cachyos" ]]; then
+        DISTRO="arch"
+        return 0
+    fi    
+
     DISTRO="unknown"
     return 1
 }
