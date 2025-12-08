@@ -451,7 +451,9 @@ git clone https://github.com/sr99622/wabash
 cd wabash
 ```
 
-Run the following script to build the project portable libraries and distribution wheels for Python versions from 3.10 through 3.13. The script will require some user input after a duration of time for Python installation as provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). Once the Python versions are installed, subsequent runs of the script do not require user intervention. As a note, it was observed that if the script were to override the user input prompt during Python installation, the process may become corrputed.
+Run the following script to build the project portable libraries and distribution wheels for Python versions from 3.10 through 3.13. 
+
+Please note that the script takes some time to run and will stop at points to collect user input for each Python installation as provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). Once all the Python versions are installed, subsequent runs of the script do not require user intervention. As a note, it was observed that if the script were to override the user input prompt during Python installation, the process may become corrputed.
 
 ```
 scripts/linux/build_libs
