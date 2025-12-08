@@ -433,7 +433,7 @@ Run the following script to build the project portable libraries and distributio
 scripts/linux/build_libs
 ```
 
-The script may require some user input during Python installation provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). At the completion of the script, there will be a virtual environment folder named for the version X.XX for each of the Python versions. Upon copmletion of the script, each of the virtual environments will have the program installed. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
+The script may require some user input during Python installation provided by [deadsnakes](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa). At the completion of the script, there will be a virtual environment folder named for the version X.XX for each of the Python versions, each of which will have the program installed. To test a version of the program, use the command following where ```X.XX``` represents a Python version e.g 3.12
 
 ```
 X.XX/bin/wabash
