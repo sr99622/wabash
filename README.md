@@ -169,7 +169,8 @@ Install the build tools
 sudo apt install curl git cmake g++
 ```
 
-Install the X11 development libraries if necessary (not needed for Wayland only configuration)
+Install the X11 development libraries if necessary (not needed for Wayland only configuration). If you get an error message like ```qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform plugin```, then you  will need these libraries.
+
 
 ```
 sudo apt install '^libxcb.*-dev'
@@ -318,6 +319,8 @@ To install by script
 ```
 scripts/linux/vm_install
 ```
+
+The script will show the status of the libvirtd service when completed. To exit this screen, press the `q` key to quit.
 
 <details><summary>Manual installation</summary>
 &nbsp;

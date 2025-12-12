@@ -25,9 +25,15 @@ build-backend = "scikit_build_core.build"
 name = "wabash"
 version = "0.0.2"
 description = "Example pybind11 extension for multi-threading and data transfer"
-authors = [{ name = "Stephen Rhodes" }]
+authors = [{ name = "Stephen Rhodes", email="sr99622@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
+liceense="Apache"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/sr99622/wabash"
+Issues = "https://github.com/sr99622/wabash/issues"
 
 dependencies = [
   'numpy', 'PyQt6-Qt6', 'pyqt6', 'loguru', 'requests', 'psutil', 'pyqtgraph', 'torch==2.8.0', 'torchvision==0.23.0', 'openvino==2025.3.0'
