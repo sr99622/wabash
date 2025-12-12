@@ -19,11 +19,11 @@ class NetworkPanel(QWidget):
         self.listener = None
         self.netutil = None
 
-        adapters = NetUtil().getAllAdapters()
+        self.adapters = NetUtil().getAllAdapters()
         grpClient = QGroupBox("Client")
         self.btnClient = QPushButton("Client")
         self.btnClient.clicked.connect(self.btnClientClicked)
-        self.clientAdapter = AdapterPanel(self.mw, adapters, ProtocolType.CLIENT)
+        self.clientAdapter = AdapterPanel(self.mw, self.adapters, ProtocolType.CLIENT)
 
         lytClient = QGridLayout(grpClient)
         lytClient.addWidget(self.clientAdapter,  0, 0, 1, 1)
@@ -32,7 +32,7 @@ class NetworkPanel(QWidget):
         grpServer = QGroupBox("Server")
         self.btnServer = QPushButton("Server")
         self.btnServer.clicked.connect(self.btnServerClicked)
-        self.serverAdapter = AdapterPanel(self.mw, adapters, ProtocolType.SERVER)
+        self.serverAdapter = AdapterPanel(self.mw, self.adapters, ProtocolType.SERVER)
 
         lytServer = QGridLayout(grpServer)
         lytServer.addWidget(self.serverAdapter,   0, 0, 1, 1)
@@ -41,7 +41,7 @@ class NetworkPanel(QWidget):
         grpBroadcast = QGroupBox("Broadcast")
         self.btnBroadcast = QPushButton("Broadcast")
         self.btnBroadcast.clicked.connect(self.btnBroadcastClicked)
-        self.broadcastAdapter = AdapterPanel(self.mw, adapters, ProtocolType.BROADCAST)
+        self.broadcastAdapter = AdapterPanel(self.mw, self.adapters, ProtocolType.BROADCAST)
 
         lytBroadcast = QGridLayout(grpBroadcast)
         lytBroadcast.addWidget(self.broadcastAdapter, 0, 0, 1, 1)
@@ -50,7 +50,7 @@ class NetworkPanel(QWidget):
         grpListen = QGroupBox("Listen")
         self.btnListen = QPushButton("Listen")
         self.btnListen.clicked.connect(self.btnListenClicked)
-        self.listenAdapter = AdapterPanel(self.mw, adapters, ProtocolType.LISTEN)
+        self.listenAdapter = AdapterPanel(self.mw, self.adapters, ProtocolType.LISTEN)
 
         lytListen = QGridLayout(grpListen)
         lytListen.addWidget(self.listenAdapter,  0, 0, 1, 1)
@@ -67,24 +67,12 @@ class NetworkPanel(QWidget):
 
     def btnServerClicked(self):
         print("btnServerClicked")
-        self.netutil = NetUtil()
-        adapters = self.netutil.getAllAdapters()
-        for adapter in adapters:
-            if adapter.up:
-                print("name", adapter.name)
-                print("address", adapter.ip_address)
-                print("gateway", adapter.gateway)
-                print("netmask", adapter.netmask)
-                print("broadcast", adapter.broadcast)
-                print("description", adapter.description)
-                print("type", adapter.type)
-                print("mac_address", adapter.mac_address)
-                print("priority", adapter.priority)
+        print("len adapters", len(self.adapters))
+        print("current adapter", self.serverAdapter.getAdapter())
 
     def btnBroadcastClicked(self):
         print("btnBroadscastClicked")
 
     def btnListenClicked(self):
         print("btnListenClicked")
-
     

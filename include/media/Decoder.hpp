@@ -32,9 +32,9 @@ extern "C" {
 #include "Packet.hpp"
 #include "Frame.hpp"
 
-AVPixelFormat hw_pix_fmt = AV_PIX_FMT_NONE;
+static AVPixelFormat hw_pix_fmt = AV_PIX_FMT_NONE;
 
-AVPixelFormat get_hw_format(AVCodecContext* ctx, const AVPixelFormat* pix_fmts) {
+static AVPixelFormat get_hw_format(AVCodecContext* ctx, const AVPixelFormat* pix_fmts) {
     const AVPixelFormat* p;
 
     for (p = pix_fmts; *p != AV_PIX_FMT_NONE; p++) {
