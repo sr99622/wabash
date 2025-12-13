@@ -154,6 +154,7 @@ public:
 
             if (result > 0) {
                 input << std::string(buffer).substr(0, 1024);
+                std::cout << "this is a test: " << input.str() << std::endl;
                 if (endsWith(input.str(), "\r\n"))
                     break;
             }
@@ -188,6 +189,8 @@ public:
                 socklen_t len = sizeof(addr);
                 client = accept(sock, &addr, &len);
 
+                std::cout << "THINGY BOB @" << std::endl;
+
                 if (client < 0) {
                     if (errno == EWOULDBLOCK || errno == EAGAIN) {
                         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -209,6 +212,7 @@ public:
 
                 std::string client_request = getClientRequest(client);
                 client_request = client_request.substr(0, client_request.length()-2);
+                std::cout << "YOU ARE HERE" << std::endl;
 
                 std::string response = serverCallback(client_request.c_str());
                 if (send(client, response.c_str(), response.length(), 0) < 0)

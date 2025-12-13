@@ -1,6 +1,9 @@
 #ifndef ADAPTER_HPP
 #define ADAPTER_HPP
 
+#include <string>
+#include <vector>
+
 namespace wabash
 {
 
@@ -19,6 +22,8 @@ public:
     bool dhcp;
     bool up;
     int priority;
+
+    const std::string __str__() { return name; }
 };
 
 }

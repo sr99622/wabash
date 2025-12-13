@@ -22,6 +22,7 @@ class ServerProtocols():
         self.mw = mw
 
     def callback(self, msg):
+        print("server callback", msg)
         args = msg.split("\n\n")
         result = args[0]
         return result

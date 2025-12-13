@@ -120,6 +120,7 @@ PYBIND11_MODULE(_wabash, m)
 
     py::class_<Adapter>(m, "Adapter")
         .def(py::init<>())
+        .def("__str__", &Adapter::__str__)
         .def_readwrite("name", &Adapter::name)
         .def_readwrite("description", &Adapter::description)
         .def_readwrite("ip_address", &Adapter::ip_address)
