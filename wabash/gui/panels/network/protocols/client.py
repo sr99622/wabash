@@ -31,8 +31,9 @@ class ClientProtocols():
         self.signals.error.connect(self.showMsgBox)
 
     def callback(self, msg):
-        configs = msg.split("\n\n")
+        configs = msg.split("\r\n")
         cmd = configs.pop(0)
+        print("client recvd string", cmd)
 
     def error(self, msg):
         logger.error(f'Client protocol error: {msg}')

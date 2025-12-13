@@ -8,6 +8,7 @@ from .adapterpanel import AdapterPanel
 from wabash import Client, Server, Broadcaster, Listener, NetUtil
 from wabash.gui.panels.network.protocols import ClientProtocols, \
         ServerProtocols, ListenProtocols, ProtocolType
+import time
 
 class NetworkPanel(QWidget):
     def __init__(self, mw):
@@ -71,14 +72,12 @@ class NetworkPanel(QWidget):
         lytMain.addWidget(grpListen,    1, 1, 1, 1)
 
     def btnClientClicked(self):
-        print("btnClientClicked")
         try:
             if not self.client:
                 self.client = Client("127.0.0.1:8550")
                 self.client.clientCallback = self.clientProtocols.callback
                 self.client.errorCallback = self.clientProtocols.error
-            print("self.txtClient", self.txtClient.text())
-            self.client.transmit(f'{self.txtClient.text()}\n\n')
+            self.client.transmit(f'{self.txtClient.text()}\r\n')
         except Exception as ex:
             print("Client init exception", ex)
 

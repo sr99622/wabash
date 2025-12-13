@@ -24,7 +24,7 @@ class ServerProtocols():
     def callback(self, msg):
         print("server callback", msg)
         args = msg.split("\n\n")
-        result = args[0]
+        result = f'{args[0]}: ECHO CMD'
         return result
     
     def error(self, msg):
