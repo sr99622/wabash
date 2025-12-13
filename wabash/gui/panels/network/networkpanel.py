@@ -84,7 +84,7 @@ class NetworkPanel(QWidget):
     def btnStartServerClicked(self):
         print("btnStartServerClicked")
         print("len adapters", len(self.adapters))
-        print("current adapter", self.serverAdapter.getAdapter())
+        #print("current adapter", self.serverAdapter.getAdapter())
         print("test")
         try:
             if not self.server:

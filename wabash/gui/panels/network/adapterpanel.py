@@ -143,9 +143,9 @@ class AdapterPanel(QWidget):
         self.dlgAdapter.setData(self.getAdapter(self.cmbAdapter.currentText()))
         self.dlgAdapter.show()
 
-    def getAdapter(self):
+    def getAdapter(self, name):
         for adapter in self.adapters:
-            if adapter.name == self.cmbAdapter.currentText():
+            if adapter.name == name:
                 return adapter
 
     def chkOnlyActiveChecked(self, state):
