@@ -401,7 +401,7 @@ sudo reboot now
 &nbsp;
 ### Download ISO
 ---
-The virtual machine is set up with a Linux Mint ISO. The ISO is a few GB in size, so it will take some time to download. There is a script included with the project for this purpose.
+The virtual machine is set up with a Linux Mint ISO. The ISO is a few GB in size, so it will take some time to download. There is a script included with the project for this purpose. You might need to sudo.
 
 ```
 cd wabash
@@ -922,4 +922,5 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 
